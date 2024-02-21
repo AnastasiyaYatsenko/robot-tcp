@@ -1,6 +1,6 @@
 import select
 import socket
-from struct import unpack
+from struct import unpack, pack
 from typing import NamedTuple
 
 SERVER_ADDRESS = ('192.168.0.91', 8686)
@@ -124,6 +124,16 @@ def handle_writables(writables):
     # Дана подія виникає, коли в буфері на запис звільнюється місце
     for resource in writables:
         try:
-            resource.send(bytes('Hello from server!', encoding='UTF-8'))
+            p = pack('@ff', 1.5, 3.2)
+            resource.send(p)
+            # resource.send(bytes('Hello from server!', encoding='UTF-8'))
         except OSError:
             clear_resource(resource)
+
+
+def send_point():
+    try:
+        p = pack('@ff', 1.5, 3.2)
+        OUTPUTS[0].send(p)
+    except OSError:
+        clear_resource(OUTPUTS[0])

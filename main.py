@@ -1,4 +1,4 @@
-from server import get_non_blocking_server_socket,INPUTS, OUTPUTS, handle_readables, handle_writables, clear_resource, select
+from server import get_non_blocking_server_socket,INPUTS, OUTPUTS, handle_readables, handle_writables, clear_resource, select, send_point
 
 # Створюємо серверний сокет без блокування основного потоку в очікуванні підключення
 server_socket = get_non_blocking_server_socket()
@@ -10,6 +10,7 @@ try:
         readables, writables, exceptional = select.select(INPUTS, OUTPUTS, INPUTS)
         handle_readables(readables, server_socket)
         handle_writables(writables)
+        #send_point()
 except KeyboardInterrupt:
     clear_resource(server_socket)
     print("Server stopped! Thank you for using!")
