@@ -3,6 +3,8 @@ import socket
 from struct import unpack, pack
 from typing import NamedTuple
 
+from arm_geometry_test import *
+
 SERVER_ADDRESS = ('192.168.0.91', 8686)
 
 MAX_CONNECTIONS = 10  # 20
@@ -124,7 +126,9 @@ def handle_writables(writables):
     # Дана подія виникає, коли в буфері на запис звільнюється місце
     for resource in writables:
         try:
-            p = pack('@ff', 1.5, 3.2)
+            arm_state = get_arm_state_by_pos(7, size, 'b')
+            # print(arm_state)
+            p = pack('@ffi', arm_state['s'], arm_state['a'], arm_state['h'])
             resource.send(p)
             # resource.send(bytes('Hello from server!', encoding='UTF-8'))
         except OSError:

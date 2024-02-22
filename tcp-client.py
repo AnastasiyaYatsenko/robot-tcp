@@ -43,8 +43,8 @@ for i in range(MAX_CONNECTIONS):
     client.send(p)
     sleep(0.1)
 
-data = client.recv(8)
-unp = unpack('@ff', data)
+data = client.recv(12)
+unp = unpack('@ffi', data)
 LS = list(unp)
 print(LS)
 print("---")
