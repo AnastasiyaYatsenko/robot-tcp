@@ -91,7 +91,7 @@ def handle_readables(readables, server):
                 LS = list(unpacked_struct)
                 robots[LS[0]].set_robot_params(LS[1], LS[2], LS[3],
                                                LS[4], LS[5], LS[6],
-                                               LS[7], LS[8], LS[9],)
+                                               LS[7], LS[8], LS[9])
                 # print(unpacked_struct)
                 robots[LS[0]].print()
                 print("---")
