@@ -39,7 +39,8 @@ class Params(NamedTuple):
 
 
 class Robot:
-    hands = [Params(0, 0, 0, 0, 0), Params(1, 1, 1, 0, 0), Params(2, 2, 2, 0, 0)]
+    def __init__(self):
+        self.hands = [Params(0, 0, 0, 0, 0), Params(1, 1, 1, 0, 0), Params(2, 2, 2, 0, 0)]
     # hand1 = Params(0, 0, 0, 0, 0)
     # hand2 = Params(1, 1, 1, 0, 0)
     # hand3 = Params(2, 2, 2, 0, 0)
@@ -56,11 +57,11 @@ class Robot:
         self.hands[1] = Params(lin2, ang2, hold2, self.hands[1].x, self.hands[1].y)
         self.hands[2] = Params(lin3, ang3, hold3, self.hands[2].x, self.hands[2].y)
 
-
     def set_coordinates(self, x1, y1, x2, y2, x3, y3):
         self.hands[0] = Params(self.hands[0].lin, self.hands[0].ang, self.hands[0].hold, x1, y1)
         self.hands[1] = Params(self.hands[1].lin, self.hands[1].ang, self.hands[1].hold, x2, y2)
         self.hands[2] = Params(self.hands[2].lin, self.hands[2].ang, self.hands[2].hold, x3, y3)
+        self.place_ceil_coordinates()
 
     def set_hand_x(self, i, x):
         self.hands[i] = Params(self.hands[i].lin, self.hands[i].ang, self.hands[i].hold, x, self.hands[i].y)
@@ -68,6 +69,28 @@ class Robot:
     def set_hand_y(self, i, y):
         self.hands[i] = Params(self.hands[i].lin, self.hands[i].ang, self.hands[i].hold, self.hands[i].x, y)
 
+    def place_ceil_coordinates(self):
+        self.move_hand(0, self.hands[0].x, self.hands[0].y)
+        self.move_hand(1, self.hands[1].x, self.hands[1].y)
+        self.move_hand(2, self.hands[2].x, self.hands[2].y)
+
+    def move_hand(self, hand_num, x, y):
+        if ceil_arr[y][x] == 0:
+            self.hand_unhold_point(hand_num)
+            self.hand_hold_point(hand_num, x, y)
+
+    def hand_unhold_point(self, hand_num):
+        old_x = self.hands[hand_num].x
+        old_y = self.hands[hand_num].y
+        ceil_arr[old_y][old_x] = 0
+
+    def hand_hold_point(self, hand_num, x, y):
+        if ceil_arr[y][x] == 0:
+            ceil_arr[y][x] = 1
+            self.set_hand_x(hand_num, x)
+            self.set_hand_y(hand_num, y)
+        else:
+            print("Point occupied!")
 
     def get_occupied_area(self):
         center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
@@ -79,36 +102,35 @@ class Robot:
                 self.hands[2].x, self.hands[2].y,
                 center_x, center_y]
 
-
     def print(self):
         print("Hand 1: " + str(self.hands[0]))
         print("Hand 2: " + str(self.hands[1]))
         print("Hand 3: " + str(self.hands[2]))
 
 
-# robots_num = 2
-robots = [Robot()]  # for i in range(robots_num)]
+robots_num = 2
+robots = [Robot() for i in range(robots_num)]
 
 
-def robot_move_hand(rob_num, hand_num, x, y):
-    if ceil_arr[y][x] == 0:
-        robot_hand_unhold_point(rob_num, hand_num)
-        robot_hand_hold_point(rob_num, hand_num, x, y)
-
-
-def robot_hand_unhold_point(rob_num, hand_num):
-    old_x = robots[rob_num].hands[hand_num].x
-    old_y = robots[rob_num].hands[hand_num].y
-    ceil_arr[old_y][old_x] = 0
-
-
-def robot_hand_hold_point(rob_num, hand_num, x, y):
-    if ceil_arr[y][x] == 0:
-        ceil_arr[y][x] = 1
-        robots[rob_num].set_hand_x(hand_num, x)
-        robots[rob_num].set_hand_y(hand_num, y)
-    else:
-        print("Point occupied!")
+# def robot_move_hand(rob_num, hand_num, x, y):
+#     if ceil_arr[y][x] == 0:
+#         robot_hand_unhold_point(rob_num, hand_num)
+#         robot_hand_hold_point(rob_num, hand_num, x, y)
+#
+#
+# def robot_hand_unhold_point(rob_num, hand_num):
+#     old_x = robots[rob_num].hands[hand_num].x
+#     old_y = robots[rob_num].hands[hand_num].y
+#     ceil_arr[old_y][old_x] = 0
+#
+#
+# def robot_hand_hold_point(rob_num, hand_num, x, y):
+#     if ceil_arr[y][x] == 0:
+#         ceil_arr[y][x] = 1
+#         robots[rob_num].set_hand_x(hand_num, x)
+#         robots[rob_num].set_hand_y(hand_num, y)
+#     else:
+#         print("Point occupied!")
 
 
 def show_ceil():
@@ -123,9 +145,10 @@ def show_ceil():
 
 def robot_simulation():
     robots[0].set_coordinates(0, 0, 1, 0, 2, 0)
-    robot_move_hand(0, 0, robots[0].hands[0].x, robots[0].hands[0].y)
-    robot_move_hand(0, 1, robots[0].hands[1].x, robots[0].hands[1].y)
-    robot_move_hand(0, 2, robots[0].hands[2].x, robots[0].hands[0].y)
+    robots[1].set_coordinates(9, 9, 8, 9, 7, 9)
+    # robots[0].move_hand(0, robots[0].hands[0].x, robots[0].hands[0].y)
+    # robots[0].move_hand(1, robots[0].hands[1].x, robots[0].hands[1].y)
+    # robots[0].move_hand(2, robots[0].hands[2].x, robots[0].hands[2].y)
     move_dir = 0  # (0,0) to (10,0), top
              # 1    (10,0) to (10,10), right
              # 2    (10,10) to (0,10), bottom
@@ -134,44 +157,80 @@ def robot_simulation():
     while True:
         for i in range(3):
             show_ceil()
+            sleep(0.5)
             if move_dir == 0:
                 if robots[0].hands[i].x + 3 < 10:
-                    robot_move_hand(0, i, robots[0].hands[i].x + 3, robots[0].hands[i].y)
+                    robots[0].move_hand(i, robots[0].hands[i].x + 3, robots[0].hands[i].y)
                 else:
                     if robots[0].hands[i].x + 3 == 10:
-                        robot_move_hand(0, i, 9, robots[0].hands[i].y + 1)
+                        robots[0].move_hand(i, 9, robots[0].hands[i].y + 1)
                     elif robots[0].hands[i].x + 3 == 11:
-                        robot_move_hand(0, i, 9, robots[0].hands[i].y + 2)
+                        robots[0].move_hand(i, 9, robots[0].hands[i].y + 2)
                         move_dir = 1
+
+                if robots[1].hands[i].x - 3 >= 0:
+                    robots[1].move_hand(i, robots[1].hands[i].x - 3, robots[1].hands[i].y)
+                else:
+                    if robots[1].hands[i].x - 3 == -1:
+                        robots[1].move_hand(i, 0, robots[1].hands[i].y - 1)
+                    elif robots[1].hands[i].x - 3 == -2:
+                        robots[1].move_hand(i, 0, robots[1].hands[i].y - 2)
             elif move_dir == 1:
                 if robots[0].hands[i].y + 3 < 10:
-                    robot_move_hand(0, i, robots[0].hands[i].x, robots[0].hands[i].y + 3)
+                    robots[0].move_hand(i, robots[0].hands[i].x, robots[0].hands[i].y + 3)
                 else:
                     if robots[0].hands[i].y + 3 == 10:
-                        robot_move_hand(0, i, robots[0].hands[i].x - 1, 9)
+                        robots[0].move_hand(i, robots[0].hands[i].x - 1, 9)
                     elif robots[0].hands[i].y + 3 == 11:
-                        robot_move_hand(0, i, robots[0].hands[i].x - 2, 9)
+                        robots[0].move_hand(i, robots[0].hands[i].x - 2, 9)
                         move_dir = 2
+
+                if robots[1].hands[i].y - 3 >= 0:
+                    robots[1].move_hand(i, robots[1].hands[i].x, robots[1].hands[i].y - 3)
+                else:
+                    if robots[1].hands[i].y - 3 == -1:
+                        robots[1].move_hand(i, robots[1].hands[i].x + 1, 0)
+                    elif robots[1].hands[i].y - 3 == -2:
+                        robots[1].move_hand(i, robots[1].hands[i].x + 2, 0)
+                        # move_dir = 0
             elif move_dir == 2:
                 if robots[0].hands[i].x - 3 >= 0:
-                    robot_move_hand(0, i, robots[0].hands[i].x - 3, robots[0].hands[i].y)
+                    robots[0].move_hand(i, robots[0].hands[i].x - 3, robots[0].hands[i].y)
                 else:
                     if robots[0].hands[i].x - 3 == -1:
-                        robot_move_hand(0, i, 0, robots[0].hands[i].y - 1)
+                        robots[0].move_hand(i, 0, robots[0].hands[i].y - 1)
                     elif robots[0].hands[i].x - 3 == -2:
-                        robot_move_hand(0, i, 0, robots[0].hands[i].y - 2)
+                        robots[0].move_hand(i, 0, robots[0].hands[i].y - 2)
                         move_dir = 3
+
+                if robots[1].hands[i].x + 3 < 10:
+                    robots[1].move_hand(i, robots[1].hands[i].x + 3, robots[1].hands[i].y)
+                else:
+                    if robots[1].hands[i].x + 3 == 10:
+                        robots[1].move_hand(i, 9, robots[1].hands[i].y + 1)
+                    elif robots[1].hands[i].x + 3 == 11:
+                        robots[1].move_hand(i, 9, robots[1].hands[i].y + 2)
+                        # move_dir = 1
             elif move_dir == 3:
                 if robots[0].hands[i].y - 3 >= 0:
-                    robot_move_hand(0, i, robots[0].hands[i].x, robots[0].hands[i].y - 3)
+                    robots[0].move_hand(i, robots[0].hands[i].x, robots[0].hands[i].y - 3)
                 else:
                     if robots[0].hands[i].y - 3 == -1:
-                        robot_move_hand(0, i, robots[0].hands[i].x + 1, 0)
+                        robots[0].move_hand(i, robots[0].hands[i].x + 1, 0)
                     elif robots[0].hands[i].y - 3 == -2:
-                        robot_move_hand(0, i, robots[0].hands[i].x + 2, 0)
+                        robots[0].move_hand(i, robots[0].hands[i].x + 2, 0)
                         move_dir = 0
+
+                if robots[1].hands[i].y + 3 < 10:
+                    robots[1].move_hand(i, robots[1].hands[i].x, robots[1].hands[i].y + 3)
+                else:
+                    if robots[1].hands[i].y + 3 == 10:
+                        robots[1].move_hand(i, robots[1].hands[i].x - 1, 9)
+                    elif robots[1].hands[i].y + 3 == 11:
+                        robots[1].move_hand(i, robots[1].hands[i].x - 2, 9)
+                        # move_dir = 2
         # show_ceil()
-        sleep(1)
+        # sleep(2)
 
 
 def get_non_blocking_server_socket():
