@@ -30,6 +30,7 @@ ceil_arr = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 
 
 def is_point_free(x, y):
+    #check if point is not in the occupied area?
     if ceil_arr[y][x] == 0:
         return True
     else:
