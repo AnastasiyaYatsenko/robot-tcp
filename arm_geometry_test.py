@@ -88,8 +88,10 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
          (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
     if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
         print("x=" + str(x) + " y=" + str(y))
+        return x, y
     else:
         print("Impossible")
+    return -1,-1
 
 
 size = {
