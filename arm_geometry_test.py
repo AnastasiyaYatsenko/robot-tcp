@@ -64,17 +64,17 @@ def get_arm_state_by_pos(pos, size, id=''):
     return res
 
 
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3, step, border_step):
     eps = 1e-6
 
-    # x1 = 2.0
-    # y1 = 2.0
-    #
-    # x2 = 6.0
-    # y2 = 4.0
-    #
-    # x3 = 4.0
-    # y3 = 7.0
+    x1 = border_step + x1*step
+    y1 = border_step + y1*step
+
+    x2 = border_step + x2*step
+    y2 = border_step + y2*step
+
+    x3 = border_step + x3*step
+    y3 = border_step + y3*step
     #
     # r1 = math.sqrt(10.0)
     # r2 = math.sqrt(10.0)
