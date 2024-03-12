@@ -18,7 +18,7 @@ class Robot:
     hand2 = Params(1, 1, 1)
     hand3 = Params(2, 2, 2)
 
-    num = 0
+    num = 1
 
     def set_robot_params(self, hand1, hand2, hand3):
         self.hand1 = Params(hand1.lin, hand1.ang, hand1.hold)

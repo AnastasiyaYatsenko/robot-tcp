@@ -45,6 +45,7 @@ class Robot:
 
         self.move_dir = 0
         self.hand_i = 0
+
     # hand1 = Params(0, 0, 0, 0, 0)
     # hand2 = Params(1, 1, 1, 0, 0)
     # hand3 = Params(2, 2, 2, 0, 0)
@@ -134,6 +135,12 @@ robots[0].move_dir = 0
 robots[1].move_dir = 2
 robots[0].hand_i = 0
 robots[1].hand_i = 0
+
+
+def add_robot(hand1, hand2, hand3):
+    r = Robot()
+    r.set_robot_params_hands(hand1, hand2, hand3)
+    robots.append(r)
 
 
 def is_point_free(x, y):
@@ -268,8 +275,8 @@ def handle_readables(readables, server):
                                                LS[7], LS[8], LS[9])
                 # print(unpacked_struct)
                 robots[LS[0]].print()
-                move_robot_simu(0)
-                move_robot_simu(1)
+                move_robot_simu(LS[0])
+                # move_robot_simu(1)
                 print("---")
                 # print("getting data: {data}".format(data=str(data)))
 
