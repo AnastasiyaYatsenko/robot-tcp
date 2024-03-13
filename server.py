@@ -144,10 +144,10 @@ def add_robot(hand1, hand2, hand3):
 
 
 def is_point_free(x, y):
-    for i in range(robots_num):
-        c_x, c_y = robots[i].get_center()
-        if (x - c_x)**2 + (y - c_y)**2 <= robot_hand_len**2:
-            return False
+    # for i in range(robots_num):
+    #     c_x, c_y = robots[i].get_center()
+    #     if (x - c_x)**2 + (y - c_y)**2 <= robot_hand_len**2:
+    #         return False
     if ceil_arr[y][x] == 0:
         return True
     else:
@@ -187,43 +187,73 @@ def move_robot_simu(robot_num):
     show_ceil()
     # sleep(0.5)
     i = robots[robot_num].hand_i
+    to_x = robots[robot_num].hands[i].x
+    to_y = robots[robot_num].hands[i].y
+    new_dir = robots[robot_num].move_dir
     if robots[robot_num].move_dir == 0:
         if robots[robot_num].hands[i].x + 3 < 10:
-            robots[robot_num].move_hand(i, robots[robot_num].hands[i].x + 3, robots[robot_num].hands[i].y)
+            # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x + 3, robots[robot_num].hands[i].y)
+            to_x = robots[robot_num].hands[i].x + 3
         else:
             if robots[robot_num].hands[i].x + 3 == 10:
-                robots[robot_num].move_hand(i, 9, robots[robot_num].hands[i].y + 1)
+                # robots[robot_num].move_hand(i, 9, robots[robot_num].hands[i].y + 1)
+                to_x = 9
+                to_y = robots[robot_num].hands[i].y + 1
             elif robots[robot_num].hands[i].x + 3 == 11:
-                robots[robot_num].move_hand(i, 9, robots[robot_num].hands[i].y + 2)
-                robots[robot_num].move_dir = 1
+                # robots[robot_num].move_hand(i, 9, robots[robot_num].hands[i].y + 2)
+                to_x = 9
+                to_y = robots[robot_num].hands[i].y + 2
+                new_dir = 1
+                # robots[robot_num].move_dir = 1
     elif robots[robot_num].move_dir == 1:
         if robots[robot_num].hands[i].y + 3 < 10:
-            robots[robot_num].move_hand(i, robots[robot_num].hands[i].x, robots[robot_num].hands[i].y + 3)
+            # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x, robots[robot_num].hands[i].y + 3)
+            to_y = robots[robot_num].hands[i].y + 3
         else:
             if robots[robot_num].hands[i].y + 3 == 10:
-                robots[robot_num].move_hand(i, robots[robot_num].hands[i].x - 1, 9)
+                # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x - 1, 9)
+                to_x = robots[robot_num].hands[i].x - 1
+                to_y = 9
             elif robots[robot_num].hands[i].y + 3 == 11:
-                robots[robot_num].move_hand(i, robots[robot_num].hands[i].x - 2, 9)
-                robots[robot_num].move_dir = 2
+                # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x - 2, 9)
+                # robots[robot_num].move_dir = 2
+                to_x = robots[robot_num].hands[i].x - 2
+                to_y = 9
+                new_dir = 2
     elif robots[robot_num].move_dir == 2:
         if robots[robot_num].hands[i].x - 3 >= 0:
-            robots[robot_num].move_hand(i, robots[robot_num].hands[i].x - 3, robots[robot_num].hands[i].y)
+            # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x - 3, robots[robot_num].hands[i].y)
+            to_x = robots[robot_num].hands[i].x - 3
         else:
             if robots[robot_num].hands[i].x - 3 == -1:
-                robots[robot_num].move_hand(i, 0, robots[robot_num].hands[i].y - 1)
+                # robots[robot_num].move_hand(i, 0, robots[robot_num].hands[i].y - 1)
+                to_x = 0
+                to_y = robots[robot_num].hands[i].y - 1
             elif robots[robot_num].hands[i].x - 3 == -2:
-                robots[robot_num].move_hand(i, 0, robots[robot_num].hands[i].y - 2)
-                robots[robot_num].move_dir = 3
+                # robots[robot_num].move_hand(i, 0, robots[robot_num].hands[i].y - 2)
+                # robots[robot_num].move_dir = 3
+                to_x = 0
+                to_y = robots[robot_num].hands[i].y - 2
+                new_dir = 3
     elif robots[robot_num].move_dir == 3:
         if robots[robot_num].hands[i].y - 3 >= 0:
-            robots[robot_num].move_hand(i, robots[robot_num].hands[i].x, robots[robot_num].hands[i].y - 3)
+            # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x, robots[robot_num].hands[i].y - 3)
+            to_y = robots[robot_num].hands[i].y - 3
         else:
             if robots[robot_num].hands[i].y - 3 == -1:
-                robots[robot_num].move_hand(i, robots[robot_num].hands[i].x + 1, 0)
+                # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x + 1, 0)
+                to_x = robots[robot_num].hands[i].x + 1
+                to_y = 0
             elif robots[robot_num].hands[i].y - 3 == -2:
-                robots[robot_num].move_hand(i, robots[robot_num].hands[i].x + 2, 0)
-                robots[robot_num].move_dir = 0
-    robots[robot_num].hand_i += 1
+                # robots[robot_num].move_hand(i, robots[robot_num].hands[i].x + 2, 0)
+                # robots[robot_num].move_dir = 0
+                to_x = robots[robot_num].hands[i].x + 2
+                to_y = 0
+                new_dir = 0
+    if is_point_free(to_x, to_y):
+        robots[robot_num].move_hand(i, to_x, to_y)
+        robots[robot_num].move_dir = new_dir
+        robots[robot_num].hand_i += 1
     if robots[robot_num].hand_i >= 3:
         robots[robot_num].hand_i = 0
 
