@@ -64,17 +64,80 @@ def get_arm_state_by_pos(pos, size, id=''):
     return res
 
 
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3, step, border_step):
+# calculate center when all holders are aligned on one line
+def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+    x1 = size["netBorder"] + x1 * size["netStep"]
+    y1 = size["netBorder"] + y1 * size["netStep"]
+
+    x2 = size["netBorder"] + x2 * size["netStep"]
+    y2 = size["netBorder"] + y2 * size["netStep"]
+
+    x3 = size["netBorder"] + x3 * size["netStep"]
+    y3 = size["netBorder"] + y3 * size["netStep"]
+
+    l = (r1**2 - r2**2) / (2 * 200) - (200 / 2)
+    h = math.sqrt(r2**2-l**2)
+    y = 0
+    x = 0
+    if (y1 == y2) and (y2 == y3):
+        if (x1 < x2) and (x2 < x3):
+            y = y1 - h
+            x = x2 + l
+        if (x2 < x3) and (x3 < x1):
+            y = y1 - h
+            x = x3 + l
+        if (x3 < x1) and (x1 < x2):
+            y = y1 - h
+            x = x1 + l
+
+        if (x3 < x2) and (x2 < x1):
+            y = y1 + h
+            x = x2 + l
+        if (x2 < x1) and (x1 < x3):
+            y = y1 + h
+            x = x1 + l
+        if (x1 < x3) and (x3 < x2):
+            y = y1 + h
+            x = x3 + l
+        print(f"x: {x}, y: {y}")
+    elif (x1 == x2) and (x2 == x3):
+        if (y3 < y2) and (y2 < y1):
+            y = y2 + l
+            x = x1 - h
+        if (y2 < y1) and (y1 < y3):
+            y = y1 + l
+            x = x1 - h
+        if (y1 < y3) and (y3 < y2):
+            y = y3 + l
+            x = x1 - h
+
+        if (y1 < y2) and (y2 < y3):
+            y = y2 + l
+            x = x1 + h
+        if (y3 < y1) and (y1 < y2):
+            y = y1 + l
+            x = x1 + h
+        if (y2 < y3) and (y3 < y1):
+            y = y3 + l
+            x = x1 + h
+        print(f"x: {x}, y: {y}")
+    else:
+        x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
+    return x, y
+
+
+# for when holders are NOT on one line
+def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     eps = 1e-6
 
-    x1 = border_step + x1*step
-    y1 = border_step + y1*step
-
-    x2 = border_step + x2*step
-    y2 = border_step + y2*step
-
-    x3 = border_step + x3*step
-    y3 = border_step + y3*step
+    # x1 = size["netBorder"] + x1 * size["netStep"]
+    # y1 = size["netBorder"] + y1 * size["netStep"]
+    #
+    # x2 = size["netBorder"] + x2 * size["netStep"]
+    # y2 = size["netBorder"] + y2 * size["netStep"]
+    #
+    # x3 = size["netBorder"] + x3 * size["netStep"]
+    # y3 = size["netBorder"] + y3 * size["netStep"]
     #
     # r1 = math.sqrt(10.0)
     # r2 = math.sqrt(10.0)
@@ -121,18 +184,18 @@ def get_ang(x1, y1, xc, yc):
 
 
 # xn, yn - hand coordinates; a,b,c - line equation for robot movement (can be replaced with desired_center)
-def calculate_new_shifts(x1, y1, x2, y2, x3, y3, a, b, c, step, border_step, min_shift, max_shift):
+def calculate_new_shifts(x1, y1, x2, y2, x3, y3, a, b, c, min_shift, max_shift):
     # eps = 1e-6
     eps = 1
 
-    x1 = border_step + x1 * step
-    y1 = border_step + y1 * step
+    x1 = size["netBorder"] + x1 * size["netStep"]
+    y1 = size["netBorder"] + y1 * size["netStep"]
 
-    x2 = border_step + x2 * step
-    y2 = border_step + y2 * step
+    x2 = size["netBorder"] + x2 * size["netStep"]
+    y2 = size["netBorder"] + y2 * size["netStep"]
 
-    x3 = border_step + x3 * step
-    y3 = border_step + y3 * step
+    x3 = size["netBorder"] + x3 * size["netStep"]
+    y3 = size["netBorder"] + y3 * size["netStep"]
 
     new_shift1 = 0
     new_shift2 = 0
@@ -144,7 +207,7 @@ def calculate_new_shifts(x1, y1, x2, y2, x3, y3, a, b, c, step, border_step, min
     for shift1 in range(min_shift, max_shift, 0.1):
         for shift2 in range(min_shift, max_shift, 0.1):
             for shift3 in range(min_shift, max_shift, 0.1):
-                center_x, center_y = calculate_center(x1, y1, x2, y2, x3, y3, shift1, shift2, shift3, step, border_step)
+                center_x, center_y = calculate_center(x1, y1, x2, y2, x3, y3, shift1, shift2, shift3)
                 if get_dist_point_line(center_x, center_y, a, b, c) <= eps:
                     new_shift1 = shift1
                     new_shift2 = shift2
@@ -165,7 +228,8 @@ def calculate_new_shifts(x1, y1, x2, y2, x3, y3, a, b, c, step, border_step, min
 size = {
     "innerRadLimit": 48,  # min shift pos
     "outerRadLimit": 210,  # max shift pos
-    "netStep": 200
+    "netStep": 200,
+    "netBorder": 100
 }
 
 # arm_state = get_arm_state_by_pos(7, size, 'b')

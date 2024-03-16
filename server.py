@@ -14,8 +14,8 @@ MAX_CONNECTIONS = 10  # 20
 INPUTS = list()
 OUTPUTS = list()
 
-ceil_step = 200.0
-border_ceil_step = 100.0
+# ceil_step = 200.0
+# border_ceil_step = 100.0
 max_x = 10
 max_y = 10
 ceil_arr = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -101,8 +101,8 @@ class Robot:
         center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
                                               self.hands[1].x, self.hands[1].y,
                                               self.hands[2].x, self.hands[2].y,
-                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin,
-                                              ceil_step, border_ceil_step)
+                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+                                              # ceil_step, border_ceil_step)
         return [self.hands[0].x, self.hands[0].y,
                 self.hands[1].x, self.hands[1].y,
                 self.hands[2].x, self.hands[2].y,
@@ -112,8 +112,8 @@ class Robot:
         center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
                                               self.hands[1].x, self.hands[1].y,
                                               self.hands[2].x, self.hands[2].y,
-                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin,
-                                              ceil_step, border_ceil_step)
+                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+                                              # ceil_step, border_ceil_step)
         return center_x, center_y
 
     def print(self):
