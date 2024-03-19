@@ -168,61 +168,152 @@ def get_dist_point_line(x, y, a, b, c):
     d = abs(a*x + b*y + c)/math.sqrt(a**2 + b**2)
     return d
 
-
-def get_ang(x1, y1, xc, yc):
-    ax = x1 - xc
-    ay = y1 - yc
-    # bx = 10 # b is calculated from point on the line of the center
-    # by = 0
-
-    # ang = math.acos((ax*bx + ay*by)/(math.sqrt(ax**2+ay**2)*math.sqrt(bx**2+by**2)))
-    ang = math.acos((ax * 10) / (math.sqrt(ax ** 2 + ay ** 2) * 10))
-    if y1 > yc:
-        ang = 360 - ang
-
-    return ang
+# візуалізація лап робота для функцій переміщення
+#    .
+#  / | \
+# C  A  B
 
 
+# рух направо від центру
+def move_forward(s1, a1, s2, a2, s3, a3, hand_a, hand_b, hand_c):
+    h = 48
+    L = size["netStep"]  # 200
+    N = 20  # amount of substeps
+
+    # Умовні позначення рук
+    # А - найкоротша на початку
+    # В - одна з двох найдовших на початку, не змінює координати
+    # С - рука, що змінює свої координати (пролітає)
+    # рука A на мінімальній відстані від вісі = h = 48mm
+    # руки В і С на відстані sqrt(L^2+h^2) = 205.68mm
+
+    # кут, з яким А входить до процедури - це напрям "компасу", загального для усіх
+    # з початковим кутом А нічого не робимо, його значення - це і є показник компасу
+    aa0 = 0
+    if hand_a == 0:
+        aa0 = a1
+    elif hand_a == 1:
+        aa0 = a2
+    elif hand_a == 2:
+        aa0 = a3
+
+    # Функція
+
+    anglestep_c = (360 - (math.atan2(L, h) / math.pi * 180) * 2) / N
+
+    # Рука С при прольоті не змінює, їй це не потрібно
+    sc = math.sqrt(L**2 + h**2)
+
+    for n in range(N+1):
+        sa = math.sqrt((L/N*n)**2 + h**2)
+        sb = math.sqrt((L-L/N*n)**2 + h**2)
+
+        # ЗАЧЕП руки, що пролітає (С)
+        hc = 1
+        if n < N:
+            hc = 0
+
+        # кути рахуються ЗА годинниковою стрілкою
+        # aa = math.atan2(L*n/N/h,1)/math.pi*180+aa0;               if (aa>360) { aa-=360 } if (aa<0) { aa+=360 }
+        # ab = 360-math.atan2((L-L*n/N)/h,1)/math.pi*180+aa0;      if (ab>360) { ab-=360 } if (ab<0) { ab+=360 }
+        # ac = math.atan2(L/h,1)/math.pi*180 + n*anglestep_c + aa0; if (ac>360) { ac-=360 } if (ac<0) { ac+=360 }
+
+        # кути рахуються ПРОТИ годинникової стрілки
+        aa = 360 - math.atan2(L*n/N, h)/math.pi*180 + aa0
+        if aa > 360:
+            aa -= 360
+        elif aa < 0:
+            aa += 360  # 360->283
+
+        ab = math.atan2((L-L*n/N), h)/math.pi*180 + aa0
+        if ab > 360:
+            ab -= 360
+        elif ab < 0:
+            ab += 360  # 76->0
+
+        ac = 360 - math.atan2(L, h)/math.pi*180 - n*anglestep_c + aa0
+        if ac > 360:
+            ac -= 360
+        elif ac < 0:
+            ac += 360  # 283->76 through 180
+
+        shifts = [0.0, 0.0, 0.0]
+        shifts[hand_a] = sa
+        shifts[hand_b] = sb
+        shifts[hand_c] = sc
+
+        angs = [0.0, 0.0, 0.0]
+        angs[hand_a] = aa
+        angs[hand_b] = ab
+        angs[hand_c] = ac
+
+        holds = [0, 0, 0]
+        holds[hand_a] = 1
+        holds[hand_b] = 1
+        holds[hand_c] = hc
+
+        # send these parameters to robot
+        # wait until the robot will respond
+
+
+
+
+
+
+# def get_ang(x1, y1, xc, yc):
+#     ax = x1 - xc
+#     ay = y1 - yc
+#     # bx = 10 # b is calculated from point on the line of the center
+#     # by = 0
+#
+#     # ang = math.acos((ax*bx + ay*by)/(math.sqrt(ax**2+ay**2)*math.sqrt(bx**2+by**2)))
+#     ang = math.acos((ax * 10) / (math.sqrt(ax ** 2 + ay ** 2) * 10))
+#     if y1 > yc:
+#         ang = 360 - ang
+#
+#     return ang
+#
+#
 # xn, yn - hand coordinates; a,b,c - line equation for robot movement (can be replaced with desired_center)
-def calculate_new_shifts(x1, y1, x2, y2, x3, y3, a, b, c, min_shift, max_shift):
-    # eps = 1e-6
-    eps = 1
-
-    x1 = size["netBorder"] + x1 * size["netStep"]
-    y1 = size["netBorder"] + y1 * size["netStep"]
-
-    x2 = size["netBorder"] + x2 * size["netStep"]
-    y2 = size["netBorder"] + y2 * size["netStep"]
-
-    x3 = size["netBorder"] + x3 * size["netStep"]
-    y3 = size["netBorder"] + y3 * size["netStep"]
-
-    new_shift1 = 0
-    new_shift2 = 0
-    new_shift3 = 0
-    new_center_x = 0
-    new_center_y = 0
-
-    # простий перебір, поки підібраний центр не потрапить у прийнятний інтервал значень
-    for shift1 in range(min_shift, max_shift, 0.1):
-        for shift2 in range(min_shift, max_shift, 0.1):
-            for shift3 in range(min_shift, max_shift, 0.1):
-                center_x, center_y = calculate_center(x1, y1, x2, y2, x3, y3, shift1, shift2, shift3)
-                if get_dist_point_line(center_x, center_y, a, b, c) <= eps:
-                    new_shift1 = shift1
-                    new_shift2 = shift2
-                    new_shift3 = shift3
-                    new_center_x = center_x
-                    new_center_y = center_y
-                    break
-            if new_shift1 != 0:
-                break
-        if new_shift1 != 0:
-            break
-    new_ang1 = get_ang(x1, y1, new_center_x, new_center_y)
-    new_ang2 = get_ang(x2, y2, new_center_x, new_center_y)
-    new_ang3 = get_ang(x3, y3, new_center_x, new_center_y)
-    return {new_shift1, new_ang1, new_shift2, new_ang2, new_shift3, new_ang3}
+# def calculate_new_shifts(x1, y1, x2, y2, x3, y3, a, b, c, min_shift, max_shift):
+#     # eps = 1e-6
+#     eps = 1
+#
+#     x1 = size["netBorder"] + x1 * size["netStep"]
+#     y1 = size["netBorder"] + y1 * size["netStep"]
+#
+#     x2 = size["netBorder"] + x2 * size["netStep"]
+#     y2 = size["netBorder"] + y2 * size["netStep"]
+#
+#     x3 = size["netBorder"] + x3 * size["netStep"]
+#     y3 = size["netBorder"] + y3 * size["netStep"]
+#
+#     new_shift1 = 0
+#     new_shift2 = 0
+#     new_shift3 = 0
+#     new_center_x = 0
+#     new_center_y = 0
+#
+#     # простий перебір, поки підібраний центр не потрапить у прийнятний інтервал значень
+#     for shift1 in range(min_shift, max_shift, 0.1):
+#         for shift2 in range(min_shift, max_shift, 0.1):
+#             for shift3 in range(min_shift, max_shift, 0.1):
+#                 center_x, center_y = calculate_center(x1, y1, x2, y2, x3, y3, shift1, shift2, shift3)
+#                 if get_dist_point_line(center_x, center_y, a, b, c) <= eps:
+#                     new_shift1 = shift1
+#                     new_shift2 = shift2
+#                     new_shift3 = shift3
+#                     new_center_x = center_x
+#                     new_center_y = center_y
+#                     break
+#             if new_shift1 != 0:
+#                 break
+#         if new_shift1 != 0:
+#             break
+#     new_ang1 = get_ang(x1, y1, new_center_x, new_center_y)
+#     new_ang2 = get_ang(x2, y2, new_center_x, new_center_y)
+#     new_ang3 = get_ang(x3, y3, new_center_x, new_center_y)
+#     return {new_shift1, new_ang1, new_shift2, new_ang2, new_shift3, new_ang3}
 
 
 size = {

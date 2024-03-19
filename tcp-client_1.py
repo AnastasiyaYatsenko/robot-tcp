@@ -43,8 +43,8 @@ for i in range(50):
     client.send(p)
     sleep(1)
 
-data = client.recv(12)
-unp = unpack('@ffi', data)
+data = client.recv(36)
+unp = unpack('@ffiffiffi', data)
 LS = list(unp)
 print(LS)
 print("---")

@@ -9,7 +9,7 @@ try:
     while INPUTS:
         readables, writables, exceptional = select.select(INPUTS, OUTPUTS, INPUTS)
         handle_readables(readables, server_socket)
-        handle_writables(writables)
+        # handle_writables(writables)
 except KeyboardInterrupt:
     clear_resource(server_socket)
     print("Server stopped! Thank you for using!")
