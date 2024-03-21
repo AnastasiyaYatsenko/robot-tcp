@@ -4,14 +4,16 @@ from struct import pack
 from arm_geometry_test import *
 from robot import *
 
-
+# клас з функціями роботи з роботами
 class Ceil:
 
     def __init__(self):
         self.max_x = 10
         self.max_y = 10
+        # масив лунок
         self.ceil_arr = [[0 for i in range(self.max_x)] for j in range(self.max_y)]
 
+        # дефолтні координати для роботів
         self.default_coordinates = {"x1": 0,
                                     "y1": 0,
                                     "x2": 1,
@@ -19,8 +21,10 @@ class Ceil:
                                     "x3": 2,
                                     "y3": 0}
 
+        # масив роботів
         self.robots = []
 
+    # додавання роботу
     def add_robot(self, ip):
         r = Robot()
         r.set_ip(ip)
@@ -31,6 +35,7 @@ class Ceil:
         # set start coordinates, paarameters will be handled with data reading
         self.robots.append(r)
 
+    # перевірка, чи можна в точку (х,у) поставити лапу
     def is_point_free(self, x, y, robot_num):
         # for i in range(robots_num):
         #     c_x, c_y = robots[i].get_center()
@@ -53,6 +58,7 @@ class Ceil:
         else:
             return False
 
+    # виведення масиву стелі на екран
     def show_ceil(self):
         print("- - - - - - - - - -")
         for i in range(self.max_y):
@@ -61,6 +67,7 @@ class Ceil:
             print()
         print("- - - - - - - - - -")
 
+    # зміна координат руки
     def move_hand(self, robot_num, hand_num, x, y):
         if self.ceil_arr[y][x] == 0:
             old_x = self.robots[robot_num].hands[hand_num].x
@@ -74,6 +81,7 @@ class Ceil:
     #    .
     #  / | \
     # C  A  B
+    # рух вперед (вправо від центру)
     def move_forward(self, robot_num, hand_a, hand_b, hand_c):
         h = 48
         L = size["netStep"]  # 200
@@ -91,6 +99,7 @@ class Ceil:
         aa0 = self.robots[robot_num].hands[hand_a].ang
 
         for n in range(N + 1):
+            # отримуємо параметри для рук робота для поточного кроку
             shifts, angs, holds = calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c)
 
             # send these parameters to robot
@@ -107,6 +116,7 @@ class Ceil:
 
         # update coordinates
 
+    # перевірка наявності робота в масиві за IP
     def match_IPs(self, ip):
         robot_i = -1
         for i in range(len(self.robots)):
@@ -115,6 +125,7 @@ class Ceil:
         return robot_i
 
     # MUST be in a thread, so it won't block other robots movement
+    # рух робота, буде аналіз координат цілі і координат поточних, куди і як рухатись
     def move_robot(self, robot_num, dest_x, dest_y):
         # determine the path to the destination
         # call corresponding functions

@@ -1,6 +1,6 @@
 from async_server import *
 
-# настраиваем логгинг
+# налаштовуємо лог
 logger.setLevel(logging.DEBUG)
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
@@ -11,7 +11,7 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.info('Run')
-# запускаем сервер
+# запускаємо сервер
 serve_forever()
 
 # from server import *

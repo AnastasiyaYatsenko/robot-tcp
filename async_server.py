@@ -22,8 +22,9 @@ ceil = Ceil()
 
 
 def handle(sock, client_ip, client_port):
-    # обработчик, работающий в процессе-потомке
+    # обробник, що працює у процесі-нащадку
     logger.info('Start to process request from %s:%d' % (client_ip, client_port))
+
     robot_num = ceil.match_IPs(client_ip)
     if robot_num == -1:
         robot_num = len(ceil.robots)
@@ -58,16 +59,18 @@ def handle(sock, client_ip, client_port):
         except Exception as e:
             result = repr(e)
 
+        # for testing
         p = pack('@ffiffiffi',
                  0.0, 0.0, 0,
                  1.0, 1.0, 1,
                  2.0, 2.0, 2,)
         ceil.robots[robot_num].out_buffer = p
 
+        # if we have parameters to send in buffer, send
         if ceil.robots[robot_num].out_buffer:
             # out_buffer = result
             logger.info('Out buffer = ' + repr(ceil.robots[robot_num].out_buffer))
-            # отправляем
+            # sending
             sock.sendall(ceil.robots[robot_num].out_buffer)
             time.sleep(1)
     sock.close()
@@ -75,14 +78,14 @@ def handle(sock, client_ip, client_port):
 
 
 def serve_forever():
-    # создаём слушающий сокет
+    # створюємо сокет для прослуховування
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # re-use port
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(BIND_ADDRESS)
     sock.listen(BACKLOG)
-    # слушаем и при получении нового входящего соединения,
-    # порождаем нить, которая будет его обрабатывать
+    # слухаємо і при отриманні нового вхідного з'єднання,
+    # створюємо тред, який буде його обробляти
     logger.info('Listning no %s:%d...' % BIND_ADDRESS)
     while True:
         try:
@@ -91,7 +94,7 @@ def serve_forever():
             if e.errno == errno.EINTR:
                 continue
             raise
-        # запускаем нить
+        # запускаємо тред
         thread = threading.Thread(
             target=handle,
             args=(connection, client_ip, clinet_port)
@@ -99,21 +102,3 @@ def serve_forever():
         thread.daemon = True
         thread.start()
 
-
-# def main():
-#     # настраиваем логгинг
-#     logger.setLevel(logging.DEBUG)
-#     ch = logging.StreamHandler()
-#     ch.setLevel(logging.DEBUG)
-#     formatter = logging.Formatter(
-#         '%(asctime)s [%(levelname)s] [%(thread)s] %(message)s',
-#         '%H:%M:%S'
-#     )
-#     ch.setFormatter(formatter)
-#     logger.addHandler(ch)
-#     logger.info('Run')
-#     # запускаем сервер
-#     serve_forever()
-#
-#
-# main()

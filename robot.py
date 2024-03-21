@@ -1,7 +1,7 @@
 import socket
 from typing import NamedTuple
-
 from arm_geometry_test import *
+
 
 class Params(NamedTuple):
     lin: float
@@ -12,21 +12,20 @@ class Params(NamedTuple):
     y: int
 
 
+# class syntax
+
 class Robot:
     def __init__(self):
         self.hands = [Params(0, 0, 0, 0, 0), Params(1, 1, 1, 0, 0), Params(2, 2, 2, 0, 0)]
-        self.move_dir = 0
-        self.hand_i = 0
+        # self.move_dir = 0
+        # self.hand_i = 0
+        self.isMoving = False
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-
-    # hand1 = Params(0, 0, 0, 0, 0)
-    # hand2 = Params(1, 1, 1, 0, 0)
-    # hand3 = Params(2, 2, 2, 0, 0)
-
-    # num = 0
+        self.out_buffer = b''
 
     def set_socket(self, new_socket):
+        print(new_socket)
         self.socket = new_socket
 
     def set_ip(self, ip):
@@ -88,7 +87,6 @@ class Robot:
                                               self.hands[1].x, self.hands[1].y,
                                               self.hands[2].x, self.hands[2].y,
                                               self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
-                                              # ceil_step, border_ceil_step)
         return [self.hands[0].x, self.hands[0].y,
                 self.hands[1].x, self.hands[1].y,
                 self.hands[2].x, self.hands[2].y,
@@ -99,10 +97,10 @@ class Robot:
                                               self.hands[1].x, self.hands[1].y,
                                               self.hands[2].x, self.hands[2].y,
                                               self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
-                                              # ceil_step, border_ceil_step)
         return center_x, center_y
 
     def print(self):
+        print("Robot "+self.robot_ip)
         print("Hand 1: " + str(self.hands[0]))
         print("Hand 2: " + str(self.hands[1]))
         print("Hand 3: " + str(self.hands[2]))

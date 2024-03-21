@@ -64,7 +64,7 @@ def get_arm_state_by_pos(pos, size, id=''):
     return res
 
 
-# calculate center when all holders are aligned on one line
+# обчислення координат центру за наявних координат лап
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     x1 = size["netBorder"] + x1 * size["netStep"]
     y1 = size["netBorder"] + y1 * size["netStep"]
@@ -79,6 +79,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     h = math.sqrt(r2**2-l**2)
     y = 0
     x = 0
+    # зачепи на одній лінії, горизонтальне розміщення
     if (y1 == y2) and (y2 == y3):
         if (x1 < x2) and (x2 < x3):
             y = y1 - h
@@ -100,6 +101,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
             y = y1 + h
             x = x3 + l
         print(f"x: {x}, y: {y}")
+    # зачепи на одні лінії, вертикальне розміщення
     elif (x1 == x2) and (x2 == x3):
         if (y3 < y2) and (y2 < y1):
             y = y2 + l
@@ -121,6 +123,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
             y = y3 + l
             x = x1 + h
         print(f"x: {x}, y: {y}")
+    # зачепи не на одній лінії
     else:
         x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
     return x, y
@@ -206,6 +209,7 @@ def get_dist_point_line(x, y, a, b, c):
 #         # wait until the robot will respond
 
 
+# обчислення параметрів для рук при русі вперед (n-тий підкрок)
 def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
     anglestep_c = (360 - (math.atan2(L, h) / math.pi * 180) * 2) / N
 
@@ -319,7 +323,7 @@ def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 #     new_ang3 = get_ang(x3, y3, new_center_x, new_center_y)
 #     return {new_shift1, new_ang1, new_shift2, new_ang2, new_shift3, new_ang3}
 
-
+# розміри стелі + лап робота
 size = {
     "innerRadLimit": 48,  # min shift pos
     "outerRadLimit": 210,  # max shift pos
