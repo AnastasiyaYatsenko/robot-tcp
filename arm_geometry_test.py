@@ -175,87 +175,91 @@ def get_dist_point_line(x, y, a, b, c):
 
 
 # рух направо від центру
-def move_forward(s1, a1, s2, a2, s3, a3, hand_a, hand_b, hand_c):
-    h = 48
-    L = size["netStep"]  # 200
-    N = 20  # amount of substeps
+# def move_forward(s1, a1, s2, a2, s3, a3, hand_a, hand_b, hand_c):
+#     h = 48
+#     L = size["netStep"]  # 200
+#     N = 20  # amount of substeps
+#
+#     # Умовні позначення рук
+#     # А - найкоротша на початку
+#     # В - одна з двох найдовших на початку, не змінює координати
+#     # С - рука, що змінює свої координати (пролітає)
+#     # рука A на мінімальній відстані від вісі = h = 48mm
+#     # руки В і С на відстані sqrt(L^2+h^2) = 205.68mm
+#
+#     # кут, з яким А входить до процедури - це напрям "компасу", загального для усіх
+#     # з початковим кутом А нічого не робимо, його значення - це і є показник компасу
+#     aa0 = 0
+#     if hand_a == 0:
+#         aa0 = a1
+#     elif hand_a == 1:
+#         aa0 = a2
+#     elif hand_a == 2:
+#         aa0 = a3
+#
+#     for n in range(N+1):
+#         shifts, angs, holds = calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c)
+#
+#         # send these parameters to robot
+#         # send_destination(robot_num, shifts, angs, holds)
+#
+#         # wait until the robot will respond
 
-    # Умовні позначення рук
-    # А - найкоротша на початку
-    # В - одна з двох найдовших на початку, не змінює координати
-    # С - рука, що змінює свої координати (пролітає)
-    # рука A на мінімальній відстані від вісі = h = 48mm
-    # руки В і С на відстані sqrt(L^2+h^2) = 205.68mm
 
-    # кут, з яким А входить до процедури - це напрям "компасу", загального для усіх
-    # з початковим кутом А нічого не робимо, його значення - це і є показник компасу
-    aa0 = 0
-    if hand_a == 0:
-        aa0 = a1
-    elif hand_a == 1:
-        aa0 = a2
-    elif hand_a == 2:
-        aa0 = a3
-
-    # Функція
-
+def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
     anglestep_c = (360 - (math.atan2(L, h) / math.pi * 180) * 2) / N
 
     # Рука С при прольоті не змінює, їй це не потрібно
-    sc = math.sqrt(L**2 + h**2)
+    sc = math.sqrt(L ** 2 + h ** 2)
 
-    for n in range(N+1):
-        sa = math.sqrt((L/N*n)**2 + h**2)
-        sb = math.sqrt((L-L/N*n)**2 + h**2)
+    sa = math.sqrt((L / N * n) ** 2 + h ** 2)
+    sb = math.sqrt((L - L / N * n) ** 2 + h ** 2)
 
-        # ЗАЧЕП руки, що пролітає (С)
-        hc = 1
-        if n < N:
-            hc = 0
+    # ЗАЧЕП руки, що пролітає (С)
+    hc = 1
+    if n < N:
+        hc = 0
 
-        # кути рахуються ЗА годинниковою стрілкою
-        # aa = math.atan2(L*n/N/h,1)/math.pi*180+aa0;               if (aa>360) { aa-=360 } if (aa<0) { aa+=360 }
-        # ab = 360-math.atan2((L-L*n/N)/h,1)/math.pi*180+aa0;      if (ab>360) { ab-=360 } if (ab<0) { ab+=360 }
-        # ac = math.atan2(L/h,1)/math.pi*180 + n*anglestep_c + aa0; if (ac>360) { ac-=360 } if (ac<0) { ac+=360 }
+    # кути рахуються ЗА годинниковою стрілкою
+    # aa = math.atan2(L*n/N/h,1)/math.pi*180+aa0;               if (aa>360) { aa-=360 } if (aa<0) { aa+=360 }
+    # ab = 360-math.atan2((L-L*n/N)/h,1)/math.pi*180+aa0;      if (ab>360) { ab-=360 } if (ab<0) { ab+=360 }
+    # ac = math.atan2(L/h,1)/math.pi*180 + n*anglestep_c + aa0; if (ac>360) { ac-=360 } if (ac<0) { ac+=360 }
 
-        # кути рахуються ПРОТИ годинникової стрілки
-        aa = 360 - math.atan2(L*n/N, h)/math.pi*180 + aa0
-        if aa > 360:
-            aa -= 360
-        elif aa < 0:
-            aa += 360  # 360->283
+    # кути рахуються ПРОТИ годинникової стрілки
+    aa = 360 - math.atan2(L * n / N, h) / math.pi * 180 + aa0
+    if aa > 360:
+        aa -= 360
+    elif aa < 0:
+        aa += 360  # 360->283
 
-        ab = math.atan2((L-L*n/N), h)/math.pi*180 + aa0
-        if ab > 360:
-            ab -= 360
-        elif ab < 0:
-            ab += 360  # 76->0
+    ab = math.atan2((L - L * n / N), h) / math.pi * 180 + aa0
+    if ab > 360:
+        ab -= 360
+    elif ab < 0:
+        ab += 360  # 76->0
 
-        ac = 360 - math.atan2(L, h)/math.pi*180 - n*anglestep_c + aa0
-        if ac > 360:
-            ac -= 360
-        elif ac < 0:
-            ac += 360  # 283->76 through 180
+    ac = 360 - math.atan2(L, h) / math.pi * 180 - n * anglestep_c + aa0
+    if ac > 360:
+        ac -= 360
+    elif ac < 0:
+        ac += 360  # 283->76 through 180
 
-        shifts = [0.0, 0.0, 0.0]
-        shifts[hand_a] = sa
-        shifts[hand_b] = sb
-        shifts[hand_c] = sc
+    shifts = [0.0, 0.0, 0.0]
+    shifts[hand_a] = sa
+    shifts[hand_b] = sb
+    shifts[hand_c] = sc
 
-        angs = [0.0, 0.0, 0.0]
-        angs[hand_a] = aa
-        angs[hand_b] = ab
-        angs[hand_c] = ac
+    angs = [0.0, 0.0, 0.0]
+    angs[hand_a] = aa
+    angs[hand_b] = ab
+    angs[hand_c] = ac
 
-        holds = [0, 0, 0]
-        holds[hand_a] = 1
-        holds[hand_b] = 1
-        holds[hand_c] = hc
+    holds = [0, 0, 0]
+    holds[hand_a] = 1
+    holds[hand_b] = 1
+    holds[hand_c] = hc
 
-        # send these parameters to robot
-        # wait until the robot will respond
-
-
+    return shifts, angs, holds
 
 
 
