@@ -1,5 +1,7 @@
+import select
 import time
 from struct import pack
+from waiting import wait
 
 from arm_geometry_test import *
 from robot import *
@@ -111,9 +113,15 @@ class Ceil:
                      shifts[0], angs[0], holds[0],
                      shifts[1], angs[1], holds[1],
                      shifts[2], angs[2], holds[2])
+            # print(f"PACKAGE: {p}")
+            self.robots[robot_num].isMoving = True
             self.robots[robot_num].out_buffer = p
-            time.sleep(1)
+            print(f"BUFFER: {self.robots[robot_num].out_buffer}")
+            # print(self.robots[robot_num].socket)
+            wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
+                 waiting_for="waiting for robot to finish move")
 
+        return 1
         # update coordinates
 
     # перевірка наявності робота в масиві за IP
@@ -129,5 +137,10 @@ class Ceil:
     def move_robot(self, robot_num, dest_x, dest_y):
         # determine the path to the destination
         # call corresponding functions
-        self.robots[robot_num].isMoving = True
-        self.move_forward(robot_num, 0, 1, 2)
+        # self.robots[robot_num].isMoving = True
+        res = self.move_forward(robot_num, 1, 2, 0)
+        if res == -1:
+            print("oups")
+            return -1
+        self.move_hand(robot_num, 0, self.robots[robot_num].hands[0].x+3, self.robots[robot_num].hands[0].y)
+        return 1

@@ -99,6 +99,11 @@ class Robot:
                                               self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
         return center_x, center_y
 
+    def is_finished_move(self):
+        if not self.isMoving:
+            return True
+        return False
+
     def print(self):
         print("Robot "+self.robot_ip)
         print("Hand 1: " + str(self.hands[0]))
