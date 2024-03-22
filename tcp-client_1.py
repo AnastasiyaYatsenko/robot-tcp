@@ -17,7 +17,10 @@ class Params(NamedTuple):
 
 class Robot:
     def __init__(self):
-        self.hands = [Params(3, 3, 3), Params(4, 4, 4), Params(5, 5, 5)]
+        # self.hands = [Params(3, 3, 3), Params(4, 4, 4), Params(5, 5, 5)]
+        self.hands = [Params(205.67936211491906, 287.49573328079583, 0),
+                      Params(48.0, 4.0, 1),
+                      Params(205.67936211491906, 80.50426671920418, 1)]
         self.isMoving = False
 
     def set_robot_params_hands(self, hand1, hand2, hand3):

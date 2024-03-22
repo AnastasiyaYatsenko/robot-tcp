@@ -104,6 +104,19 @@ class Robot:
             return True
         return False
 
+    def is_horizontal_aligned(self):
+        if (self.hands[0].y == self.hands[1].y and
+                self.hands[1].y == self.hands[2].y):
+            return True
+        return False
+
+    def is_vertical_aligned(self):
+        if (self.hands[0].x == self.hands[1].x and
+                self.hands[1].x == self.hands[2].x):
+            return True
+        return False
+
+
     def print(self):
         print("Robot "+self.robot_ip)
         print("Hand 1: " + str(self.hands[0]))

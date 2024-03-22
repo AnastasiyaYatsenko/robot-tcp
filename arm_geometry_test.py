@@ -64,8 +64,12 @@ def get_arm_state_by_pos(pos, size, id=''):
     return res
 
 
-# обчислення координат центру за наявних координат лап
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def ceil_to_coordinates(a):
+    a = size["netBorder"] + a * size["netStep"]
+    return a
+
+
+def ceil_to_coordinates_all(x1, y1, x2, y2, x3, y3):
     x1 = size["netBorder"] + x1 * size["netStep"]
     y1 = size["netBorder"] + y1 * size["netStep"]
 
@@ -75,8 +79,55 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     x3 = size["netBorder"] + x3 * size["netStep"]
     y3 = size["netBorder"] + y3 * size["netStep"]
 
-    l = (r1**2 - r2**2) / (2 * 200) - (200 / 2)
-    h = math.sqrt(r2**2-l**2)
+    return x1, y1, x2, y2, x3, y3
+
+
+def coordinates_to_ceil(a):
+    a = (a - size["netBorder"]) / size["netStep"]
+    return int(a)
+
+
+def coordinates_to_ceil_all(x1, y1, x2, y2, x3, y3):
+    x1 = (x1 - size["netBorder"]) / size["netStep"]
+    y1 = (y1 - size["netBorder"]) / size["netStep"]
+
+    x2 = (x2 - size["netBorder"]) / size["netStep"]
+    y2 = (y2 - size["netBorder"]) / size["netStep"]
+
+    x3 = (x3 - size["netBorder"]) / size["netStep"]
+    y3 = (y3 - size["netBorder"]) / size["netStep"]
+
+    return int(x1), int(y1), int(x2), int(y2), int(x3), int(y3)
+
+
+# обчислення координат центру за наявних координат лап
+def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+    # x1 = size["netBorder"] + x1 * size["netStep"]
+    # y1 = size["netBorder"] + y1 * size["netStep"]
+    #
+    # x2 = size["netBorder"] + x2 * size["netStep"]
+    # y2 = size["netBorder"] + y2 * size["netStep"]
+    #
+    # x3 = size["netBorder"] + x3 * size["netStep"]
+    # y3 = size["netBorder"] + y3 * size["netStep"]
+
+    # print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
+    # print(f"R: {r1} | {r2} | {r3}")
+    r_short = -1
+    r_long = -1
+
+    if r1 < r2 and r1 < r3:
+        r_short = r1
+        r_long = r2
+    elif r2 < r1 and r2 < r3:
+        r_short = r2
+        r_long = r3
+    else:
+        r_short = r3
+        r_long = r1
+
+    l = (r_long**2 - r_short**2) / (2 * 200) - (200 / 2)
+    h = math.sqrt(r_short**2-l**2)
     y = 0
     x = 0
     # зачепи на одній лінії, горизонтальне розміщення
@@ -100,7 +151,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         if (x1 < x3) and (x3 < x2):
             y = y1 + h
             x = x3 + l
-        print(f"x: {x}, y: {y}")
+        # print(f"CENTER x: {x}, y: {y}")
     # зачепи на одні лінії, вертикальне розміщення
     elif (x1 == x2) and (x2 == x3):
         if (y3 < y2) and (y2 < y1):
@@ -265,6 +316,9 @@ def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 
     return shifts, angs, holds
 
+
+def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
+    pass
 
 
 
