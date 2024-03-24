@@ -265,10 +265,9 @@ def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
     anglestep_c = (360 - (math.atan2(L, h) / math.pi * 180) * 2) / N
 
     # Рука С при прольоті не змінює, їй це не потрібно
-    sc = math.sqrt(L ** 2 + h ** 2)
-
     sa = math.sqrt((L / N * n) ** 2 + h ** 2)
     sb = math.sqrt((L - L / N * n) ** 2 + h ** 2)
+    sc = math.sqrt(L ** 2 + h ** 2)
 
     # ЗАЧЕП руки, що пролітає (С)
     hc = 1
@@ -318,7 +317,53 @@ def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 
 
 def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
-    pass
+    anglestep_b = (360 - (math.atan2(L / h, 1) / math.pi * 180) * 2) / N
+
+    # Рука B при прольоті не змінює, їй це не потрібно
+    sa = math.sqrt((L / N * n) ** 2 + h ** 2)
+    sb = math.sqrt(L ** 2 + h ** 2)
+    sc = math.sqrt((L - L / N * n) ** 2 + h ** 2)
+
+    # ЗАЧЕП руки, що пролітає (B)
+    hb = 1
+    if n < N:
+        hb = 0
+
+    # кути рахуються ПРОТИ годинникової стрілки
+    aa = math.atan2(L * n / N / h, 1) / math.pi * 180 + aa0
+    if aa > 360:
+        aa -= 360
+    elif aa < 0:
+        aa += 360  # 360->283
+
+    ac = 360 - math.atan2((L - L * n / N) / h, 1) / math.pi * 180 + aa0
+    if ac > 360:
+        ac -= 360
+    elif ac < 0:
+        ac += 360  # 76->0
+
+    ab = math.atan2(L / h, 1) / math.pi * 180 + n * anglestep_b + aa0
+    if ab > 360:
+        ab -= 360
+    elif ab < 0:
+        ab += 360  # 283->76 through 180
+
+    shifts = [0.0, 0.0, 0.0]
+    shifts[hand_a] = sa
+    shifts[hand_b] = sb
+    shifts[hand_c] = sc
+
+    angs = [0.0, 0.0, 0.0]
+    angs[hand_a] = aa
+    angs[hand_b] = ab
+    angs[hand_c] = ac
+
+    holds = [0, 0, 0]
+    holds[hand_a] = 1
+    holds[hand_b] = hb
+    holds[hand_c] = 1
+
+    return shifts, angs, holds
 
 
 

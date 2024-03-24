@@ -11,7 +11,6 @@ class Params(NamedTuple):
     x: int
     y: int
 
-
 # class syntax
 
 class Robot:
@@ -23,6 +22,11 @@ class Robot:
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.out_buffer = b''
+                                # x    y
+        self.real_coordinates = [(100, 100),  # hand 0
+                                 (300, 100),  # hand 1
+                                 (500, 100),  # hand 2
+                                 (300, 52)]  # center
 
     def set_socket(self, new_socket):
         print(new_socket)
@@ -82,7 +86,7 @@ class Robot:
     #     else:
     #         print("Point occupied!")
 
-    def get_occupied_area(self):
+    def get_all_points(self):
         center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
                                               self.hands[1].x, self.hands[1].y,
                                               self.hands[2].x, self.hands[2].y,
@@ -91,6 +95,15 @@ class Robot:
                 self.hands[1].x, self.hands[1].y,
                 self.hands[2].x, self.hands[2].y,
                 center_x, center_y]
+
+    def set_real_coordinates(self, c1, c2, c3, co):
+        self.real_coordinates[0] = c1
+        self.real_coordinates[1] = c2
+        self.real_coordinates[2] = c3
+        self.real_coordinates[3] = co
+
+    def get_real_coordinates(self):
+        return self.real_coordinates
 
     def get_center(self):
         center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
