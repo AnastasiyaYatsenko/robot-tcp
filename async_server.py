@@ -221,33 +221,44 @@ def serve_forever():
 
 def draw_ceil(screen):
     rect_side = 590
+    # rect_side = 1000
+    outer_border = 60  # 20 + 60
+    outer_border_add = 20 + outer_border
     side = 2 * size["netBorder"] + (ceil.max_x - 1) * size["netStep"]
     rect_border = int(size["netBorder"]*rect_side / side)
     rect_step = int(size["netStep"] * rect_side / side)
 
     # side_x = 2*size["netBorder"]+(self.max_x-1)*size["netStep"]
     # side_y = 2 * size["netBorder"] + (self.max_y - 1) * size["netStep"]
-    pg.draw.rect(screen, (255, 255, 255), (20, 20, 680, 680))
-    pg.draw.rect(screen, (0, 0, 0), (70, 70, 590, 590), 1)
+    pg.draw.rect(screen, (255, 255, 255), (20, 20, rect_side+2*outer_border, rect_side+2*outer_border))
+    pg.draw.rect(screen, (0, 0, 0), (outer_border_add, outer_border_add, rect_side, rect_side), 1)
 
     for y in range(ceil.max_y):
         for x in range(ceil.max_x):
-            pg.draw.circle(screen, (0, 0, 0), (rect_border+x*rect_step+70,
-                                               rect_border+y*rect_step+70), 5, 1)
+            pg.draw.circle(screen, (0, 0, 0), (rect_border+x*rect_step+outer_border_add,
+                                               rect_border+y*rect_step+outer_border_add), 5, 1)
 
         for i in range(len(ceil.robots)):
             # print("in r loop")
             points = ceil.robots[i].get_real_coordinates()
+            hand_points = ceil.robots[i].get_real_coordinates_hand()
             # print(points)
             # self.rect_border + x * self.rect_step + 30
-            red_x, red_y = (rect_border+points[0][0]*rect_side/side+40,
-                            rect_border + points[0][1]*rect_side/side+40)
-            green_x, green_y = (rect_border + points[1][0]*rect_side/side+40,
-                                rect_border + points[1][1]*rect_side/side+40)
-            blue_x, blue_y = (rect_border + points[2][0]*rect_side/side+40,
-                              rect_border + points[2][1]*rect_side/side+40)
-            center_x, center_y = (rect_border + points[3][0]*rect_side/side+40,
-                                  rect_border + points[3][1]*rect_side/side+40)
+            # hand_red_x, hand_red_y = (rect_border + hand_points[0][0] * rect_side / side + 40,
+            #                           rect_border + hand_points[0][1] * rect_side / side + 40)
+            # hand_green_x, hand_green_y = (rect_border + hand_points[1][0] * rect_side / side + 40,
+            #                               rect_border + hand_points[1][1] * rect_side / side + 40)
+            # hand_blue_x, hand_blue_y = (rect_border + hand_points[2][0] * rect_side / side + 40,
+            #                             rect_border + hand_points[2][1] * rect_side / side + 40)
+
+            red_x, red_y = (points[0][0] * rect_side / side + outer_border_add,
+                            points[0][1] * rect_side / side + outer_border_add)
+            green_x, green_y = (points[1][0] * rect_side / side + outer_border_add,
+                                points[1][1] * rect_side / side + outer_border_add)
+            blue_x, blue_y = (points[2][0] * rect_side / side + outer_border_add,
+                              points[2][1] * rect_side / side + outer_border_add)
+            center_x, center_y = (points[3][0] * rect_side / side + outer_border_add,
+                                  points[3][1] * rect_side / side + outer_border_add)
 
             # print(f"{red_x} {red_y}")
             # print(f"{green_x} {green_y}")

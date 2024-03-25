@@ -22,11 +22,16 @@ class Robot:
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.out_buffer = b''
-                                # x    y
+                                # x       y
         self.real_coordinates = [(100, 100),  # hand 0
                                  (300, 100),  # hand 1
                                  (500, 100),  # hand 2
                                  (300, 52)]  # center
+
+        self.real_coordinates_hand = [(100, 100),  # hand 0
+                                      (300, 100),  # hand 1
+                                      (500, 100),  # hand 2
+                                      (300, 52)]  # center
 
     def set_socket(self, new_socket):
         print(new_socket)
@@ -103,6 +108,15 @@ class Robot:
         self.real_coordinates[3] = co
 
     def get_real_coordinates(self):
+        return self.real_coordinates
+
+    def set_real_coordinates_hand(self, c1, c2, c3, co):
+        self.real_coordinates_hand[0] = c1
+        self.real_coordinates_hand[1] = c2
+        self.real_coordinates_hand[2] = c3
+        self.real_coordinates_hand[3] = co
+
+    def get_real_coordinates_hand(self):
         return self.real_coordinates
 
     def get_center(self):

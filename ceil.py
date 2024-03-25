@@ -188,13 +188,49 @@ class Ceil:
             self.ceil_arr[ceil_y][ceil_x] = 1
             self.robots[robot_num].set_hand_coordinates(hand_num, x, y)
 
-    def get_real_coordinates(self, robot_num, hand_a, hand_b, hand_c, shifts, angs):
-        # delta = 1e-12  # 47.999999999->48.0 або -0.0000000001->0.0
-        delta = 0
-
+    def get_real_coordinates(self, robot_num, hand_a, hand_b, hand_c, shifts, angs, aa0):
+        # print(f"Shifts {shifts}, Angs: {angs}")
         sa = shifts[hand_a]
         sb = shifts[hand_b]
         sc = shifts[hand_c]
+
+        aa = angs[hand_a]-aa0
+        ab = angs[hand_b]-aa0
+        ac = angs[hand_c]-aa0
+
+        # координати центру відносно А - це "віддзеркалені" кординати А відносно центру
+        o = (-1 * sa * math.sin(aa * math.pi / 180),
+             -1 * sa * math.cos(aa * math.pi / 180))
+        a = (0, 0)
+        b = (sb * math.sin(ab * math.pi / 180) + o[0],
+             sb * math.cos(ab * math.pi / 180) + o[1])
+        c = (sc * math.sin(ac * math.pi / 180) + o[0],
+             sc * math.cos(ac * math.pi / 180) + o[1])
+
+        a_x = float(self.robots[robot_num].hands[hand_a].x)
+        a_y = float(self.robots[robot_num].hands[hand_a].y)
+        a_real = a[0] + a_x, a[1] + a_y
+        b_real = b[0] + a_x, b[1] + a_y
+        c_real = c[0] + a_x, c[1] + a_y
+        o_real = o[0] + a_x, o[1] + a_y
+
+        coord = [(0, 0), (0, 0), (0, 0), (0, 0)]
+        coord[hand_a] = (a_real[0], a_real[1])
+        coord[hand_b] = (b_real[0], b_real[1])
+        coord[hand_c] = (c_real[0], c_real[1])
+        coord[3] = (o_real[0], o_real[1])
+        # print(f"Coord: {coord}")
+
+        self.robots[robot_num].set_real_coordinates(coord[0], coord[1], coord[2], coord[3])
+
+    # TODO
+    def get_real_coordinates_hand(self, robot_num, hand_a, hand_b, hand_c, angs):
+        # delta = 1e-12  # 47.999999999->48.0 або -0.0000000001->0.0
+        delta = 0
+
+        sa = 210
+        sb = 210
+        sc = 210
 
         aa = angs[hand_a]
         ab = angs[hand_b]
@@ -221,7 +257,7 @@ class Ceil:
         coord[3] = (o_real[0], o_real[1])
         # print(f"Coord: {coord}")
 
-        self.robots[robot_num].set_real_coordinates(coord[0], coord[1], coord[2], coord[3])
+        self.robots[robot_num].set_real_coordinates_hand(coord[0], coord[1], coord[2], coord[3])
 
     # візуалізація лап робота для функцій переміщення
     #    .
@@ -230,7 +266,7 @@ class Ceil:
     # рух вперед (вправо від центру)
     def move_forward(self, robot_num, hand_a, hand_b, hand_c):
         h = 48
-        L = size["netStep"]  # 200
+        L = size["netStep"]  # 200.0
         N = 20  # amount of substeps
 
         # Умовні позначення рук
@@ -262,7 +298,9 @@ class Ceil:
             self.robots[robot_num].out_buffer = p
             # print(f"BUFFER: {self.robots[robot_num].out_buffer}")
             # print(self.robots[robot_num].socket)
-            self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs)
+            print(f"Shifts {shifts}, Angs: {angs}")
+            self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, aa0)
+            self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs)
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
 
@@ -298,7 +336,8 @@ class Ceil:
             self.robots[robot_num].out_buffer = p
             # print(f"BUFFER: {self.robots[robot_num].out_buffer}")
             # print(self.robots[robot_num].socket)
-            self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs)
+            self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, aa0)
+            self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs)
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
 
