@@ -117,7 +117,7 @@ class Robot:
         self.real_coordinates_hand[3] = co
 
     def get_real_coordinates_hand(self):
-        return self.real_coordinates
+        return self.real_coordinates_hand
 
     def get_center(self):
         center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,

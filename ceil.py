@@ -119,6 +119,7 @@ class Ceil:
 
     def get_real_coordinates(self, robot_num, hand_a, hand_b, hand_c, shifts, angs, aa0):
         # print(f"Shifts {shifts}, Angs: {angs}")
+
         sa = shifts[hand_a]
         sb = shifts[hand_b]
         sc = shifts[hand_c]
@@ -136,6 +137,32 @@ class Ceil:
         c = (sc * math.sin(ac * math.pi / 180) + o[0],
              sc * math.cos(ac * math.pi / 180) + o[1])
 
+        o = (0, 0)
+        a = (sa * dsin(aa), sa * dcos(aa))  # координаты центра относительно А - это "отзеркаленные" кординаты А относительно цен
+        b = (sb * dsin(ab), sb * dcos(ab))
+        c = (sc * dsin(ac), sc * dcos(ac))
+
+        sa = sb = sc = 210.0
+
+        # ЛАПЫ
+        # Вычисляем все относительно O
+        o_ = (0, 0)
+        a_ = (sa * dsin(aa), sa * dcos(aa))  # координаты центра относительно А - это "отзеркаленные" кординаты А относительно це
+        b_ = (sb * dsin(ab), sb * dcos(ab))
+        c_ = (sc * dsin(ac), sc * dcos(ac))
+
+        # и смещаем зацеп A в начало координат, из координаты конца ЛИНИИ вычитаем координату ЗАЦЕПА!!
+        o_ = (o_[0]-a[0], o_[1]-a[1])
+        b_ = (b_[0]-a[0], b_[1]-a[1])
+        c_ = (c_[0]-a[0], c_[1]-a[1])
+        a_ = (a_[0]-a[0], a_[1]-a[1])
+
+        # и смещаем зацеп A в начало координат
+        o = (o[0]-a[0], o[1]-a[1])
+        b = (b[0]-a[0], b[1]-a[1])
+        c = (c[0]-a[0], c[1]-a[1])
+        a = (a[0]-a[0], a[1]-a[1])
+
         a_x = float(self.robots[robot_num].hands[hand_a].x)
         a_y = float(self.robots[robot_num].hands[hand_a].y)
         a_real = a[0] + a_x, a[1] + a_y
@@ -143,19 +170,31 @@ class Ceil:
         c_real = c[0] + a_x, c[1] + a_y
         o_real = o[0] + a_x, o[1] + a_y
 
+        a_real_ = a_[0] + a_x, a_[1] + a_y
+        b_real_ = b_[0] + a_x, b_[1] + a_y
+        c_real_ = c_[0] + a_x, c_[1] + a_y
+        o_real_ = o_[0] + a_x, o_[1] + a_y
+
         coord = [(0, 0), (0, 0), (0, 0), (0, 0)]
         coord[hand_a] = (a_real[0], a_real[1])
         coord[hand_b] = (b_real[0], b_real[1])
         coord[hand_c] = (c_real[0], c_real[1])
         coord[3] = (o_real[0], o_real[1])
+
+        coord_ = [(0, 0), (0, 0), (0, 0), (0, 0)]
+        coord_[hand_a] = (a_real_[0], a_real_[1])
+        coord_[hand_b] = (b_real_[0], b_real_[1])
+        coord_[hand_c] = (c_real_[0], c_real_[1])
+        coord_[3] = (o_real_[0], o_real_[1])
         # print(f"Coord: {coord}")
 
         self.robots[robot_num].set_real_coordinates(coord[0], coord[1], coord[2], coord[3])
+        self.robots[robot_num].set_real_coordinates_hand(coord_[0], coord_[1], coord_[2], coord_[3])
 
     # TODO
     def get_real_coordinates_hand(self, robot_num, hand_a, hand_b, hand_c, angs, aa0):
         # delta = 1e-12  # 47.999999999->48.0 або -0.0000000001->0.0
-        delta = 0
+        # delta = 0
 
         sa = 210.0
         sb = 210.0
@@ -305,7 +344,7 @@ class Ceil:
             # print(self.robots[robot_num].socket)
             print(f"Shifts {shifts}, Angs: {angs}")
             self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
-            self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
+            # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
 
@@ -378,7 +417,7 @@ class Ceil:
             self.robots[robot_num].out_buffer = p
             print(f"Shifts {shifts}, Angs: {angs}")
             self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
-            self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
+            # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
 
@@ -452,7 +491,7 @@ class Ceil:
             self.robots[robot_num].out_buffer = p
             print(f"Shifts {shifts}, Angs: {angs}")
             self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
-            self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
+            # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
 
@@ -533,7 +572,7 @@ class Ceil:
             # print(self.robots[robot_num].socket)
             print(f"Shifts {shifts}, Angs: {angs}")
             self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
-            self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
+            # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
 
