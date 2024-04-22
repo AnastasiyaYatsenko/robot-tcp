@@ -260,6 +260,26 @@ def get_dist_point_line(x, y, a, b, c):
 #         # wait until the robot will respond
 
 
+def normalize(a):
+    if 0 > a > -0.00001:
+        return 0
+    elif a >= 360:
+        return a - 360*int(a/360)
+    elif a < 0:
+        return a - 360*(int(a/360)-1)
+    return a
+
+
+def dsin(angle):
+  return math.sin(math.radians(angle))
+
+def dcos(angle):
+  return math.cos(math.radians(angle))
+
+def darctan(tan):
+  return math.degrees(math.atan2(tan,1))
+
+
 # обчислення параметрів для рук при русі вперед (n-тий підкрок)
 def calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
     anglestep_c = (360 - (math.atan2(L, h) / math.pi * 180) * 2) / N

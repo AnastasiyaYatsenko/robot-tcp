@@ -169,6 +169,7 @@ def imitate_command():
     print("in imitate")
     ceil.move_robot(0, 1700.0, 0)
     ceil.move_robot(0, 300.0, 0)
+    ceil.turn_robot(0)
     # ceil.robots[0].print()
 
 
@@ -244,12 +245,12 @@ def draw_ceil(screen):
             hand_points = ceil.robots[i].get_real_coordinates_hand()
             # print(points)
             # self.rect_border + x * self.rect_step + 30
-            # hand_red_x, hand_red_y = (rect_border + hand_points[0][0] * rect_side / side + 40,
-            #                           rect_border + hand_points[0][1] * rect_side / side + 40)
-            # hand_green_x, hand_green_y = (rect_border + hand_points[1][0] * rect_side / side + 40,
-            #                               rect_border + hand_points[1][1] * rect_side / side + 40)
-            # hand_blue_x, hand_blue_y = (rect_border + hand_points[2][0] * rect_side / side + 40,
-            #                             rect_border + hand_points[2][1] * rect_side / side + 40)
+            hand_red_x, hand_red_y = (rect_border + hand_points[0][0] * rect_side / side + 40,
+                                      rect_border + hand_points[0][1] * rect_side / side + 40)
+            hand_green_x, hand_green_y = (rect_border + hand_points[1][0] * rect_side / side + 40,
+                                          rect_border + hand_points[1][1] * rect_side / side + 40)
+            hand_blue_x, hand_blue_y = (rect_border + hand_points[2][0] * rect_side / side + 40,
+                                        rect_border + hand_points[2][1] * rect_side / side + 40)
 
             red_x, red_y = (points[0][0] * rect_side / side + outer_border_add,
                             points[0][1] * rect_side / side + outer_border_add)
@@ -266,9 +267,9 @@ def draw_ceil(screen):
             # print(f"{center_x} {center_y}")
             # print("-----")
 
-            pg.draw.line(screen, (255, 0, 0), (red_x, red_y), (center_x, center_y), 3)
-            pg.draw.line(screen, (0, 255, 0), (green_x, green_y), (center_x, center_y), 3)
-            pg.draw.line(screen, (0, 0, 255), (blue_x, blue_y), (center_x, center_y), 3)
+            pg.draw.line(screen, (255, 0, 0), (hand_red_x, hand_red_y), (center_x, center_y), 3)
+            pg.draw.line(screen, (0, 255, 0), (hand_green_x, hand_green_y), (center_x, center_y), 3)
+            pg.draw.line(screen, (0, 0, 255), (hand_blue_x, hand_blue_y), (center_x, center_y), 3)
 
             pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 10, 1)
             pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 10, 1)

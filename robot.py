@@ -23,15 +23,15 @@ class Robot:
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.out_buffer = b''
                                 # x       y
-        self.real_coordinates = [(100, 100),  # hand 0
-                                 (300, 100),  # hand 1
-                                 (500, 100),  # hand 2
-                                 (300, 52)]  # center
+        self.real_coordinates = [(100, 300),  # hand 0
+                                 (300, 300),  # hand 1
+                                 (500, 300),  # hand 2
+                                 (300, 252)]  # center
 
-        self.real_coordinates_hand = [(100, 100),  # hand 0
-                                      (300, 100),  # hand 1
-                                      (500, 100),  # hand 2
-                                      (300, 52)]  # center
+        self.real_coordinates_hand = [(100, 300),  # hand 0
+                                      (300, 300),  # hand 1
+                                      (500, 300),  # hand 2
+                                      (300, 252)]  # center
 
     def set_socket(self, new_socket):
         print(new_socket)

@@ -1,6 +1,8 @@
 import select
 import socket
+import struct
 from struct import unpack, pack
+from threading import Thread
 from time import sleep
 from typing import NamedTuple
 
@@ -8,6 +10,7 @@ from arm_geometry_test import *
 from robot import *
 
 SERVER_ADDRESS = ('192.168.0.91', 8686)
+command_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
 MAX_CONNECTIONS = 10  # 20
 
@@ -17,6 +20,8 @@ OUTPUTS = list()
 
 max_x = 10
 max_y = 10
+ceil_arr_2 = [[0 for i in range(max_x)] for j in range(max_y)]
+
 ceil_arr = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
@@ -28,6 +33,12 @@ ceil_arr = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
             [0, 0, 0, 0, 0, 0, 0, 0, 0, 0]]
 
+default_coordinates = {"x1": 0,
+                       "y1": 0,
+                       "x2": 1,
+                       "y2": 0,
+                       "x3": 2,
+                       "y3": 0}
 
 # class Params(NamedTuple):
 #     lin: float
@@ -121,7 +132,7 @@ ceil_arr = [[0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
 #         print("Hand 3: " + str(self.hands[2]))
 
 
-robots_num = 2
+# robots_num = 2
 robot_hand_len = 210.0
 # robots = [Robot() for i in range(robots_num)]
 robots = []
@@ -145,40 +156,34 @@ robots = []
 def add_robot(ip):
     r = Robot()
     r.set_ip(ip)
+    r.set_coordinates(default_coordinates["x1"], default_coordinates["y1"],
+                      default_coordinates["x2"], default_coordinates["y2"],
+                      default_coordinates["x3"], default_coordinates["y3"])
+
+    # set start coordinates, paarameters will be handled with data reading
     robots.append(r)
 
-def is_point_free(x, y):
+
+def is_point_free(x, y, robot_num):
     # for i in range(robots_num):
     #     c_x, c_y = robots[i].get_center()
     #     if (x - c_x)**2 + (y - c_y)**2 <= robot_hand_len**2:
     #         return False
 
     # must check if there's no possible robot movements in this point
-
+    for i in range(len(robots)):
+        if i == robot_num:
+            continue
+        else:
+            if (robots[i].hands[0].x == robots[i].hands[1].x and robots[i].hands[1].x == robots[i].hands[2].x)\
+                    or (robots[i].hands[0].y == robots[i].hands[1].y and robots[i].hands[1].y == robots[i].hands[2].y):
+                pass
+            else:
+                pass
     if ceil_arr[y][x] == 0:
         return True
     else:
         return False
-
-# def robot_move_hand(rob_num, hand_num, x, y):
-#     if ceil_arr[y][x] == 0:
-#         robot_hand_unhold_point(rob_num, hand_num)
-#         robot_hand_hold_point(rob_num, hand_num, x, y)
-#
-#
-# def robot_hand_unhold_point(rob_num, hand_num):
-#     old_x = robots[rob_num].hands[hand_num].x
-#     old_y = robots[rob_num].hands[hand_num].y
-#     ceil_arr[old_y][old_x] = 0
-#
-#
-# def robot_hand_hold_point(rob_num, hand_num, x, y):
-#     if ceil_arr[y][x] == 0:
-#         ceil_arr[y][x] = 1
-#         robots[rob_num].set_hand_x(hand_num, x)
-#         robots[rob_num].set_hand_y(hand_num, y)
-#     else:
-#         print("Point occupied!")
 
 
 def show_ceil():
@@ -259,12 +264,52 @@ def move_hand(robot_num, hand_num, x, y):
         robots[robot_num].set_hand_coordinates(hand_num, x, y)
 
 
+# візуалізація лап робота для функцій переміщення
+#    .
+#  / | \
+# C  A  B
+def move_forward(robot_num, hand_a, hand_b, hand_c):
+    h = 48
+    L = size["netStep"]  # 200
+    N = 20  # amount of substeps
+
+    # Умовні позначення рук
+    # А - найкоротша на початку
+    # В - одна з двох найдовших на початку, не змінює координати
+    # С - рука, що змінює свої координати (пролітає)
+    # рука A на мінімальній відстані від вісі = h = 48mm
+    # руки В і С на відстані sqrt(L^2+h^2) = 205.68mm
+
+    # кут, з яким А входить до процедури - це напрям "компасу", загального для усіх
+    # з початковим кутом А нічого не робимо, його значення - це і є показник компасу
+    aa0 = robots[robot_num].hands[hand_a].ang
+
+    for n in range(N+1):
+        shifts, angs, holds = calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c)
+
+        # send these parameters to robot
+        # send_destination(robot_num, shifts, angs, holds)
+        print(f"{robot_num}: [{shifts[0]}, {angs[0]}, {holds[0]}], [{shifts[1]}, {angs[1]}, {holds[1]}], [{shifts[2]}, {angs[2]}, {holds[2]}]")
+        # wait until the robot will respond
+        sleep(1)
+
+    # update coordinates
+
+
 def match_IPs(ip):
     robot_i = -1
     for i in range(len(robots)):
         if robots[i].get_ip() == ip:
             robot_i = i
     return robot_i
+
+
+# MUST be in a thread, so it won't block other robots movement
+def move_robot(robot_num, dest_x, dest_y):
+    # determine the path to the destination
+    # call corresponding functions
+    robots[robot_num].isMoving = True
+    move_forward(robot_num, 0, 1, 2)
 
 
 def get_non_blocking_server_socket():
@@ -280,30 +325,41 @@ def get_non_blocking_server_socket():
 
     return server
 
-
 def handle_readables(readables, server):
     """
     Обробка появи подій на входах
     """
+
     for resource in readables:
 
+        print(resource)
+        print(resource.fileno())
         # Якщо подія від серверного сокету, то ми отримуємо нове підключення
         if resource is server:
+            print("This is server")
             connection, client_address = resource.accept()
             connection.setblocking(0)
             INPUTS.append(connection)
 
-            robot_num = match_IPs(client_address)
-            if robot_num == -1:
-                robot_num = len(robots)
-                add_robot(client_address)
-            robots[robot_num].set_socket(connection)
+            if client_address[0] != SERVER_ADDRESS[0]:
+                robot_num = match_IPs(client_address)
+                if robot_num == -1:
+                    robot_num = len(robots)
+                    add_robot(client_address[0])
+                robots[robot_num].set_socket(connection)
+            else:
+                command_socket = connection
 
             print("new connection from {address}".format(address=client_address))
 
         # Якщо подія не від серверного сокету, але спрацювало переривання на наповнення вхідного буферу
         else:
-            data = []
+            print("This is NOT server")
+            data = b''
+            try:
+                peer_ip = resource.getpeername()[0]
+            except OSError:
+                print("One of the robots doesn't respond")
             try:
                 data = resource.recv(1024)
 
@@ -312,28 +368,52 @@ def handle_readables(readables, server):
                 pass
 
             if data:
-                robot_ip = resource.getpeername()[0]
-                robot_num = match_IPs(robot_ip)
+                if peer_ip == SERVER_ADDRESS[0]:
+                    print(data)
+                    unpacked_struct = ()
+                    try:
+                        unpacked_struct = unpack('@iiff', data)
+                        LS = list(unpacked_struct)
+                        if LS[0] == 0:
+                            print("command 0")
+                            print("get ceil image")
+                        if LS[0] == 1:
+                            print("command 1")
+                            print(f"send robot {LS[1]} to coordinates ({LS[2]}, {LS[3]})")
+                            t = Thread(target=move_robot, args=(LS[1], LS[2], LS[3]))
+                            t.start()
+                    except struct.error:
+                        print("Junk input")
+                        break
+                else:
+                    robot_num = match_IPs(peer_ip)
+                    unpacked_struct = ()
 
-                # Отримання даних
-                unpacked_struct = unpack('@iffiffiffi', data)
-                LS = list(unpacked_struct)
-                robots[robot_num].set_robot_params(LS[0], LS[1], LS[2],
-                                                   LS[3], LS[4], LS[5],
-                                                   LS[6], LS[7], LS[8])
-                # print(unpacked_struct)
-                print(robot_ip)
-                robots[robot_num].print()
-                # move_robot_simu(robot_num)
-                print("---")
+                    # Отримання даних
+                    try:
+                        unpacked_struct = unpack('@ffiffiffi', data)
+                        LS = list(unpacked_struct)
+                        robots[robot_num].set_robot_params(LS[0], LS[1], LS[2],
+                                                           LS[3], LS[4], LS[5],
+                                                           LS[6], LS[7], LS[8])
+                        # print(unpacked_struct)
+                        # print(robot_ip)
+                        robots[robot_num].print()
+                        # move_robot_simu(robot_num)
+                        print("---")
 
-                # Говоримо про те, що ми будемо ще й писати у даний сокет
-                if resource not in OUTPUTS:
-                    OUTPUTS.append(resource)
+                        # Говоримо про те, що ми будемо ще й писати у даний сокет
+                        if resource not in OUTPUTS:
+                            OUTPUTS.append(resource)
+
+                        send_destination(robot_num, [0.0, 0.0, 0.0], [1.0, 1.0, 1.0], [0, 0, 0])
+                    except struct.error:
+                        print("Junk input")
+                        break
 
             # Якщо даних нема, але подія спрацювала, то ОС нам відправляє прапорець про повне прочитання ресурсу та його закритті
             else:
-
+                # pass
                 # Очищуємо дані про ресурс і закриваємо дескриптор
                 clear_resource(resource)
 
@@ -354,23 +434,31 @@ def clear_resource(resource):
 def handle_writables(writables):
 
     # Дана подія виникає, коли в буфері на запис звільнюється місце
-    for resource in writables:
-        try:
-            arm_state = get_arm_state_by_pos(7, size, 'b')
-            # print(arm_state)
-            p = pack('@ffi', arm_state['s'], arm_state['a'], arm_state['h'])
-            resource.send(p)
+    # for resource in writables:
+    print("handle writables")
+    for i in range(len(robots)):
+        # try:
+        send_destination(i, [0.0,0.0,0.0], [1.0,1.0,1.0], [0,0,0])
+            # arm_state = get_arm_state_by_pos(7, size, 'b')
+            # # print(arm_state)
+            # p = pack('@ffi', arm_state['s'], arm_state['a'], arm_state['h'])
+            # resource.send(p)
             # resource.send(bytes('Hello from server!', encoding='UTF-8'))
-        except OSError:
-            clear_resource(resource)
+        # except OSError:
+        #     print("IN WRITABLES")
+        #     clear_resource(robots[0].socket)
 
 
-def send_destination(robot_num):
+def send_destination(robot_num, shifts, angs, holds):
     try:
         p = pack('@ffiffiffi',
-                 robots[robot_num].hands[0].lin, robots[robot_num].hands[0].ang, robots[robot_num].hands[0].hold,
-                 robots[robot_num].hands[1].lin, robots[robot_num].hands[1].ang, robots[robot_num].hands[1].hold,
-                 robots[robot_num].hands[2].lin, robots[robot_num].hands[2].ang, robots[robot_num].hands[2].hold)
-        robots[robot_num].socket.send(p)
+                 shifts[0], angs[0], holds[0],
+                 shifts[1], angs[1], holds[1],
+                 shifts[2], angs[2], holds[2])
+        if robots[robot_num].socket in OUTPUTS:
+            robots[robot_num].socket.send(p)
+        else:
+            print("robo socket is not in outputs")
     except OSError:
-        clear_resource(OUTPUTS[0])
+        print("IN SEND DEST")
+        clear_resource(robots[robot_num].socket)
