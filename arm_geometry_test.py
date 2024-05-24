@@ -101,6 +101,7 @@ def coordinates_to_ceil_all(x1, y1, x2, y2, x3, y3):
 
 
 # обчислення координат центру за наявних координат лап
+# x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
@@ -126,6 +127,8 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         r_short = r3
         r_long = r1
 
+    # print(f"r_short: {r_short}; r_long: {r_long}")
+
     l = (r_long**2 - r_short**2) / (2 * 200) - (200 / 2)
     h = math.sqrt(r_short**2-l**2)
     y = 0
@@ -150,7 +153,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
             x = x1 + l
         if (x1 < x3) and (x3 < x2):
             y = y1 + h
-            x = x3 + l
+            x = x2 + l
         # print(f"CENTER x: {x}, y: {y}")
     # зачепи на одні лінії, вертикальне розміщення
     elif (x1 == x2) and (x2 == x3):
@@ -173,7 +176,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         if (y2 < y3) and (y3 < y1):
             y = y3 + l
             x = x1 + h
-        print(f"x: {x}, y: {y}")
+        print(f"CENTER x: {x}, y: {y}")
     # зачепи не на одній лінії
     else:
         x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
@@ -182,7 +185,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 # for when holders are NOT on one line
 def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
-    eps = 1e-6
+    # eps = 1e-6
 
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
@@ -203,12 +206,14 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     y = (((x2 - x1) * (r2 * r2 - r3 * r3 - x2 * x2 + x3 * x3 - y2 * y2 + y3 * y3) - (x3 - x2) *
           (r1 * r1 - r2 * r2 - x1 * x1 + x2 * x2 - y1 * y1 + y2 * y2)) /
          (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
-    if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
-        print("x=" + str(x) + " y=" + str(y))
-        return x, y
-    else:
-        print("Impossible")
-    return -1, -1
+    # if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
+    #     print("x=" + str(x) + " y=" + str(y))
+    return x, y
+    # else:
+    #     print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
+    #     print(f"x: {x} y: {y}")
+    #     print("Impossible")
+    # return -1, -1
 
 
 def get_line_equation(x1, y1, x2, y2):
@@ -269,6 +274,15 @@ def normalize(a):
         return a - 360*(int(a/360)-1)
     return a
 
+def clockwise(delta):
+    if delta > 0 or delta < -360:
+        delta = delta - 360 * (math.floor(delta / 360) + 1)
+    return delta
+
+def counterclockwise(delta):
+    if delta > 360 or delta < 0:
+        delta = delta - 360 * math.floor(delta / 360)
+    return delta
 
 def dsin(angle):
   return math.sin(math.radians(angle))

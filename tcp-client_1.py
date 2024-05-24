@@ -70,7 +70,7 @@ def send_params():
 
 
 def imitate_movement():
-    sleep(1)
+    sleep(0.01)
     send_params()
 
 
