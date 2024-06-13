@@ -303,7 +303,8 @@ def command_panel():
                         elif (x < 0) or (x > 2000) or (y < 0) or (y > 2000):
                             print("Invalid coordinates")
                         else:
-                            t1 = threading.Thread(target=ceil.start_move, args=[robot_num, x, y])
+                            # t1 = threading.Thread(target=ceil.start_move, args=[robot_num, x, y])
+                            t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
                             t1.start()
                             # t1 = threading.Thread(target=imitate_command)
                 if button_set_coord.collidepoint(event.pos):

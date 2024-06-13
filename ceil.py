@@ -141,6 +141,7 @@ class Ceil:
             self.robots[robot_num].set_hand_coordinates(hand_num, x, y)
 
     def set_hand_coordinates(self, robot_num, x1, y1, x2, y2, x3, y3):
+        print("IN SET COORDS")
         self.robots[robot_num].set_coordinates(x1, y1, x2, y2, x3, y3)
         self.move_hand(robot_num, 0, x1, y1)
         self.move_hand(robot_num, 1, x2, y2)
@@ -156,18 +157,56 @@ class Ceil:
         base = 0
         if self.robots[robot_num].is_vertical_aligned():
             base = 270
-        self.get_real_coordinates(robot_num, a, b, c, shifts, angles, self.robots[robot_num].hands[a].ang - base)
+
+        center_x, center_y = self.robots[robot_num].get_center()
+        print(f"IN SET COORDS center: {center_x} {center_y}")
+        new_a, new_b, new_c, new_ang_a, new_ang_b, new_ang_c, robot_head_ = self.get_new_params_by_vector(robot_num,
+                                                                                                         center_x, center_x,
+                                                                                                         center_x, center_x,
+                                                                                                         a, b, c)
+
+        robot_head = self.get_robot_angle_shift(robot_num)
+        print(f"SETCOORDS ROBOT HEAD: {robot_head}")
+        print(f"SETCOORDS ROBOT HEAD 2: {robot_head_}")
+
+        #self.get_real_coordinates(robot_num, a, b, c, shifts, angles, self.robots[robot_num].hands[a].ang - base)
+        self.get_real_coordinates(robot_num, a, b, c, shifts, angles, robot_head)
+
+    def get_robot_angle_shift(self, robot_num):
+        ang_a = self.robots[robot_num].hands[0].ang
+
+        center_x, center_y = self.robots[robot_num].get_center()
+
+        print(f"START ANGLES a: {ang_a}")
+
+        xa, ya = get_vector_coords(self.robots[robot_num].hands[0].x, self.robots[robot_num].hands[0].y,
+                                   center_x, center_y)
+
+        print(f"GET VECTOR COORDS a: ({xa}, {ya})")
+
+        a = get_abs_vector(xa, ya)
+
+        print(f"GET VECTOR ABS a: {a}")
+
+        # base vector is vertical vector from which the angles and offset will be counted
+        base_vector_x = 0
+        base_vector_y = 5
+
+        base_to_a = angle_between_vectors(base_vector_x, base_vector_y, xa, ya)
+        shift = normalize(ang_a - base_to_a)
+
+        return shift
 
     def get_real_coordinates(self, robot_num, hand_a, hand_b, hand_c, shifts, angs, aa0):
-        # print(f"Shifts {shifts}, Angs: {angs}")
+        print(f"GRC: Shifts {shifts}, Angs: {angs}, AA0: {aa0}")
 
         sa = shifts[hand_a]
         sb = shifts[hand_b]
         sc = shifts[hand_c]
 
-        aa = angs[hand_a] - aa0
-        ab = angs[hand_b] - aa0
-        ac = angs[hand_c] - aa0
+        aa = normalize(angs[hand_a] - aa0)
+        ab = normalize(angs[hand_b] - aa0)
+        ac = normalize(angs[hand_c] - aa0)
 
         # координати центру відносно А - це "віддзеркалені" кординати А відносно центру
         # o = (-1 * sa * math.sin(aa * math.pi / 180),
@@ -179,18 +218,20 @@ class Ceil:
         #      sc * math.cos(ac * math.pi / 180) + o[1])
 
         o = (0, 0)
-        a = (sa * dsin(aa), sa * dcos(aa))
-        b = (sb * dsin(ab), sb * dcos(ab))
-        c = (sc * dsin(ac), sc * dcos(ac))
+        a = (-sa * dsin(aa), -sa * dcos(aa))
+        b = (-sb * dsin(ab), -sb * dcos(ab))
+        c = (-sc * dsin(ac), -sc * dcos(ac))
 
-        sa = sb = sc = 210.0
+        print(f"GRC: A: {a}, B: {b}, C: {c}, O: {o}")
+
+        sa = sb = sc = size["outerRadLimit"]
 
         # ЛАПИ
         # Обчислюємо все відносно O
         o_ = (0, 0)
-        a_ = (sa * dsin(aa), sa * dcos(aa))  # координаты центра относительно А - это "отзеркаленные" кординаты А относительно це
-        b_ = (sb * dsin(ab), sb * dcos(ab))
-        c_ = (sc * dsin(ac), sc * dcos(ac))
+        a_ = (-sa * dsin(aa), -sa * dcos(aa))  # координаты центра относительно А - это "отзеркаленные" кординаты А относительно це
+        b_ = (-sb * dsin(ab), -sb * dcos(ab))
+        c_ = (-sc * dsin(ac), -sc * dcos(ac))
 
         # и смещаем зацеп A в начало координат, из координаты конца ЛИНИИ вычитаем координату ЗАЦЕПА!!
         o_ = (o_[0]-a[0], o_[1]-a[1])
@@ -203,6 +244,7 @@ class Ceil:
         b = (b[0]-a[0], b[1]-a[1])
         c = (c[0]-a[0], c[1]-a[1])
         a = (a[0]-a[0], a[1]-a[1])
+        print(f"GRC: A1: {a}, B1: {b}, C1: {c}, O1: {o}")
 
         a_x = float(self.robots[robot_num].hands[hand_a].x)
         a_y = float(self.robots[robot_num].hands[hand_a].y)
@@ -210,6 +252,7 @@ class Ceil:
         b_real = b[0] + a_x, b[1] + a_y
         c_real = c[0] + a_x, c[1] + a_y
         o_real = o[0] + a_x, o[1] + a_y
+        print(f"GRC: A2: {a_real}, B2: {b_real}, C2: {c_real}, O2: {o_real}")
 
         a_real_ = a_[0] + a_x, a_[1] + a_y
         b_real_ = b_[0] + a_x, b_[1] + a_y
@@ -227,6 +270,8 @@ class Ceil:
         coord_[hand_b] = (b_real_[0], b_real_[1])
         coord_[hand_c] = (c_real_[0], c_real_[1])
         coord_[3] = (o_real_[0], o_real_[1])
+        center_x, center_y = self.robots[robot_num].get_center()
+        print(f"IN COORD SCENTER x: ({center_x}, {center_y})")
         print(f"Coord: {coord}")
 
         self.robots[robot_num].set_real_coordinates(coord[0], coord[1], coord[2], coord[3])
@@ -236,6 +281,130 @@ class Ceil:
     #    .
     #  / | \
     # C  A  B
+
+    def get_new_params_by_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_a, hand_b, hand_c):
+        # TODO get params from robot
+        ang_a = self.robots[robot_num].hands[hand_a].ang
+        ang_b = self.robots[robot_num].hands[hand_b].ang
+
+        print(f"START ANGLES a: {ang_a} b: {ang_b}")
+
+        xa, ya = get_vector_coords(self.robots[robot_num].hands[hand_a].x, self.robots[robot_num].hands[hand_a].y,
+                                   xo_s, yo_s)
+        xb, yb = get_vector_coords(self.robots[robot_num].hands[hand_b].x, self.robots[robot_num].hands[hand_b].y,
+                                   xo_s, yo_s)
+
+        print(f"GET VECTOR COORDS a: ({xa}, {ya}) b: ({xb}, {yb})")
+
+        a = get_abs_vector(xa, ya)
+        b = get_abs_vector(xb, yb)
+
+        print(f"GET VECTOR ABS a: {a} b: {b}")
+
+        # base vector is vertical vector from which the angles and offset will be counted
+        base_vector_x = 0
+        base_vector_y = 5
+
+        base_to_a = angle_between_vectors(base_vector_x, base_vector_y, xa, ya)
+        shift = normalize(ang_a - base_to_a)
+        print(f"BASE TO A: {base_to_a} SHIFT: {shift}")
+
+        #x_head, y_head = get_head_vector(a, ang_a, b, ang_b, xa, ya, xb, yb)
+        # print(f"GET HEAD head: ({x_head}, {y_head})")
+
+        new_xa, new_ya = get_vector_coords(self.robots[robot_num].hands[hand_a].x,
+                                           self.robots[robot_num].hands[hand_a].y,
+                                           xo_t, yo_t)
+        new_xb, new_yb = get_vector_coords(self.robots[robot_num].hands[hand_b].x,
+                                           self.robots[robot_num].hands[hand_b].y,
+                                           xo_t, yo_t)
+
+        new_xc, new_yc = get_vector_coords(self.robots[robot_num].hands[hand_c].x,
+                                           self.robots[robot_num].hands[hand_c].y,
+                                           xo_t, yo_t)
+
+        print(f"GET NEW VECTOR COORDS a: ({new_xa}, {new_ya}) b: ({new_xb}, {new_yb}) c: ({new_xc}, {new_yc})")
+
+        new_a = get_abs_vector(new_xa, new_ya)
+        new_b = get_abs_vector(new_xb, new_yb)
+        new_c = get_abs_vector(new_xc, new_yc)
+
+        print(f"GET NEW VECTOR ABS a: {new_a} b: {new_b} c: {new_c}")
+
+        '''new_ang_a = angle_between_vectors(x_head, y_head, new_xa, new_ya)
+        new_ang_b = angle_between_vectors(x_head, y_head, new_xb, new_yb)
+        new_ang_c = angle_between_vectors(x_head, y_head, new_xc, new_yc)'''
+
+        new_ang_a = angle_between_vectors(base_vector_x, base_vector_y, new_xa, new_ya)
+        new_ang_b = angle_between_vectors(base_vector_x, base_vector_y, new_xb, new_yb)
+        new_ang_c = angle_between_vectors(base_vector_x, base_vector_y, new_xc, new_yc)
+
+        print(f"ANGS BEFORE SHIFT a: {new_ang_a} b: {new_ang_b} c: {new_ang_c}")
+
+        new_ang_a = normalize(new_ang_a + shift)
+        new_ang_b = normalize(new_ang_b + shift)
+        new_ang_c = normalize(new_ang_c + shift)
+
+        print(f"GET ANGS a: {new_ang_a} b: {new_ang_b} c: {new_ang_c}")
+
+        return new_a, new_b, new_c, new_ang_a, new_ang_b, new_ang_c, shift
+
+    #no hand change yet
+    def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_a, hand_b, hand_c):
+        #robot_head = self.robots[robot_num].hands[hand_a].ang
+
+        #self.N = 10
+        # TODO
+        hand_a = 0
+        hand_b = 1
+        hand_c = 2
+
+        for n in range(self.N + 1):
+            xo_n = xo_s
+            yo_n = yo_s
+            if 0 < n < self.N:
+                l = (n) / (self.N - n)
+                xo_n = (xo_s + l * xo_t) / (1 + l)
+                yo_n = (yo_s + l * yo_t) / (1 + l)
+            elif n == self.N:
+                xo_n = xo_t
+                yo_n = yo_t
+            print("---------")
+            print(f"s X: {xo_s} Y: {yo_s}")
+            print(f"n X: {xo_n} Y: {yo_n}")
+            print(f"t X: {xo_t} Y: {yo_t}")
+            print("---------")
+            new_a, new_b, new_c, new_ang_a, new_ang_b, new_ang_c, robot_head = self.get_new_params_by_vector(robot_num, xo_s, yo_s, xo_n, yo_n, hand_a, hand_b, hand_c)
+            shifts = [0.0, 0.0, 0.0]
+            shifts[hand_a] = new_a
+            shifts[hand_b] = new_b
+            shifts[hand_c] = new_c
+
+            angs = [0.0, 0.0, 0.0]
+            angs[hand_a] = normalize(new_ang_a)
+            angs[hand_b] = normalize(new_ang_b)
+            angs[hand_c] = normalize(new_ang_c)
+
+            holds = [0, 0, 0]
+            holds[hand_a] = 1
+            holds[hand_b] = 1
+            holds[hand_c] = 1
+
+            p = pack('@ffiffiffi',
+                     shifts[0], angs[0], holds[0],
+                     shifts[1], angs[1], holds[1],
+                     shifts[2], angs[2], holds[2])
+            # print(f"PACKAGE: {p}")
+            self.robots[robot_num].isMoving = True
+            self.robots[robot_num].out_buffer = p
+            # print(f"BUFFER: {self.robots[robot_num].out_buffer}")
+            # print(self.robots[robot_num].socket)
+            print(f"Shifts {shifts}, Angs: {angs}")
+            wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
+                 waiting_for="waiting for robot to finish move")
+            self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
+            # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
+
 
     def to_right(self, robot_num, hand_a, hand_b, hand_c):
         # N = 2  # amount of substeps
@@ -919,7 +1088,7 @@ class Ceil:
             return self.get_L_hand_letters(robot_num)
         center_x, center_y = self.robots[robot_num].get_center()
         # print("---------GET HAND LETTERS---------")
-        # print(f"CENTER x: ({center_x}, {center_y})")
+        print(f"CENTER x: ({center_x}, {center_y})")
         # print(
         #     f"ROBOT COORDINATES: ({self.robots[robot_num].hands[0].x}, {self.robots[robot_num].hands[0].y}) ({self.robots[robot_num].hands[1].x}, {self.robots[robot_num].hands[1].y}) ({self.robots[robot_num].hands[2].x}, {self.robots[robot_num].hands[2].y})")
         # print(
@@ -929,7 +1098,7 @@ class Ceil:
         b = -1
         c = -1
         # eps = 0.1
-        eps = 2
+        eps = 10
 
         if (self.robots[robot_num].hands[0].lin < self.robots[robot_num].hands[1].lin
                 and self.robots[robot_num].hands[0].lin < self.robots[robot_num].hands[2].lin):
@@ -988,9 +1157,24 @@ class Ceil:
                 c = bc[0]
         return a, b, c
 
+
+    def move_robot(self, robot_num, dest_x, dest_y):
+        # determine the path to the destination
+        # call corresponding functions
+        # self.robots[robot_num].isMoving = True
+
+        center_x, center_y = self.robots[robot_num].get_center()
+        # print(f"c_x: {center_x}, c_y: {center_y}")
+
+        #  hand a - center hand
+        #  hand b - right hand
+        #  hand c - left hand
+        a, b, c = self.get_hand_letters(robot_num)
+        self.move_vector(robot_num, center_x, center_y, dest_x, dest_y, a, b, c)
+
     # MUST be in a thread, so it won't block other robots movement
     # рух робота, буде аналіз координат цілі і координат поточних, куди і як рухатись
-    def move_robot(self, robot_num, dest_x, dest_y):
+    def move_robot_(self, robot_num, dest_x, dest_y):
         # determine the path to the destination
         # call corresponding functions
         # self.robots[robot_num].isMoving = True
@@ -1050,6 +1234,7 @@ class Ceil:
         # call corresponding functions
         # self.robots[robot_num].isMoving = True
         print("---------START MOVE---------")
+        self.align_robot_in_line(robot_num)
         self.show_ceil()
         # return
         center_x, center_y = self.robots[robot_num].get_center()
@@ -1338,10 +1523,79 @@ class Ceil:
                        self.robots[robot_num].hands[c].y + 1 * 200)
         self.show_ceil()
 
+    def align_robot_in_line(self, robot_num):
+        if not (self.robots[robot_num].is_horizontal_aligned() or self.robots[robot_num].is_vertical_aligned()):
+            # TODO check if L position and nothing else
+            a, b, c = self.get_L_hand_letters(robot_num)
+            if self.is_point_free(robot_num,
+                                  self.robots[robot_num].hands[c].x - 1 * 200,
+                                  self.robots[robot_num].hands[c].y + 1 * 200):
+                self.L1_to_Hu(robot_num, a, b, c)
+                self.move_hand(robot_num, c, self.robots[robot_num].hands[c].x - 1 * 200,
+                               self.robots[robot_num].hands[c].y + 1 * 200)
+            elif self.is_point_free(robot_num,
+                                    self.robots[robot_num].hands[b].x - 1 * 200,
+                                    self.robots[robot_num].hands[b].y + 1 * 200):
+                self.L1_to_Vr(robot_num, a, b, c)
+                self.move_hand(robot_num, b, self.robots[robot_num].hands[b].x - 1 * 200,
+                               self.robots[robot_num].hands[b].y + 1 * 200)
+            self.show_ceil()
+        # align the robot
+        a, b, c = self.get_hand_letters(robot_num)
+        self.align(robot_num, a, b, c)
 
-        # res = self.move_forward(robot_num, 1, 2, 0)
-        # if res == -1:
-        #     print("oups")
-        #     return -1
-        # self.move_hand(robot_num, 0, self.robots[robot_num].hands[0].x + 3, self.robots[robot_num].hands[0].y)
-        # return 1
+    def align(self, robot_num, hand_a, hand_b, hand_c):
+        # Параметри рук
+        l = 48
+        L = size["netStep"]  # 200.0
+
+        BASE = 0 # TODO
+
+        print(f"hand_a = {hand_a}; hand_b = {hand_b}; hand_c = {hand_c}")
+
+        robot_head = self.robots[robot_num].hands[hand_a].ang - BASE
+
+        ha = self.robots[robot_num].hands[hand_a].hold
+        hb = self.robots[robot_num].hands[hand_b].hold
+        hc = self.robots[robot_num].hands[hand_c].hold
+
+        sa = l
+        sb = sc = math.sqrt(L ** 2 + l ** 2)
+
+        # кути рахуються проти годинникової стрілки
+        aa = BASE
+        ab = BASE + darctan(L / l)
+        ac = BASE - darctan(L / l)
+
+        aa += robot_head
+        ab += robot_head
+        ac += robot_head
+
+        shifts = [0.0, 0.0, 0.0]
+        shifts[hand_a] = sa
+        shifts[hand_b] = sb
+        shifts[hand_c] = sc
+
+        angs = [0.0, 0.0, 0.0]
+        angs[hand_a] = normalize(aa)
+        angs[hand_b] = normalize(ab)
+        angs[hand_c] = normalize(ac)
+
+        holds = [0, 0, 0]
+        holds[hand_a] = 1
+        holds[hand_b] = 1
+        holds[hand_c] = 1
+
+        p = pack('@ffiffiffi',
+                 shifts[0], angs[0], holds[0],
+                 shifts[1], angs[1], holds[1],
+                 shifts[2], angs[2], holds[2])
+        self.robots[robot_num].isMoving = True
+        self.robots[robot_num].out_buffer = p
+        print(f"Shifts {shifts}, Angs: {angs}")
+        self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
+        wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
+             waiting_for="waiting for robot to finish move")
+
+        return 1
+

@@ -130,14 +130,35 @@ class Robot:
         return self.real_coordinates_hand
 
     def get_center(self):
-        center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
+        center_x, center_y = 0, 0
+        if self.is_aligned():
+            center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
+                                                  self.hands[1].x, self.hands[1].y,
+                                                  self.hands[2].x, self.hands[2].y,
+                                                  self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+            pass
+        else:
+            center_x, center_y = calculate_center_three_points(self.hands[0].x, self.hands[0].y,
+                                                               self.hands[1].x, self.hands[1].y,
+                                                               self.hands[2].x, self.hands[2].y,
+                                                               self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+        '''center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
                                               self.hands[1].x, self.hands[1].y,
                                               self.hands[2].x, self.hands[2].y,
-                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)'''
         return center_x, center_y
 
     def is_finished_move(self):
         if not self.isMoving:
+            return True
+        return False
+
+    def is_aligned(self):
+        if self.is_horizontal_aligned() or self.is_vertical_aligned():
+            return True
+        Tol = 1e-10
+        if abs((self.hands[2].x - self.hands[0].x) / (self.hands[1].x - self.hands[0].x) -
+               (self.hands[2].y - self.hands[0].y) / (self.hands[1].y - self.hands[0].y)) <= Tol:
             return True
         return False
 

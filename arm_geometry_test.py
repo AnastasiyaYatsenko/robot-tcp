@@ -102,7 +102,7 @@ def coordinates_to_ceil_all(x1, y1, x2, y2, x3, y3):
 
 # обчислення координат центру за наявних координат лап
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
     #
@@ -183,6 +183,69 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     return x, y
 
 
+def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+    print("---")
+    print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
+    l = dist(x1, y1, x2, y2)
+    s = (r1 + r2 + l) / 2
+    print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    h = 2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l # altitude
+    print(f"H: {h}")
+
+    # find the right triangle where r1 - hypotenuse and h - one of the legs
+    x = x1
+    y = y1
+    r = r1
+    d = math.sqrt(r**2 - h**2) # the second leg; on the holders line
+    print(f"d: {d}")
+
+    # find the angle between the horizontal of the ceiling and the robot line
+    x_r_vector, y_r_vector = get_vector_coords(x1, y1, x2, y2) # vector of robot line
+    print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
+    x_horizontal = 5 # horizontal vector
+    y_horizontal = 0
+    shift_angle = angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector)
+    print(f"shift angle: {shift_angle}")
+
+    # TODO if robot is facing down or left, modify the angle
+
+    x_rotated, y_rotated = rotate_point(x, y, x2, y2, shift_angle)
+    print(f"ROTATED x: {x_rotated} y: {y_rotated}")
+
+    ox_ = x_rotated + d
+    oy_ = y_rotated - h
+    print(f"ROTATED O x: {ox_} y: {oy_}")
+
+    ox, oy = rotate_point(ox_, oy_, x2, y2, normalize(-shift_angle))
+    print(f"UNROTATED O x: {ox} y: {oy}")
+
+    return ox, oy
+
+def get_shift_angle(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+
+    # print("---")
+    # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
+    l = dist(x1, y1, x2, y2)
+    s = (r1 + r2 + l) / 2
+    # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    h = 2 * math.sqrt(s * (s - r1) * (s - r2) * (s - l)) / l  # altitude
+    # print(f"H: {h}")
+
+    # find the right triangle where r1 - hypotenuse and h - one of the legs
+    x = x1
+    y = y1
+    r = r1
+    d = math.sqrt(r ** 2 - h ** 2)  # the second leg; on the holders line
+    # print(f"d: {d}")
+
+    # find the angle between the horizontal of the ceiling and the robot line
+    x_r_vector, y_r_vector = get_vector_coords(x1, y1, x2, y2)  # vector of robot line
+    # print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
+    x_horizontal = 5  # horizontal vector
+    y_horizontal = 0
+    shift_angle = angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector)
+    return shift_angle
+
 # for when holders are NOT on one line
 def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # eps = 1e-6
@@ -215,6 +278,24 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     #     print("Impossible")
     # return -1, -1
 
+def rotate_point(px, py, qx, qy, theta):
+    print(f"px {px} py {py} qx {qx} qy {qy}")
+    px_ = px - qx
+    py_ = py - qy
+    print(f"P' x: {px_} y: {py_}")
+    px_rotated = px_ * dcos(theta) - py_ * dsin(theta)
+    py_rotated = px_ * dsin(theta) + py_ * dcos(theta)
+    print(f"P rotated x: {px_rotated} y: {py_rotated}")
+    rx = px_rotated + qx
+    ry = py_rotated + qy
+    print(f"R x: {rx} y: {ry}")
+    return rx, ry
+
+def dist(x1, y1, x2, y2):
+    return math.hypot(x2 - x1, y2 - y1)
+
+def dists(x1, y1, x2, y2, x3, y3, xc, yc):
+    return [dist(x1, y1, xc, yc), dist(x2, y2, xc, yc), dist(x3, y3, xc, yc)]
 
 def get_line_equation(x1, y1, x2, y2):
     a = y1 - y2
@@ -227,43 +308,38 @@ def get_dist_point_line(x, y, a, b, c):
     d = abs(a*x + b*y + c)/math.sqrt(a**2 + b**2)
     return d
 
-# візуалізація лап робота для функцій переміщення
-#    .
-#  / | \
-# C  A  B
+def get_vector_coords(x1, y1, x2, y2):
+    return x2 - x1, y2 - y1
 
+def get_abs_vector(x, y):
+    return math.sqrt(x**2 + y**2)
 
-# рух направо від центру
-# def move_forward(s1, a1, s2, a2, s3, a3, hand_a, hand_b, hand_c):
-#     h = 48
-#     L = size["netStep"]  # 200
-#     N = 20  # amount of substeps
-#
-#     # Умовні позначення рук
-#     # А - найкоротша на початку
-#     # В - одна з двох найдовших на початку, не змінює координати
-#     # С - рука, що змінює свої координати (пролітає)
-#     # рука A на мінімальній відстані від вісі = h = 48mm
-#     # руки В і С на відстані sqrt(L^2+h^2) = 205.68mm
-#
-#     # кут, з яким А входить до процедури - це напрям "компасу", загального для усіх
-#     # з початковим кутом А нічого не робимо, його значення - це і є показник компасу
-#     aa0 = 0
-#     if hand_a == 0:
-#         aa0 = a1
-#     elif hand_a == 1:
-#         aa0 = a2
-#     elif hand_a == 2:
-#         aa0 = a3
-#
-#     for n in range(N+1):
-#         shifts, angs, holds = calc_params_forward(L, N, n, h, aa0, hand_a, hand_b, hand_c)
-#
-#         # send these parameters to robot
-#         # send_destination(robot_num, shifts, angs, holds)
-#
-#         # wait until the robot will respond
+def get_head_vector(a, ang_a, b, ang_b, xa, ya, xb, yb):
+    v = a * dcos(ang_a)
+    w = b * dcos(ang_b)
 
+    '''x_robot_head = 1
+    y_robot_head = (v - xa * x_robot_head) / ya'''
+
+    x_robot_head = 0
+    y_robot_head = 0
+    
+    if (ya * xb - xa * yb) != 0:
+        x_robot_head = (-yb * v + ya * w) / (ya * xb - xa * yb)
+        y_robot_head = (-xb * v + xa * w) / (ya * xb - xa * yb)
+    else:
+        y_robot_head = 1
+        x_robot_head = (v / xa) - (ya / xa) * y_robot_head
+
+    return x_robot_head, y_robot_head
+
+def angle_between_vectors(xa, ya, xb, yb):
+    dot_product = xa * xb + ya * yb
+    cross_product = xa * yb - ya * xb
+    angle_rad = math.atan2(cross_product, dot_product)
+    angle_deg = -math.degrees(angle_rad) # *-1 because of inverted y
+    angle_deg = normalize(angle_deg)
+    return angle_deg
 
 def normalize(a):
     if 0 > a > -0.00001:
@@ -459,7 +535,7 @@ def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 # розміри стелі + лап робота
 size = {
     "innerRadLimit": 48,  # min shift pos
-    "outerRadLimit": 210,  # max shift pos
+    "outerRadLimit": 260,  # max shift pos
     "netStep": 200,
     "netBorder": 100
 }
