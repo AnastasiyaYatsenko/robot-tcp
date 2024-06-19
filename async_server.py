@@ -214,9 +214,21 @@ def draw_ceil(screen):
             pg.draw.line(screen, (0, 255, 0), (hand_green_x, hand_green_y), (center_x, center_y), 3)
             pg.draw.line(screen, (0, 0, 255), (hand_blue_x, hand_blue_y), (center_x, center_y), 3)
 
-            pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 10, 1)
-            pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 10, 1)
-            pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 10, 1)
+            if ceil.robots[i].hands[0].hold == 1:
+                pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 5, 0)
+            else:
+                pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 10, 1)
+
+            if ceil.robots[i].hands[1].hold == 1:
+                pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 5, 0)
+            else:
+                pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 10, 1)
+
+            if ceil.robots[i].hands[2].hold == 1:
+                pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 5, 0)
+            else:
+                pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 10, 1)
+
             pg.draw.circle(screen, (255, 255, 255), (center_x, center_y), 5, 1)
 
 

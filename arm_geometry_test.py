@@ -184,6 +184,7 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+    #  if center is on the left from the center hand, it jumps to the right old-to-do
     print("---")
     print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     l = dist(x1, y1, x2, y2)
@@ -204,15 +205,26 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
     x_horizontal = 5 # horizontal vector
     y_horizontal = 0
-    shift_angle = angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector)
+    shift_angle = normalize(-angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector))
     print(f"shift angle: {shift_angle}")
 
-    # TODO if robot is facing down or left, modify the angle
+    # if robot is facing down or left, modify the angle
 
     x_rotated, y_rotated = rotate_point(x, y, x2, y2, shift_angle)
     print(f"ROTATED x: {x_rotated} y: {y_rotated}")
 
-    ox_ = x_rotated + d
+    x_rotated_vector, y_rotated_vector = get_vector_coords(x2, y2, x_rotated, y_rotated)  # vector of robot line
+    print(f"ROTATED VECTOR x: {x_rotated_vector} y: {y_rotated_vector}")
+    #hand_angle = angle_between_vectors(x_rotated_vector, y_rotated_vector, x_horizontal, y_horizontal)
+    hand_angle = math.degrees(math.acos((r1**2 + l**2 - r2**2) / (2 * r1 * l)))
+    print(f"HAND ANGLE: {hand_angle}")
+
+    if hand_angle > 90:
+        print("minus")
+        ox_ = x_rotated - d
+    else:
+        print("plus")
+        ox_ = x_rotated + d
     oy_ = y_rotated - h
     print(f"ROTATED O x: {ox_} y: {oy_}")
 
@@ -303,6 +315,18 @@ def get_line_equation(x1, y1, x2, y2):
     c = x1*y2 - x2*y1
     return a, b, c
 
+def get_point_on_dist(x1, y1, x2, y2, d):
+    print(f"x1: {x1} y1: {y1} x2: {x2} y2: {y2} d: {d}")
+    a, b, c = get_line_equation(x1, y1, x2, y2)
+    print(f"A: {a} B: {b} c:{c}")
+    vec_x, vec_y = get_vector_coords(x1, y1, x2, y2)
+    d_12 = get_abs_vector(vec_x, vec_y)
+    print(f"AB: {d_12}")
+    if d_12<=d:
+        return x2, y2
+    x_n = x1 + d * (b / d_12)
+    y_n = -y1 + d * (a / d_12)
+    return x_n, y_n
 
 def get_dist_point_line(x, y, a, b, c):
     d = abs(a*x + b*y + c)/math.sqrt(a**2 + b**2)
@@ -340,6 +364,31 @@ def angle_between_vectors(xa, ya, xb, yb):
     angle_deg = -math.degrees(angle_rad) # *-1 because of inverted y
     angle_deg = normalize(angle_deg)
     return angle_deg
+
+def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
+    dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
+    print(dist_arr)
+    if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
+            dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]) or (
+            dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):
+        return False
+    xa, ya = get_vector_coords(x1, y1, xo, yo)
+    xb, yb = get_vector_coords(x2, y2, xo, yo)
+    xc, yc = get_vector_coords(x3, y3, xo, yo)
+
+    aob = angle_between_vectors(xa, ya, xb, yb)
+    boc = angle_between_vectors(xb, yb, xc, yc)
+    coa = angle_between_vectors(xc, yc, xa, ya)
+
+    print(f"ANGS FOR REACH ZONE: aob: {aob} boc: {boc} coa: {coa}")
+
+    if (aob < size["minAngle"] or (360-aob) < size["minAngle"]) or (
+            boc < size["minAngle"] or (360-boc) < size["minAngle"]) or (
+            coa < size["minAngle"] or (360-coa) < size["minAngle"]):
+        return False
+    # TODO check if the conditions will be met while moving the center
+    return True
+
 
 def normalize(a):
     if 0 > a > -0.00001:
@@ -534,8 +583,10 @@ def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 
 # розміри стелі + лап робота
 size = {
-    "innerRadLimit": 48,  # min shift pos
+    #"innerRadLimit": 48,  # min shift pos
+    "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
     "outerRadLimit": 260,  # max shift pos
+    "minAngle": 60,
     "netStep": 200,
     "netBorder": 100
 }

@@ -19,7 +19,8 @@ class Ceil:
         self.max_y = 10
         # масив лунок
         self.ceil_arr = [[0 for i in range(self.max_x)] for j in range(self.max_y)]
-        self.N = 2
+        #self.N = 2
+        self.N = 1
 
         # дефолтні координати для роботів
         self.default_coordinates = {"x1": 300,
@@ -198,7 +199,7 @@ class Ceil:
         return shift
 
     def get_real_coordinates(self, robot_num, hand_a, hand_b, hand_c, shifts, angs, aa0):
-        print(f"GRC: Shifts {shifts}, Angs: {angs}, AA0: {aa0}")
+        # print(f"GRC: Shifts {shifts}, Angs: {angs}, AA0: {aa0}")
 
         sa = shifts[hand_a]
         sb = shifts[hand_b]
@@ -222,7 +223,7 @@ class Ceil:
         b = (-sb * dsin(ab), -sb * dcos(ab))
         c = (-sc * dsin(ac), -sc * dcos(ac))
 
-        print(f"GRC: A: {a}, B: {b}, C: {c}, O: {o}")
+        # print(f"GRC: A: {a}, B: {b}, C: {c}, O: {o}")
 
         sa = sb = sc = size["outerRadLimit"]
 
@@ -244,7 +245,7 @@ class Ceil:
         b = (b[0]-a[0], b[1]-a[1])
         c = (c[0]-a[0], c[1]-a[1])
         a = (a[0]-a[0], a[1]-a[1])
-        print(f"GRC: A1: {a}, B1: {b}, C1: {c}, O1: {o}")
+        # print(f"GRC: A1: {a}, B1: {b}, C1: {c}, O1: {o}")
 
         a_x = float(self.robots[robot_num].hands[hand_a].x)
         a_y = float(self.robots[robot_num].hands[hand_a].y)
@@ -252,7 +253,7 @@ class Ceil:
         b_real = b[0] + a_x, b[1] + a_y
         c_real = c[0] + a_x, c[1] + a_y
         o_real = o[0] + a_x, o[1] + a_y
-        print(f"GRC: A2: {a_real}, B2: {b_real}, C2: {c_real}, O2: {o_real}")
+        # print(f"GRC: A2: {a_real}, B2: {b_real}, C2: {c_real}, O2: {o_real}")
 
         a_real_ = a_[0] + a_x, a_[1] + a_y
         b_real_ = b_[0] + a_x, b_[1] + a_y
@@ -271,8 +272,8 @@ class Ceil:
         coord_[hand_c] = (c_real_[0], c_real_[1])
         coord_[3] = (o_real_[0], o_real_[1])
         center_x, center_y = self.robots[robot_num].get_center()
-        print(f"IN COORD SCENTER x: ({center_x}, {center_y})")
-        print(f"Coord: {coord}")
+        # print(f"IN COORD SCENTER x: ({center_x}, {center_y})")
+        # print(f"Coord: {coord}")
 
         self.robots[robot_num].set_real_coordinates(coord[0], coord[1], coord[2], coord[3])
         self.robots[robot_num].set_real_coordinates_hand(coord_[0], coord_[1], coord_[2], coord_[3])
@@ -282,82 +283,105 @@ class Ceil:
     #  / | \
     # C  A  B
 
-    def get_new_params_by_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_a, hand_b, hand_c):
+    def get_new_params_by_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
         # TODO get params from robot
-        ang_a = self.robots[robot_num].hands[hand_a].ang
-        ang_b = self.robots[robot_num].hands[hand_b].ang
+        ang_0 = self.robots[robot_num].hands[0].ang
 
-        print(f"START ANGLES a: {ang_a} b: {ang_b}")
+        print(f"START ANGLES a: {ang_0}")
 
-        xa, ya = get_vector_coords(self.robots[robot_num].hands[hand_a].x, self.robots[robot_num].hands[hand_a].y,
-                                   xo_s, yo_s)
-        xb, yb = get_vector_coords(self.robots[robot_num].hands[hand_b].x, self.robots[robot_num].hands[hand_b].y,
+        x0, y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
                                    xo_s, yo_s)
 
-        print(f"GET VECTOR COORDS a: ({xa}, {ya}) b: ({xb}, {yb})")
+        print(f"GET VECTOR COORDS a: ({x0}, {y0})")
 
-        a = get_abs_vector(xa, ya)
-        b = get_abs_vector(xb, yb)
+        a = get_abs_vector(x0, y0)
 
-        print(f"GET VECTOR ABS a: {a} b: {b}")
+        print(f"GET VECTOR ABS a: {a}")
 
         # base vector is vertical vector from which the angles and offset will be counted
         base_vector_x = 0
         base_vector_y = 5
 
-        base_to_a = angle_between_vectors(base_vector_x, base_vector_y, xa, ya)
-        shift = normalize(ang_a - base_to_a)
-        print(f"BASE TO A: {base_to_a} SHIFT: {shift}")
+        base_to_0 = angle_between_vectors(base_vector_x, base_vector_y, x0, y0)
+        shift = normalize(ang_0 - base_to_0)
+        print(f"BASE TO A: {base_to_0} SHIFT: {shift}")
 
         #x_head, y_head = get_head_vector(a, ang_a, b, ang_b, xa, ya, xb, yb)
         # print(f"GET HEAD head: ({x_head}, {y_head})")
 
-        new_xa, new_ya = get_vector_coords(self.robots[robot_num].hands[hand_a].x,
-                                           self.robots[robot_num].hands[hand_a].y,
+        new_x0, new_y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
                                            xo_t, yo_t)
-        new_xb, new_yb = get_vector_coords(self.robots[robot_num].hands[hand_b].x,
-                                           self.robots[robot_num].hands[hand_b].y,
+        new_x1, new_y1 = get_vector_coords(hand_coords[1][0], hand_coords[1][1],
                                            xo_t, yo_t)
 
-        new_xc, new_yc = get_vector_coords(self.robots[robot_num].hands[hand_c].x,
-                                           self.robots[robot_num].hands[hand_c].y,
+        new_x2, new_y2 = get_vector_coords(hand_coords[2][0], hand_coords[2][1],
                                            xo_t, yo_t)
 
-        print(f"GET NEW VECTOR COORDS a: ({new_xa}, {new_ya}) b: ({new_xb}, {new_yb}) c: ({new_xc}, {new_yc})")
+        print(f"GET NEW VECTOR COORDS a: ({new_x0}, {new_y0}) b: ({new_x1}, {new_y1}) c: ({new_x2}, {new_y2})")
 
-        new_a = get_abs_vector(new_xa, new_ya)
-        new_b = get_abs_vector(new_xb, new_yb)
-        new_c = get_abs_vector(new_xc, new_yc)
+        new_0 = get_abs_vector(new_x0, new_y0)
+        new_1 = get_abs_vector(new_x1, new_y1)
+        new_2 = get_abs_vector(new_x2, new_y2)
 
-        print(f"GET NEW VECTOR ABS a: {new_a} b: {new_b} c: {new_c}")
+        print(f"GET NEW VECTOR ABS a: {new_0} b: {new_1} c: {new_2}")
 
         '''new_ang_a = angle_between_vectors(x_head, y_head, new_xa, new_ya)
         new_ang_b = angle_between_vectors(x_head, y_head, new_xb, new_yb)
         new_ang_c = angle_between_vectors(x_head, y_head, new_xc, new_yc)'''
 
-        new_ang_a = angle_between_vectors(base_vector_x, base_vector_y, new_xa, new_ya)
-        new_ang_b = angle_between_vectors(base_vector_x, base_vector_y, new_xb, new_yb)
-        new_ang_c = angle_between_vectors(base_vector_x, base_vector_y, new_xc, new_yc)
+        new_ang_0 = angle_between_vectors(base_vector_x, base_vector_y, new_x0, new_y0)
+        new_ang_1 = angle_between_vectors(base_vector_x, base_vector_y, new_x1, new_y1)
+        new_ang_2 = angle_between_vectors(base_vector_x, base_vector_y, new_x2, new_y2)
 
-        print(f"ANGS BEFORE SHIFT a: {new_ang_a} b: {new_ang_b} c: {new_ang_c}")
+        print(f"ANGS BEFORE SHIFT a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
 
-        new_ang_a = normalize(new_ang_a + shift)
-        new_ang_b = normalize(new_ang_b + shift)
-        new_ang_c = normalize(new_ang_c + shift)
+        new_ang_0 = normalize(new_ang_0 + shift)
+        new_ang_1 = normalize(new_ang_1 + shift)
+        new_ang_2 = normalize(new_ang_2 + shift)
 
-        print(f"GET ANGS a: {new_ang_a} b: {new_ang_b} c: {new_ang_c}")
+        print(f"GET ANGS a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
 
-        return new_a, new_b, new_c, new_ang_a, new_ang_b, new_ang_c, shift
+        return new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, shift
+
+    # check if hand shifts will be of possible lengths throughout the move
+    def is_move_possible_three_holds(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
+        N = 10
+        for n in range(N + 1):
+            xo_n = xo_s
+            yo_n = yo_s
+            if 0 < n < self.N:
+                l = (n) / (self.N - n)
+                xo_n = (xo_s + l * xo_t) / (1 + l)
+                yo_n = (yo_s + l * yo_t) / (1 + l)
+            elif n == self.N:
+                xo_n = xo_t
+                yo_n = yo_t
+            # print("---------")
+            # print(f"s X: {xo_s} Y: {yo_s}")
+            # print(f"n X: {xo_n} Y: {yo_n}")
+            # print(f"t X: {xo_t} Y: {yo_t}")
+            # print("---------")
+            in_reach_zone = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
+                                                   hand_coords[1][0], hand_coords[1][1],
+                                                   hand_coords[2][0], hand_coords[2][1],
+                                                   xo_n, yo_n)
+            if not in_reach_zone:
+                # print("NOT IN REACH ZONE")
+                return False
+            # print("IN REACH ZONE")
+        return True
+
 
     #no hand change yet
-    def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_a, hand_b, hand_c):
+    def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
         #robot_head = self.robots[robot_num].hands[hand_a].ang
 
         #self.N = 10
-        # TODO
-        hand_a = 0
-        hand_b = 1
-        hand_c = 2
+
+        is_possible = self.is_move_possible_three_holds(robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords)
+        if not is_possible:
+            print("MOVE IS NOT POSSIBLE")
+            return
 
         for n in range(self.N + 1):
             xo_n = xo_s
@@ -374,21 +398,30 @@ class Ceil:
             print(f"n X: {xo_n} Y: {yo_n}")
             print(f"t X: {xo_t} Y: {yo_t}")
             print("---------")
-            new_a, new_b, new_c, new_ang_a, new_ang_b, new_ang_c, robot_head = self.get_new_params_by_vector(robot_num, xo_s, yo_s, xo_n, yo_n, hand_a, hand_b, hand_c)
+            in_reach_zone = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
+                                                   hand_coords[1][0], hand_coords[1][1],
+                                                   hand_coords[2][0], hand_coords[2][1],
+                                                   xo_n, yo_n)
+            if not in_reach_zone:
+                print("NOT IN REACH ZONE")
+                return
+            print("IN REACH ZONE")
+            new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, robot_head = self.get_new_params_by_vector(robot_num, xo_s, yo_s, xo_n, yo_n, hand_coords)
             shifts = [0.0, 0.0, 0.0]
-            shifts[hand_a] = new_a
-            shifts[hand_b] = new_b
-            shifts[hand_c] = new_c
+            shifts[0] = new_0
+            shifts[1] = new_1
+            shifts[2] = new_2
 
             angs = [0.0, 0.0, 0.0]
-            angs[hand_a] = normalize(new_ang_a)
-            angs[hand_b] = normalize(new_ang_b)
-            angs[hand_c] = normalize(new_ang_c)
+            angs[0] = normalize(new_ang_0)
+            angs[1] = normalize(new_ang_1)
+            angs[2] = normalize(new_ang_2)
 
+            #TODO
             holds = [0, 0, 0]
-            holds[hand_a] = 1
-            holds[hand_b] = 1
-            holds[hand_c] = 1
+            holds[0] = 1
+            holds[1] = 1
+            holds[2] = 1
 
             p = pack('@ffiffiffi',
                      shifts[0], angs[0], holds[0],
@@ -402,8 +435,49 @@ class Ceil:
             print(f"Shifts {shifts}, Angs: {angs}")
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
-            self.get_real_coordinates(robot_num, hand_a, hand_b, hand_c, shifts, angs, robot_head)
+            self.get_real_coordinates(robot_num, 0, 1, 2, shifts, angs, robot_head)
             # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
+
+    def move_step(self, robot_num, xo_s, yo_s, xo_t, yo_t):
+        print(f"xos: {xo_s} yos: {yo_s} xot: {xo_t} yot: {yo_t}")
+        h = math.sqrt(size["outerRadLimit"]**2 - (size["netStep"]/2)**2) # TODO: not netStep, but dist between two stable holders
+        d = h # TODO:  sqrt(h^2 + (L - innerRad)^2 / 4)
+        print(f"d: {d}")
+        x_t_, y_t_ = get_point_on_dist(xo_s, yo_s, xo_t, yo_t, d)
+        print(f"TEMP x {x_t_} y {y_t_}")
+
+
+        shift_0 = dist(self.robots[robot_num].hands[0].x, self.robots[robot_num].hands[0].y,
+                       x_t_, y_t_)
+        shift_1 = dist(self.robots[robot_num].hands[1].x, self.robots[robot_num].hands[1].y,
+                       x_t_, y_t_)
+        shift_2 = dist(self.robots[robot_num].hands[2].x, self.robots[robot_num].hands[2].y,
+                       x_t_, y_t_)
+
+        print(f"SHIFTS FOR 0: {shift_0} 1: {shift_1} 2: {shift_2}")
+
+        shift_diff = [int(shift_0-size["outerRadLimit"] > 0),
+                      int(shift_1-size["outerRadLimit"] > 0),
+                      int(shift_2-size["outerRadLimit"] > 0)]
+        sum_diff = sum(shift_diff)
+        print(sum_diff)
+
+        hand_coords = [(self.robots[robot_num].hands[0].x, self.robots[robot_num].hands[0].y),
+                       (self.robots[robot_num].hands[1].x, self.robots[robot_num].hands[1].y),
+                       (self.robots[robot_num].hands[2].x, self.robots[robot_num].hands[2].y)]
+
+        if sum_diff == 0:
+            print("CASE 0")
+            self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
+        elif sum_diff == 1:
+            print("CASE 1")
+            # only one hand can't reach, move that hand to another hole
+            # find the closest vacant place for a hand
+            # give that as coordinates for moving function along with two stable hand coordinates
+        else:
+            print("CASE 2")
+            # can't move to that point in one step, need to find closer point
+
 
 
     def to_right(self, robot_num, hand_a, hand_b, hand_c):
@@ -1170,7 +1244,7 @@ class Ceil:
         #  hand b - right hand
         #  hand c - left hand
         a, b, c = self.get_hand_letters(robot_num)
-        self.move_vector(robot_num, center_x, center_y, dest_x, dest_y, a, b, c)
+        self.move_step(robot_num, center_x, center_y, dest_x, dest_y)
 
     # MUST be in a thread, so it won't block other robots movement
     # рух робота, буде аналіз координат цілі і координат поточних, куди і як рухатись
