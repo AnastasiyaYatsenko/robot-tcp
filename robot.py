@@ -154,12 +154,27 @@ class Robot:
         return False
 
     def is_aligned(self):
+        print("---")
+        print("CHECK IF IN LINE")
+        print(f"X: {self.hands[0].x} {self.hands[1].x} {self.hands[2].x}")
+        print(f"Y: {self.hands[0].y} {self.hands[1].y} {self.hands[2].y}")
         if self.is_horizontal_aligned() or self.is_vertical_aligned():
+            print("---")
             return True
         Tol = 1e-10
+        if (self.hands[0].x == self.hands[2].x and self.hands[0].x != self.hands[1].x) or (
+                self.hands[1].x == self.hands[2].x and self.hands[1].x != self.hands[0].x) or (
+                self.hands[0].x == self.hands[1].x and self.hands[0].x != self.hands[2].x):
+            return False
+        if (self.hands[0].y == self.hands[2].y and self.hands[0].y != self.hands[1].y) or (
+                self.hands[1].y == self.hands[2].y and self.hands[1].y != self.hands[0].y) or (
+                self.hands[0].y == self.hands[1].y and self.hands[0].y != self.hands[2].y):
+            return False
         if abs((self.hands[2].x - self.hands[0].x) / (self.hands[1].x - self.hands[0].x) -
                (self.hands[2].y - self.hands[0].y) / (self.hands[1].y - self.hands[0].y)) <= Tol:
+            print("---")
             return True
+        print("---")
         return False
 
     def is_horizontal_aligned(self):

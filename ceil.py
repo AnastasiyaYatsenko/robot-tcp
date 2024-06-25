@@ -99,25 +99,32 @@ class Ceil:
         # set start coordinates, parameters will be handled with data reading
         self.robots.append(r)
 
-    # TODO
+    # TODO check and debug
     # перевірка, чи можна в точку (х,у) поставити лапу
     def is_point_free(self, x, y, robot_num):
         # must check if there's no possible robot movements in this point
-
-        # DON'T FORGET coordinates_to_ceil !!!
+        x_ceil = ceil_to_coordinates(x)
+        y_ceil = ceil_to_coordinates(y)
 
         for i in range(len(self.robots)):
             if i == robot_num:
                 continue
             else:
-                if self.robots[i].is_horizontal_aligned() or self.robots[i].is_vertical_aligned():
-                    pass
-                else:
-                    pass
-        if self.ceil_arr[y][x] == 0:
-            return True
-        else:
-            return False
+                x_robot, y_robot = self.robots[i].get_center()
+                is_in_circle = False
+                if (x_ceil - x_robot) ** 2 + (-y_ceil + y_robot) ** 2 <= size["outerRadLimit"] ** 2:
+                    is_in_circle = True
+                if is_in_circle:
+                    return False
+        return True
+                # if self.robots[i].is_horizontal_aligned() or self.robots[i].is_vertical_aligned():
+                #     pass
+                # else:
+                #     pass
+        # if self.ceil_arr[y][x] == 0:
+        #     return True
+        # else:
+        #     return False
 
     # виведення масиву стелі на екран
     def show_ceil(self):
@@ -287,16 +294,16 @@ class Ceil:
         # TODO get params from robot
         ang_0 = self.robots[robot_num].hands[0].ang
 
-        print(f"START ANGLES a: {ang_0}")
+        # print(f"START ANGLES a: {ang_0}")
 
         x0, y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
                                    xo_s, yo_s)
 
-        print(f"GET VECTOR COORDS a: ({x0}, {y0})")
+        # print(f"GET VECTOR COORDS a: ({x0}, {y0})")
 
         a = get_abs_vector(x0, y0)
 
-        print(f"GET VECTOR ABS a: {a}")
+        # print(f"GET VECTOR ABS a: {a}")
 
         # base vector is vertical vector from which the angles and offset will be counted
         base_vector_x = 0
@@ -304,7 +311,7 @@ class Ceil:
 
         base_to_0 = angle_between_vectors(base_vector_x, base_vector_y, x0, y0)
         shift = normalize(ang_0 - base_to_0)
-        print(f"BASE TO A: {base_to_0} SHIFT: {shift}")
+        # print(f"BASE TO A: {base_to_0} SHIFT: {shift}")
 
         #x_head, y_head = get_head_vector(a, ang_a, b, ang_b, xa, ya, xb, yb)
         # print(f"GET HEAD head: ({x_head}, {y_head})")
@@ -317,13 +324,13 @@ class Ceil:
         new_x2, new_y2 = get_vector_coords(hand_coords[2][0], hand_coords[2][1],
                                            xo_t, yo_t)
 
-        print(f"GET NEW VECTOR COORDS a: ({new_x0}, {new_y0}) b: ({new_x1}, {new_y1}) c: ({new_x2}, {new_y2})")
+        # print(f"GET NEW VECTOR COORDS a: ({new_x0}, {new_y0}) b: ({new_x1}, {new_y1}) c: ({new_x2}, {new_y2})")
 
         new_0 = get_abs_vector(new_x0, new_y0)
         new_1 = get_abs_vector(new_x1, new_y1)
         new_2 = get_abs_vector(new_x2, new_y2)
 
-        print(f"GET NEW VECTOR ABS a: {new_0} b: {new_1} c: {new_2}")
+        # print(f"GET NEW VECTOR ABS a: {new_0} b: {new_1} c: {new_2}")
 
         '''new_ang_a = angle_between_vectors(x_head, y_head, new_xa, new_ya)
         new_ang_b = angle_between_vectors(x_head, y_head, new_xb, new_yb)
@@ -333,13 +340,13 @@ class Ceil:
         new_ang_1 = angle_between_vectors(base_vector_x, base_vector_y, new_x1, new_y1)
         new_ang_2 = angle_between_vectors(base_vector_x, base_vector_y, new_x2, new_y2)
 
-        print(f"ANGS BEFORE SHIFT a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
+        # print(f"ANGS BEFORE SHIFT a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
 
         new_ang_0 = normalize(new_ang_0 + shift)
         new_ang_1 = normalize(new_ang_1 + shift)
         new_ang_2 = normalize(new_ang_2 + shift)
 
-        print(f"GET ANGS a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
+        # print(f"GET ANGS a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
 
         return new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, shift
 
@@ -371,6 +378,10 @@ class Ceil:
             # print("IN REACH ZONE")
         return True
 
+    def check_coord_change(self, robot_num, hand_num, x, y):
+        if self.robots[robot_num].hands[hand_num].x != x or self.robots[robot_num].hands[hand_num].y != y:
+            return True
+        return False
 
     #no hand change yet
     def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
@@ -383,11 +394,19 @@ class Ceil:
             print("MOVE IS NOT POSSIBLE")
             return
 
+        move_hand = -1
+        if self.check_coord_change(robot_num, 0, hand_coords[0][0], hand_coords[0][1]):
+            move_hand = 0
+        elif self.check_coord_change(robot_num, 1, hand_coords[1][0], hand_coords[1][1]):
+            move_hand = 1
+        elif self.check_coord_change(robot_num, 2, hand_coords[2][0], hand_coords[2][1]):
+            move_hand = 2
+
         for n in range(self.N + 1):
             xo_n = xo_s
             yo_n = yo_s
             if 0 < n < self.N:
-                l = (n) / (self.N - n)
+                l = n / (self.N - n)
                 xo_n = (xo_s + l * xo_t) / (1 + l)
                 yo_n = (yo_s + l * yo_t) / (1 + l)
             elif n == self.N:
@@ -418,10 +437,10 @@ class Ceil:
             angs[2] = normalize(new_ang_2)
 
             #TODO
-            holds = [0, 0, 0]
-            holds[0] = 1
-            holds[1] = 1
-            holds[2] = 1
+            holds = [1, 1, 1]
+            print(f"n = {n}; move_hand is {move_hand}")
+            if move_hand != -1 and n != self.N:
+                holds[move_hand] = 0
 
             p = pack('@ffiffiffi',
                      shifts[0], angs[0], holds[0],
@@ -435,13 +454,16 @@ class Ceil:
             print(f"Shifts {shifts}, Angs: {angs}")
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
+            self.move_hand(robot_num, 0, hand_coords[0][0], hand_coords[0][1])
+            self.move_hand(robot_num, 1, hand_coords[1][0], hand_coords[1][1])
+            self.move_hand(robot_num, 2, hand_coords[2][0], hand_coords[2][1])
             self.get_real_coordinates(robot_num, 0, 1, 2, shifts, angs, robot_head)
             # self.get_real_coordinates_hand(robot_num, hand_a, hand_b, hand_c, angs, robot_head)
 
     def move_step(self, robot_num, xo_s, yo_s, xo_t, yo_t):
         print(f"xos: {xo_s} yos: {yo_s} xot: {xo_t} yot: {yo_t}")
         h = math.sqrt(size["outerRadLimit"]**2 - (size["netStep"]/2)**2) # TODO: not netStep, but dist between two stable holders
-        d = h # TODO:  sqrt(h^2 + (L - innerRad)^2 / 4)
+        d = h/12 # TODO:  sqrt(h^2 + (L - innerRad)^2 / 4)
         print(f"d: {d}")
         x_t_, y_t_ = get_point_on_dist(xo_s, yo_s, xo_t, yo_t, d)
         print(f"TEMP x {x_t_} y {y_t_}")
@@ -456,9 +478,9 @@ class Ceil:
 
         print(f"SHIFTS FOR 0: {shift_0} 1: {shift_1} 2: {shift_2}")
 
-        shift_diff = [int(shift_0-size["outerRadLimit"] > 0),
-                      int(shift_1-size["outerRadLimit"] > 0),
-                      int(shift_2-size["outerRadLimit"] > 0)]
+        shift_diff = [int(shift_0 > size["outerRadLimit"] or shift_0 < size["innerRadLimit"]),
+                      int(shift_1 > size["outerRadLimit"] or shift_1 < size["innerRadLimit"]),
+                      int(shift_2 > size["outerRadLimit"] or shift_2 < size["innerRadLimit"])]
         sum_diff = sum(shift_diff)
         print(sum_diff)
 
@@ -468,15 +490,75 @@ class Ceil:
 
         if sum_diff == 0:
             print("CASE 0")
+            # no need to check if the point is free - current robot occupies the area
             self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
         elif sum_diff == 1:
             print("CASE 1")
-            # only one hand can't reach, move that hand to another hole
-            # find the closest vacant place for a hand
+            hand_c = shift_diff.index(1)
+            stable_hands = [0, 1, 2]
+            stable_hands.remove(hand_c)
+            # only one hand can't reach, move that hand to another hole; find the closest vacant place for a hand
             # give that as coordinates for moving function along with two stable hand coordinates
+
+            # we have a circle with center in Ot and r = outerRadLimit
+            # and a triangle, formed bu two stable hands
+
+            #min and max x and y for potentially available holes
+            min_x = max(math.floor((((xo_t - size["outerRadLimit"]) - size["netBorder"]) / size["netStep"])), 0)
+            max_x = max(math.floor((((xo_t + size["outerRadLimit"]) - size["netBorder"]) / size["netStep"])), 0)
+            min_y = max(math.floor((((yo_t - size["outerRadLimit"]) - size["netBorder"]) / size["netStep"])), 0)
+            max_y = max(math.floor((((yo_t + size["outerRadLimit"]) - size["netBorder"]) / size["netStep"])), 0)
+
+            print(f"min_x: {min_x}, max_x: {max_x}, min_y: {min_y}, max_y: {max_y}")
+
+            min_shift = size["outerRadLimit"] + 1
+            best_x, best_y = -1, -1
+            for y in range(min_y, max_y+1):
+                for x in range(min_x, max_x + 1):
+                    print("---")
+                    print(f"IN LOOP x: {x}, y: {y}")
+                    x_ceil = ceil_to_coordinates(x)
+                    y_ceil = ceil_to_coordinates(y)
+                    print(f"TRUE COORDS x: {x_ceil}, y: {y_ceil}")
+
+                    # check if the point is inside the circle
+                    is_in_circle = False
+                    if (x_ceil-xo_t)**2 + (-y_ceil + yo_t)**2 <= size["outerRadLimit"]**2:
+                        is_in_circle = True
+                    print(f"Is in circle? - {is_in_circle}")
+                    if not is_in_circle:
+                        continue
+
+                    v1x, v1y = get_vector_coords(xo_t, yo_t,
+                                                 self.robots[robot_num].hands[stable_hands[0]].x,
+                                                 self.robots[robot_num].hands[stable_hands[0]].y)
+                    v2x, v2y = get_vector_coords(xo_t, yo_t,
+                                                 self.robots[robot_num].hands[stable_hands[1]].x,
+                                                 self.robots[robot_num].hands[stable_hands[1]].y)
+                    # check if the point is inside stable hands sector
+                    is_in_sector = point_in_sector(x_ceil, y_ceil, xo_t, yo_t, v1x, v1y, v2x, v2y)
+                    print(f"Is in sector? - {is_in_sector}")
+                    if is_in_sector:
+                        continue
+
+                    # TODO limitations of greedy algorithm - need to improve
+                    xy_shift = dist(xo_t, yo_t, x_ceil, y_ceil)
+                    if xy_shift < min_shift and xy_shift >= size["innerRadLimit"]:
+                        min_shift = xy_shift
+                        best_x = x_ceil
+                        best_y = y_ceil
+
+            # now we acquired the point to move hand C to
+            # TODO check if the point is free!!
+            if best_x != -1 and best_y != -1:
+                hand_coords[hand_c] = (best_x, best_y)
+                self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
+
         else:
             print("CASE 2")
             # can't move to that point in one step, need to find closer point
+            # TODO strategy for point (Ot) selection
+            # or need additional move?
 
 
 
@@ -1243,8 +1325,16 @@ class Ceil:
         #  hand a - center hand
         #  hand b - right hand
         #  hand c - left hand
-        a, b, c = self.get_hand_letters(robot_num)
-        self.move_step(robot_num, center_x, center_y, dest_x, dest_y)
+        # a, b, c = self.get_hand_letters(robot_num)
+        x_path = abs(dest_x - center_x)
+        y_path = abs(dest_y - center_y)
+        while x_path > 0.01 or y_path > 0.01:
+            self.move_step(robot_num, center_x, center_y, dest_x, dest_y)
+            center_x, center_y = self.robots[robot_num].get_center()
+            x_path = abs(dest_x - center_x)
+            y_path = abs(dest_y - center_y)
+            # return
+
 
     # MUST be in a thread, so it won't block other robots movement
     # рух робота, буде аналіз координат цілі і координат поточних, куди і як рухатись

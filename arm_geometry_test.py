@@ -99,6 +99,28 @@ def coordinates_to_ceil_all(x1, y1, x2, y2, x3, y3):
 
     return int(x1), int(y1), int(x2), int(y2), int(x3), int(y3)
 
+def point_in_sector(px, py, cx, cy, v1x, v1y, v2x, v2y):
+    # Преобразование координат точки с инверсией оси y
+    x_prime = px - cx
+    y_prime = -(py - cy)
+
+    # Углы граничных векторов с инверсией оси y
+    theta1 = math.atan2(-v1y, v1x)
+    theta2 = math.atan2(-v2y, v2x)
+
+    # Угол точки
+    theta_p = math.atan2(y_prime, x_prime)
+
+    # Нормализуем углы к диапазону [0, 2π)
+    theta1 = theta1 % (2 * math.pi)
+    theta2 = theta2 % (2 * math.pi)
+    theta_p = theta_p % (2 * math.pi)
+
+    # Проверка попадания угла в интервал
+    if theta1 <= theta2:
+        return theta1 <= theta_p <= theta2
+    else:
+        return theta_p >= theta1 or theta_p <= theta2
 
 # обчислення координат центру за наявних координат лап
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
@@ -185,51 +207,51 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     #  if center is on the left from the center hand, it jumps to the right old-to-do
-    print("---")
-    print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
+    # print("---")
+    # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     l = dist(x1, y1, x2, y2)
     s = (r1 + r2 + l) / 2
-    print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
     h = 2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l # altitude
-    print(f"H: {h}")
+    # print(f"H: {h}")
 
     # find the right triangle where r1 - hypotenuse and h - one of the legs
     x = x1
     y = y1
     r = r1
     d = math.sqrt(r**2 - h**2) # the second leg; on the holders line
-    print(f"d: {d}")
+    # print(f"d: {d}")
 
     # find the angle between the horizontal of the ceiling and the robot line
     x_r_vector, y_r_vector = get_vector_coords(x1, y1, x2, y2) # vector of robot line
-    print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
+    # print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
     x_horizontal = 5 # horizontal vector
     y_horizontal = 0
     shift_angle = normalize(-angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector))
-    print(f"shift angle: {shift_angle}")
+    # print(f"shift angle: {shift_angle}")
 
     # if robot is facing down or left, modify the angle
 
     x_rotated, y_rotated = rotate_point(x, y, x2, y2, shift_angle)
-    print(f"ROTATED x: {x_rotated} y: {y_rotated}")
+    # print(f"ROTATED x: {x_rotated} y: {y_rotated}")
 
     x_rotated_vector, y_rotated_vector = get_vector_coords(x2, y2, x_rotated, y_rotated)  # vector of robot line
-    print(f"ROTATED VECTOR x: {x_rotated_vector} y: {y_rotated_vector}")
+    # print(f"ROTATED VECTOR x: {x_rotated_vector} y: {y_rotated_vector}")
     #hand_angle = angle_between_vectors(x_rotated_vector, y_rotated_vector, x_horizontal, y_horizontal)
     hand_angle = math.degrees(math.acos((r1**2 + l**2 - r2**2) / (2 * r1 * l)))
-    print(f"HAND ANGLE: {hand_angle}")
+    # print(f"HAND ANGLE: {hand_angle}")
 
     if hand_angle > 90:
-        print("minus")
+        # print("minus")
         ox_ = x_rotated - d
     else:
-        print("plus")
+        # print("plus")
         ox_ = x_rotated + d
     oy_ = y_rotated - h
-    print(f"ROTATED O x: {ox_} y: {oy_}")
+    # print(f"ROTATED O x: {ox_} y: {oy_}")
 
     ox, oy = rotate_point(ox_, oy_, x2, y2, normalize(-shift_angle))
-    print(f"UNROTATED O x: {ox} y: {oy}")
+    # print(f"UNROTATED O x: {ox} y: {oy}")
 
     return ox, oy
 
@@ -291,16 +313,16 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # return -1, -1
 
 def rotate_point(px, py, qx, qy, theta):
-    print(f"px {px} py {py} qx {qx} qy {qy}")
+    # print(f"px {px} py {py} qx {qx} qy {qy}")
     px_ = px - qx
     py_ = py - qy
-    print(f"P' x: {px_} y: {py_}")
+    # print(f"P' x: {px_} y: {py_}")
     px_rotated = px_ * dcos(theta) - py_ * dsin(theta)
     py_rotated = px_ * dsin(theta) + py_ * dcos(theta)
-    print(f"P rotated x: {px_rotated} y: {py_rotated}")
+    # print(f"P rotated x: {px_rotated} y: {py_rotated}")
     rx = px_rotated + qx
     ry = py_rotated + qy
-    print(f"R x: {rx} y: {ry}")
+    # print(f"R x: {rx} y: {ry}")
     return rx, ry
 
 def dist(x1, y1, x2, y2):
@@ -317,15 +339,14 @@ def get_line_equation(x1, y1, x2, y2):
 
 def get_point_on_dist(x1, y1, x2, y2, d):
     print(f"x1: {x1} y1: {y1} x2: {x2} y2: {y2} d: {d}")
-    a, b, c = get_line_equation(x1, y1, x2, y2)
-    print(f"A: {a} B: {b} c:{c}")
-    vec_x, vec_y = get_vector_coords(x1, y1, x2, y2)
-    d_12 = get_abs_vector(vec_x, vec_y)
-    print(f"AB: {d_12}")
-    if d_12<=d:
+    ab = math.sqrt((x2-x1)**2 + (y2-y1)**2)
+    print(f"AB: {ab}")
+    if ab<=d:
         return x2, y2
-    x_n = x1 + d * (b / d_12)
-    y_n = -y1 + d * (a / d_12)
+    l = d / (ab - d)
+    x_n = (x1 + l * x2) / (1 + l)
+    y_n = (y1 + l * y2) / (1 + l)
+
     return x_n, y_n
 
 def get_dist_point_line(x, y, a, b, c):
@@ -586,7 +607,7 @@ size = {
     #"innerRadLimit": 48,  # min shift pos
     "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
     "outerRadLimit": 260,  # max shift pos
-    "minAngle": 60,
+    "minAngle": 40,
     "netStep": 200,
     "netBorder": 100
 }
