@@ -387,6 +387,7 @@ def angle_between_vectors(xa, ya, xb, yb):
     return angle_deg
 
 def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
+    print("IN CONDITION CHECK")
     dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
     print(dist_arr)
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
@@ -410,6 +411,44 @@ def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
     # TODO check if the conditions will be met while moving the center
     return True
 
+def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
+    print("IN LIMITATION CHECK")
+    dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
+    print(dist_arr)
+    if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
+            dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]) or (
+            dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):
+        print("false")
+        return False
+    xa, ya = get_vector_coords(x1, y1, xo, yo)
+    xb, yb = get_vector_coords(x2, y2, xo, yo)
+    xc, yc = get_vector_coords(x3, y3, xo, yo)
+
+    aob = angle_between_vectors(xa, ya, xb, yb)
+    boc = angle_between_vectors(xb, yb, xc, yc)
+    coa = angle_between_vectors(xc, yc, xa, ya)
+
+    limited_hand = -1
+    if aob + coa <= 360 - (aob + coa):
+        print(f"hand: 0; angle: {aob + coa}")
+        limited_hand = 0
+    if aob + boc <= 360 - (aob + boc):
+        print(f"hand: 1; angle: {aob + boc}")
+        limited_hand = 1
+    if boc + coa <= 360 - (boc + coa):
+        print(f"hand: 2; angle: {boc + coa}")
+        limited_hand = 2
+
+    if limited_hand == -1:
+        print("false")
+        return False
+
+    if limited_hand == hand_num:
+        print("true")
+        return True
+
+    print("false")
+    return False
 
 def normalize(a):
     if 0 > a > -0.00001:
