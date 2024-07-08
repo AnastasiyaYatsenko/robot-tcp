@@ -206,7 +206,6 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
-    #  if center is on the left from the center hand, it jumps to the right old-to-do
     # print("---")
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     l = dist(x1, y1, x2, y2)
@@ -282,20 +281,11 @@ def get_shift_angle(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 # for when holders are NOT on one line
 def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
-    # eps = 1e-6
+    eps = 1e-6
 
-    # x1 = size["netBorder"] + x1 * size["netStep"]
-    # y1 = size["netBorder"] + y1 * size["netStep"]
-    #
-    # x2 = size["netBorder"] + x2 * size["netStep"]
-    # y2 = size["netBorder"] + y2 * size["netStep"]
-    #
-    # x3 = size["netBorder"] + x3 * size["netStep"]
-    # y3 = size["netBorder"] + y3 * size["netStep"]
-    #
-    # r1 = math.sqrt(10.0)
-    # r2 = math.sqrt(10.0)
-    # r3 = math.sqrt(5.0)
+    if (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3)) == 0) or (
+            (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))) == 0):
+        return -1, -1
 
     x = (((y2 - y1) * (r2 * r2 - r3 * r3 - y2 * y2 + y3 * y3 - x2 * x2 + x3 * x3) - (y3 - y2) *
           (r1 * r1 - r2 * r2 - y1 * y1 + y2 * y2 - x1 * x1 + x2 * x2)) /
@@ -303,14 +293,14 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     y = (((x2 - x1) * (r2 * r2 - r3 * r3 - x2 * x2 + x3 * x3 - y2 * y2 + y3 * y3) - (x3 - x2) *
           (r1 * r1 - r2 * r2 - x1 * x1 + x2 * x2 - y1 * y1 + y2 * y2)) /
          (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
-    # if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
-    #     print("x=" + str(x) + " y=" + str(y))
-    return x, y
+    if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
+        print("x=" + str(x) + " y=" + str(y))
+        return x, y
     # else:
-    #     print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
-    #     print(f"x: {x} y: {y}")
-    #     print("Impossible")
-    # return -1, -1
+        # print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
+        # print(f"x: {x} y: {y}")
+        # print("Impossible")
+    return -1, -1
 
 def rotate_point(px, py, qx, qy, theta):
     # print(f"px {px} py {py} qx {qx} qy {qy}")
@@ -386,6 +376,13 @@ def angle_between_vectors(xa, ya, xb, yb):
     angle_deg = normalize(angle_deg)
     return angle_deg
 
+def mirroring_check(ang1, ang2, ang3):
+    if (ang1 < ang2 < ang3) or (
+            ang2 < ang3 < ang1) or (
+            ang3 < ang1 < ang2):
+        return True
+    return False
+
 def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
     print("IN CONDITION CHECK")
     dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
@@ -407,6 +404,24 @@ def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
     if (aob < size["minAngle"] or (360-aob) < size["minAngle"]) or (
             boc < size["minAngle"] or (360-boc) < size["minAngle"]) or (
             coa < size["minAngle"] or (360-coa) < size["minAngle"]):
+        return False
+    # TODO check if the conditions will be met while moving the center
+    return True
+
+def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
+    # print("2hands: IN CONDITION CHECK")
+    dist_arr = [dist(x1, y1, xo, yo), dist(x2, y2, xo, yo)]
+    if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
+            dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]):
+        return False
+    xa, ya = get_vector_coords(x1, y1, xo, yo)
+    xb, yb = get_vector_coords(x2, y2, xo, yo)
+
+    aob = angle_between_vectors(xa, ya, xb, yb)
+
+    # print(f"ANGS FOR REACH ZONE: aob: {aob}")
+
+    if aob < size["minAngle"] or (360-aob) < size["minAngle"]:
         return False
     # TODO check if the conditions will be met while moving the center
     return True
@@ -448,6 +463,51 @@ def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
         return True
 
     print("false")
+    return False
+
+def optimal_points(a, b, c):
+    x_start, y_start = 100, 100
+    max_dist = size["netStep"] * math.sqrt(2)
+    opt_points = []
+    for y_step in range(10):
+        for x_step in range(10):
+            x = x_start + size["netStep"] * x_step
+            y = y_start + size["netStep"] * y_step
+            d = abs(a * x + b * y + c) / math.sqrt(a**2 + b**2)
+            if d <= max_dist:
+                opt_points.append((x, y))
+    return opt_points
+
+def is_aligned(hand_coords):
+    if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
+        print("---")
+        return True
+    Tol = 1e-10
+    if (hand_coords[0][0] == hand_coords[2][0] and hand_coords[0][0] != hand_coords[1][0]) or (
+            hand_coords[1][0] == hand_coords[2][0] and hand_coords[1][0] != hand_coords[0][0]) or (
+            hand_coords[0][0] == hand_coords[1][0] and hand_coords[0][0] != hand_coords[2][0]):
+        return False
+    if (hand_coords[0][1] == hand_coords[2][1] and hand_coords[0][1] != hand_coords[1][1]) or (
+            hand_coords[1][1] == hand_coords[2][1] and hand_coords[1][1] != hand_coords[0][1]) or (
+            hand_coords[0][1] == hand_coords[1][1] and hand_coords[0][1] != hand_coords[2][1]):
+        return False
+    if abs((hand_coords[2][0] - hand_coords[0][0]) / (hand_coords[1][0] - hand_coords[0][0]) -
+           (hand_coords[2][1] - hand_coords[0][1]) / (hand_coords[1][1] - hand_coords[0][1])) <= Tol:
+        print("---")
+        return True
+    print("---")
+    return False
+
+def is_horizontal_aligned(hand_coords):
+    if (hand_coords[0][1] == hand_coords[1][1] and
+            hand_coords[1][1] == hand_coords[2][1]):
+        return True
+    return False
+
+def is_vertical_aligned(hand_coords):
+    if (hand_coords[0][0] == hand_coords[1][0] and
+            hand_coords[1][0] == hand_coords[2][0]):
+        return True
     return False
 
 def normalize(a):
