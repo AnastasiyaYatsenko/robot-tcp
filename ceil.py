@@ -747,7 +747,7 @@ class Ceil:
                                                 self.robots[robot_num].hands[2].x,
                                                 self.robots[robot_num].hands[2].y,
                                                 x_t_, y_t_)
-            is_possible = self.is_move_possible_three_holds(robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords)
+            is_possible = self.is_move_possible_three_holds(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
             if is_in_area and is_possible:
                     print("move possible")
                     self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
@@ -839,12 +839,12 @@ class Ceil:
                     temp_hand_coords[hand_c] = (x_ceil, y_ceil)
                     is_possible = self.is_move_possible_two_holds(robot_num,
                                                                   xo_s, yo_s,
-                                                                  xo_t, yo_t,
+                                                                  x_t_, y_t_,
                                                                   temp_hand_coords, hand_c)
                     # print(f"Needed conditions are met? - {is_in_area}")
                     xy = (x_ceil, y_ceil)
                     is_in_optimal = xy in opt_points
-                    if is_in_optimal:
+                    if is_in_optimal and is_possible:
                         # min_shift = xy_shift
                         best_x = x_ceil
                         best_y = y_ceil
@@ -856,13 +856,15 @@ class Ceil:
                 hand_coords[hand_c] = (best_x, best_y)
                 is_possible = self.is_move_possible_two_holds(robot_num,
                                                               xo_s, yo_s,
-                                                              xo_t, yo_t,
+                                                              x_t_, y_t_,
                                                               hand_coords, hand_c)
                 if is_possible:
+                    print("Move is possible (move_step case 1)")
                     self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
                 else:
+                    print("Move is impossible (move_step case 1), searching for a new Ot'")
                     new_xo_t_, new_yo_t_ = self.find_new_position_three_holds(robot_num, xo_s, yo_s,
-                                                                              xo_t, yo_t, hand_coords, hand_c)
+                                                                              x_t_, y_t_, hand_coords, hand_c)
                     self.move_vector(robot_num, xo_s, yo_s, new_xo_t_, new_yo_t_, hand_coords)
             else:
                 print("CAN'T FINISH THE MOVE, NO POSSIBLE POINTS")
