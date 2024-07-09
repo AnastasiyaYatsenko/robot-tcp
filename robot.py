@@ -130,14 +130,16 @@ class Robot:
         return self.real_coordinates_hand
 
     def get_center(self):
+        # print("--- get center ---")
         center_x, center_y = 0, 0
         if self.is_aligned():
+            # print("aligned")
             center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
                                                   self.hands[1].x, self.hands[1].y,
                                                   self.hands[2].x, self.hands[2].y,
                                                   self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
-            pass
         else:
+            # print("not aligned")
             center_x, center_y = calculate_center_three_points(self.hands[0].x, self.hands[0].y,
                                                                self.hands[1].x, self.hands[1].y,
                                                                self.hands[2].x, self.hands[2].y,
@@ -154,12 +156,12 @@ class Robot:
         return False
 
     def is_aligned(self):
-        print("---")
-        print("CHECK IF IN LINE")
-        print(f"X: {self.hands[0].x} {self.hands[1].x} {self.hands[2].x}")
-        print(f"Y: {self.hands[0].y} {self.hands[1].y} {self.hands[2].y}")
+        # print("---")
+        # print("CHECK IF IN LINE")
+        # print(f"X: {self.hands[0].x} {self.hands[1].x} {self.hands[2].x}")
+        # print(f"Y: {self.hands[0].y} {self.hands[1].y} {self.hands[2].y}")
         if self.is_horizontal_aligned() or self.is_vertical_aligned():
-            print("---")
+            # print("---")
             return True
         Tol = 1e-10
         if (self.hands[0].x == self.hands[2].x and self.hands[0].x != self.hands[1].x) or (

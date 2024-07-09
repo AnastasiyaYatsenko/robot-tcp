@@ -64,10 +64,11 @@ def handle_read(sock, client_ip, client_port):
                                                     LS[3], LS[4], LS[5],
                                                     LS[6], LS[7], LS[8])
             # print(unpacked_struct)
-            # print(robot_ip)
-            # ceil.robots[robot_num].print()
+            print("---")
+            # print(f"Robot no. {robot_num}")
+            ceil.robots[robot_num].print()
             # move_robot_simu(robot_num)
-            # print("---")
+            print("---")
             ceil.robots[robot_num].isMoving = False
 
         except Exception as e:
@@ -299,7 +300,7 @@ def command_panel():
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # Call the on_mouse_button_down() function
                 if button_start.collidepoint(event.pos):
-                    print("Button clicked!")
+                    # print("Button clicked!")
                     if (robot_input.text == '') or (x_input.text == '') or (y_input.text == ''):
                         print("Invalid input")
                     else:

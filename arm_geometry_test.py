@@ -281,8 +281,10 @@ def get_shift_angle(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 # for when holders are NOT on one line
 def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
-    eps = 1e-6
-
+    # eps = 1e-6
+    eps = 0.003
+    # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
+    # print(f"r1: {r1} r2: {r2}")
     if (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3)) == 0) or (
             (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))) == 0):
         return -1, -1
@@ -293,6 +295,8 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     y = (((x2 - x1) * (r2 * r2 - r3 * r3 - x2 * x2 + x3 * x3 - y2 * y2 + y3 * y3) - (x3 - x2) *
           (r1 * r1 - r2 * r2 - x1 * x1 + x2 * x2 - y1 * y1 + y2 * y2)) /
          (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
+    # print("x=" + str(x) + " y=" + str(y))
+    # print(f"abs = {abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1)}")
     if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
         print("x=" + str(x) + " y=" + str(y))
         return x, y
@@ -384,9 +388,9 @@ def mirroring_check(ang1, ang2, ang3):
     return False
 
 def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
-    print("IN CONDITION CHECK")
+    # print("IN CONDITION CHECK")
     dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
-    print(dist_arr)
+    # print(dist_arr)
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]) or (
             dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):
@@ -399,7 +403,7 @@ def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
     boc = angle_between_vectors(xb, yb, xc, yc)
     coa = angle_between_vectors(xc, yc, xa, ya)
 
-    print(f"ANGS FOR REACH ZONE: aob: {aob} boc: {boc} coa: {coa}")
+    # print(f"ANGS FOR REACH ZONE: aob: {aob} boc: {boc} coa: {coa}")
 
     if (aob < size["minAngle"] or (360-aob) < size["minAngle"]) or (
             boc < size["minAngle"] or (360-boc) < size["minAngle"]) or (
@@ -427,13 +431,13 @@ def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
     return True
 
 def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
-    print("IN LIMITATION CHECK")
+    # print("IN LIMITATION CHECK")
     dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
     print(dist_arr)
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]) or (
             dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):
-        print("false")
+        # print("false")
         return False
     xa, ya = get_vector_coords(x1, y1, xo, yo)
     xb, yb = get_vector_coords(x2, y2, xo, yo)
@@ -445,24 +449,24 @@ def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
 
     limited_hand = -1
     if aob + coa <= 360 - (aob + coa):
-        print(f"hand: 0; angle: {aob + coa}")
+        # print(f"hand: 0; angle: {aob + coa}")
         limited_hand = 0
     if aob + boc <= 360 - (aob + boc):
-        print(f"hand: 1; angle: {aob + boc}")
+        # print(f"hand: 1; angle: {aob + boc}")
         limited_hand = 1
     if boc + coa <= 360 - (boc + coa):
-        print(f"hand: 2; angle: {boc + coa}")
+        # print(f"hand: 2; angle: {boc + coa}")
         limited_hand = 2
 
     if limited_hand == -1:
-        print("false")
+        # print("false")
         return False
 
     if limited_hand == hand_num:
-        print("true")
+        # print("true")
         return True
 
-    print("false")
+    # print("false")
     return False
 
 def optimal_points(a, b, c):

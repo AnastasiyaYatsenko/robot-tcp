@@ -412,6 +412,46 @@ class Ceil:
             return True
         return False
 
+    def check_conditions_pos(self, robot_num, center_x, center_y, xo_s, yo_s, hand_coords, hand_c = -1):
+        # if is_aligned(hand_coords):
+        #     center_x, center_y = calculate_center(hand_coords[0][0], hand_coords[0][1],
+        #                                           hand_coords[1][0], hand_coords[1][1],
+        #                                           hand_coords[2][0], hand_coords[2][1],
+        #                                           shift_1, shift_2, shift_3)
+        # else:
+        #     center_x, center_y = calculate_center_three_points(hand_coords[0][0], hand_coords[0][1],
+        #                                                        hand_coords[1][0], hand_coords[1][1],
+        #                                                        hand_coords[2][0], hand_coords[2][1],
+        #                                                        shift_1, shift_2, shift_3)
+        # if we've got -1, -1, it means these shifts are impossible
+        if center_x != -1 and center_y != -1:
+            print("------")
+            print(f"IN FIND SHIFTS: ({center_x}, {center_y})")
+            # checking new center point for min angle
+            is_possible = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
+                                                 hand_coords[1][0], hand_coords[1][1],
+                                                 hand_coords[2][0], hand_coords[2][1], center_x, center_y)
+            new_0, new_1, new_2, ang_0, ang_1, ang_2, rh = self.get_new_params_by_vector(robot_num,
+                                                                                         xo_s, yo_s,
+                                                                                         center_x, center_y,
+                                                                                         hand_coords)
+            is_correct_hand_order = mirroring_check(ang_0, ang_1, ang_2)
+            is_move_possible = True
+
+            if hand_c != -1:
+                is_move_possible = self.is_move_possible_two_holds(robot_num, xo_s, yo_s,
+                                                                   center_x, center_y,
+                                                                   hand_coords, hand_c)
+            else:
+                is_move_possible = self.is_move_possible_three_holds(robot_num, xo_s, yo_s,
+                                                                     center_x, center_y,
+                                                                     hand_coords)
+            print(f"Conditions are: pose: {is_possible}, move: {is_move_possible}")
+            if not is_possible or not is_move_possible or not is_correct_hand_order:
+                return False
+            return True
+        return False
+
     # finds the suitable shifts for the robot; TODO change brute force search to smth more effective
     def find_pos_by_shifts(self, robot_num, xo_s, yo_s, hand_coords, start_shifts, hand_c = -1):
         best_shifts = [-1, -1, -1]
@@ -431,58 +471,65 @@ class Ceil:
                                                                            hand_coords[1][0], hand_coords[1][1],
                                                                            hand_coords[2][0], hand_coords[2][1],
                                                                            shift_1, shift_2, shift_3)
-                    # if we've got -1, -1, it means these shifts are impossible
-                    if center_x != -1 and center_y != -1:
-                        print("------")
-                        print(f"IN FIND SHIFTS: ({center_x}, {center_y})")
-                        # checking new center point for min angle
-                        is_possible = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
-                                                             hand_coords[1][0], hand_coords[1][1],
-                                                             hand_coords[2][0], hand_coords[2][1], center_x, center_y)
-                        new_0, new_1, new_2, ang_0, ang_1, ang_2, rh = self.get_new_params_by_vector(robot_num,
-                                                                                                     xo_s, yo_s,
-                                                                                                     center_x, center_y,
-                                                                                                     hand_coords)
-                        is_correct_hand_order = mirroring_check(ang_0, ang_1, ang_2)
-                        is_move_possible = True
+                    pos_conditions = self.check_conditions_pos(robot_num, center_x, center_y,
+                                                               xo_s, yo_s, hand_coords, hand_c)
 
-                        if hand_c != -1:
-                            is_move_possible = self.is_move_possible_two_holds(robot_num, xo_s, yo_s,
-                                                                               center_x, center_y,
-                                                                               hand_coords, hand_c)
-                        print(f"Conditions are: pose: {is_possible}, move: {is_move_possible}")
-                        if not is_possible or not is_move_possible:
-                            continue
-                        if best_shifts[0] == -1:
-                            # first option that we've found
+                    # # if we've got -1, -1, it means these shifts are impossible
+                    # if center_x != -1 and center_y != -1:
+                    #     print("------")
+                    #     print(f"IN FIND SHIFTS: ({center_x}, {center_y})")
+                    #     # checking new center point for min angle
+                    #     is_possible = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
+                    #                                          hand_coords[1][0], hand_coords[1][1],
+                    #                                          hand_coords[2][0], hand_coords[2][1], center_x, center_y)
+                    #     new_0, new_1, new_2, ang_0, ang_1, ang_2, rh = self.get_new_params_by_vector(robot_num,
+                    #                                                                                  xo_s, yo_s,
+                    #                                                                                  center_x, center_y,
+                    #                                                                                  hand_coords)
+                    #     is_correct_hand_order = mirroring_check(ang_0, ang_1, ang_2)
+                    #     is_move_possible = True
+                    #
+                    #     if hand_c != -1:
+                    #         is_move_possible = self.is_move_possible_two_holds(robot_num, xo_s, yo_s,
+                    #                                                            center_x, center_y,
+                    #                                                            hand_coords, hand_c)
+                    #     else:
+                    #         is_move_possible = self.is_move_possible_three_holds(robot_num, xo_s, yo_s,
+                    #                                                              center_x, center_y,
+                    #                                                              hand_coords)
+                    #     print(f"Conditions are: pose: {is_possible}, move: {is_move_possible}")
+                    if not pos_conditions:
+                        continue
+                    if best_shifts[0] == -1:
+                        # first option that we've found
+                        best_shifts[0] = shift_1
+                        best_shifts[1] = shift_2
+                        best_shifts[2] = shift_3
+                        best_center = (center_x, center_y)
+                    else:
+                        # checking if current shifts are better than previous
+                        # (if they are closer to the start shifts)
+                        deltas_saved = [abs(best_shifts[0]-start_shifts[0]),
+                                        abs(best_shifts[1]-start_shifts[1]),
+                                        abs(best_shifts[2]-start_shifts[2])]
+                        deltas_new = [abs(shift_1 - start_shifts[0]),
+                                      abs(shift_2 - start_shifts[1]),
+                                      abs(shift_3 - start_shifts[2])]
+                        if sum(deltas_new) < sum(deltas_saved):
                             best_shifts[0] = shift_1
                             best_shifts[1] = shift_2
                             best_shifts[2] = shift_3
                             best_center = (center_x, center_y)
-                        else:
-                            # checking if current shifts are better than previous
-                            # (if they are closer to the start shifts)
-                            deltas_saved = [abs(best_shifts[0]-start_shifts[0]),
-                                            abs(best_shifts[1]-start_shifts[1]),
-                                            abs(best_shifts[2]-start_shifts[2])]
-                            deltas_new = [abs(shift_1 - start_shifts[0]),
-                                          abs(shift_2 - start_shifts[1]),
-                                          abs(shift_3 - start_shifts[2])]
-                            if sum(deltas_new) < sum(deltas_saved):
+                        elif sum(deltas_new) == sum(deltas_saved):
+                            diff = [int(deltas_new[0] < deltas_saved[0]),
+                                    int(deltas_new[1] < deltas_saved[1]),
+                                    int(deltas_new[2] < deltas_saved[2])]
+                            if sum(diff) >= 2:
                                 best_shifts[0] = shift_1
                                 best_shifts[1] = shift_2
                                 best_shifts[2] = shift_3
                                 best_center = (center_x, center_y)
-                            elif sum(deltas_new) == sum(deltas_saved):
-                                diff = [int(deltas_new[0] < deltas_saved[0]),
-                                        int(deltas_new[1] < deltas_saved[1]),
-                                        int(deltas_new[2] < deltas_saved[2])]
-                                if sum(diff) >= 2:
-                                    best_shifts[0] = shift_1
-                                    best_shifts[1] = shift_2
-                                    best_shifts[2] = shift_3
-                                    best_center = (center_x, center_y)
-        if best_shifts[0] == -1:
+        if best_center[0] == -1:
             print("Can't find proper position for these coordinates")
             return -1, -1
 
@@ -522,28 +569,33 @@ class Ceil:
                                                                hand_coords[1][0], hand_coords[1][1],
                                                                hand_coords[2][0], hand_coords[2][1],
                                                                shifts[0], shifts[1], shifts[2])
-        if new_xo_t == -1:
-            new_shifts = self.find_pos_by_shifts(robot_num, xo_s, yo_s,
+
+        pos_conditions = self.check_conditions_pos(robot_num, new_xo_t, new_yo_t,
+                                                   xo_s, yo_s, hand_coords, hand_c)
+        if not pos_conditions:
+            new_xo_t, new_yo_t = self.find_pos_by_shifts(robot_num, xo_s, yo_s,
                                                  hand_coords, shifts, hand_c)
-            if new_shifts[0] == -1:
+            if new_xo_t == -1 or new_yo_t == -1:
                 print("Can't find proper position for these coordinates")
-                return -1
+                return -1, -1
 
         return new_xo_t, new_yo_t
 
     #no hand change yet
-    def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
+    def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, move_hand = -1):
         #robot_head = self.robots[robot_num].hands[hand_a].ang
 
         #self.N = 10
 
-        move_hand = -1
-        if self.check_coord_change(robot_num, 0, hand_coords[0][0], hand_coords[0][1]):
-            move_hand = 0
-        elif self.check_coord_change(robot_num, 1, hand_coords[1][0], hand_coords[1][1]):
-            move_hand = 1
-        elif self.check_coord_change(robot_num, 2, hand_coords[2][0], hand_coords[2][1]):
-            move_hand = 2
+        # move_hand = -1
+        # if self.check_coord_change(robot_num, 0, hand_coords[0][0], hand_coords[0][1]):
+        #     move_hand = 0
+        # elif self.check_coord_change(robot_num, 1, hand_coords[1][0], hand_coords[1][1]):
+        #     move_hand = 1
+        # elif self.check_coord_change(robot_num, 2, hand_coords[2][0], hand_coords[2][1]):
+        #     move_hand = 2
+
+        print(f"move hand: {move_hand}")
 
         is_possible = False
         if move_hand == -1:
@@ -570,14 +622,14 @@ class Ceil:
             print(f"n X: {xo_n} Y: {yo_n}")
             print(f"t X: {xo_t} Y: {yo_t}")
             print("---------")
-            in_reach_zone = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
-                                                   hand_coords[1][0], hand_coords[1][1],
-                                                   hand_coords[2][0], hand_coords[2][1],
-                                                   xo_n, yo_n)
-            if not in_reach_zone:
-                print("NOT IN REACH ZONE")
-                return
-            print("IN REACH ZONE")
+            # in_reach_zone = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
+            #                                        hand_coords[1][0], hand_coords[1][1],
+            #                                        hand_coords[2][0], hand_coords[2][1],
+            #                                        xo_n, yo_n)
+            # if not in_reach_zone:
+            #     print("NOT IN REACH ZONE")
+            #     return
+            # print("IN REACH ZONE")
             new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, robot_head = self.get_new_params_by_vector(robot_num,
                                                                                                              xo_s, yo_s,
                                                                                                              xo_n, yo_n,
@@ -710,9 +762,9 @@ class Ceil:
         opt_points = optimal_points(a, b, c)
 
         print(f"xos: {xo_s} yos: {yo_s} xot: {xo_t} yot: {yo_t}")
-        h = math.sqrt(size["outerRadLimit"]**2 - (size["netStep"]/2)**2) / 2 # TODO: not netStep, but dist between two stable holders
+        h = math.sqrt(size["outerRadLimit"]**2 - (size["netStep"]/2)**2) # TODO: not netStep, but dist between two stable holders
         if d==0:
-            d = math.sqrt(h**2 + (size["netStep"] - size["innerRadLimit"])**2 / 4)
+            d = math.sqrt(h**2 + (size["netStep"] - size["innerRadLimit"])**2 / 4) / 2
         print(f"d: {d}")
         x_t_, y_t_ = get_point_on_dist(xo_s, yo_s, xo_t, yo_t, d)
         print(f"TEMP x {x_t_} y {y_t_}")
@@ -731,7 +783,7 @@ class Ceil:
                       int(shift_1 > size["outerRadLimit"] or shift_1 < size["innerRadLimit"]),
                       int(shift_2 > size["outerRadLimit"] or shift_2 < size["innerRadLimit"])]
         sum_diff = sum(shift_diff)
-        print(f"sum_diff: {sum_diff}")
+        # print(f"sum_diff: {sum_diff}")
 
         hand_coords = [(self.robots[robot_num].hands[0].x, self.robots[robot_num].hands[0].y),
                        (self.robots[robot_num].hands[1].x, self.robots[robot_num].hands[1].y),
@@ -829,7 +881,7 @@ class Ceil:
                         continue
 
                     # TODO limitations of greedy algorithm - need to improve
-                    # xy_shift = dist(x_t_, y_t_, x_ceil, y_ceil)
+                    xy_shift = dist(x_t_, y_t_, x_ceil, y_ceil)
                     # is_in_area = is_in_three_hands_area(self.robots[robot_num].hands[stable_hands[0]].x,
                     #                                     self.robots[robot_num].hands[stable_hands[0]].y,
                     #                                     self.robots[robot_num].hands[stable_hands[1]].x,
@@ -837,15 +889,15 @@ class Ceil:
                     #                                     x_ceil, y_ceil, x_t_, y_t_)
                     temp_hand_coords = hand_coords
                     temp_hand_coords[hand_c] = (x_ceil, y_ceil)
-                    is_possible = self.is_move_possible_two_holds(robot_num,
-                                                                  xo_s, yo_s,
-                                                                  x_t_, y_t_,
-                                                                  temp_hand_coords, hand_c)
+                    # is_possible = self.is_move_possible_two_holds(robot_num,
+                    #                                               xo_s, yo_s,
+                    #                                               x_t_, y_t_,
+                    #                                               temp_hand_coords, hand_c)
                     # print(f"Needed conditions are met? - {is_in_area}")
                     xy = (x_ceil, y_ceil)
                     is_in_optimal = xy in opt_points
-                    if is_in_optimal and is_possible:
-                        # min_shift = xy_shift
+                    if is_in_optimal and xy_shift < min_shift:
+                        min_shift = xy_shift
                         best_x = x_ceil
                         best_y = y_ceil
 
@@ -860,16 +912,23 @@ class Ceil:
                                                               hand_coords, hand_c)
                 if is_possible:
                     print("Move is possible (move_step case 1)")
-                    self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords)
+                    print(f"hand c: {hand_c}")
+                    self.move_vector(robot_num, xo_s, yo_s, x_t_, y_t_, hand_coords, hand_c)
                 else:
                     print("Move is impossible (move_step case 1), searching for a new Ot'")
                     new_xo_t_, new_yo_t_ = self.find_new_position_three_holds(robot_num, xo_s, yo_s,
                                                                               x_t_, y_t_, hand_coords, hand_c)
+                    print(f"New Ot' coords: ({new_xo_t_}, {new_yo_t_})")
+                    if new_xo_t_ == -1 or new_yo_t_ == -1:
+                        print("No possible position, return")
+                        return -1
                     self.move_vector(robot_num, xo_s, yo_s, new_xo_t_, new_yo_t_, hand_coords)
             else:
                 print("CAN'T FINISH THE MOVE, NO POSSIBLE POINTS")
                 if is_limited:
                     self.adjust_hand(robot_num, xo_s, yo_s, hand_c)
+                else:
+                    return -1
                 # else:
                 #     new_xo_t_, new_yo_t_ = self.find_new_position_three_holds(robot_num, xo_t, yo_t, hand_coords)
                 #     self.move_vector(robot_num, xo_s, yo_s, new_xo_t_, new_yo_t_, hand_coords)
@@ -1669,6 +1728,10 @@ class Ceil:
         x_path = abs(dest_x - center_x)
         y_path = abs(dest_y - center_y)
         while x_path > 0.01 or y_path > 0.01:
+            if center_x == -1 or center_y == -1:
+                print("Something is wrong, can't find robot center!")
+                self.robots[robot_num].print()
+                break
             res = self.move_step(robot_num, center_x, center_y, dest_x, dest_y)
             if res == -1:
                 break
