@@ -208,10 +208,11 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("---")
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
+    #todo ensure that x1y1 and x2y2 are neighbouring
     l = dist(x1, y1, x2, y2)
     s = (r1 + r2 + l) / 2
     # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
-    h = 2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l # altitude
+    h = round((2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l), 10) # altitude
     # print(f"H: {h}")
 
     # find the right triangle where r1 - hypotenuse and h - one of the legs
@@ -306,6 +307,23 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         # print("Impossible")
     return -1, -1
 
+def center_by_params(hand_coords, shift_1, shift_2, shift_3):
+    center_x, center_y = -1, -1
+    try:
+        if is_aligned(hand_coords):
+            center_x, center_y = calculate_center(hand_coords[0][0], hand_coords[0][1],
+                                                  hand_coords[1][0], hand_coords[1][1],
+                                                  hand_coords[2][0], hand_coords[2][1],
+                                                  shift_1, shift_2, shift_3)
+        else:
+            center_x, center_y = calculate_center_three_points(hand_coords[0][0], hand_coords[0][1],
+                                                               hand_coords[1][0], hand_coords[1][1],
+                                                               hand_coords[2][0], hand_coords[2][1],
+                                                               shift_1, shift_2, shift_3)
+        return center_x, center_y
+    except:
+        return -1, -1
+
 def rotate_point(px, py, qx, qy, theta):
     # print(f"px {px} py {py} qx {qx} qy {qy}")
     px_ = px - qx
@@ -318,6 +336,31 @@ def rotate_point(px, py, qx, qy, theta):
     ry = py_rotated + qy
     # print(f"R x: {rx} y: {ry}")
     return rx, ry
+
+def middle_point(p1, p2, p3):
+    # Extract x and y coordinates
+    x1, y1 = p1
+    x2, y2 = p2
+    x3, y3 = p3
+
+    # Check if points are collinear
+    # (y2 - y1) / (x2 - x1) should be equal to (y3 - y1) / (x3 - x1)
+    # To avoid division by zero, use cross multiplication
+    if (-y2 + y1) * (x3 - x1) == (-y3 + y1) * (x2 - x1):
+        # Create a list of the points
+        points = [p1, p2, p3]
+
+        # Sort points by their x-coordinates first, and y-coordinates as tie-breaker
+        points.sort(key=lambda point: (point[0], point[1]))
+        middle_coord = points[1]
+        for i in range(3):
+            if middle_coord[0] == points[i][0] and middle_coord[1] == points[i][1]:
+                return i
+
+        # The middle point after sorting will be the one in between
+        return -1
+    else:
+        return -1
 
 def dist(x1, y1, x2, y2):
     return math.hypot(x2 - x1, y2 - y1)
@@ -433,7 +476,7 @@ def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
 def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
     # print("IN LIMITATION CHECK")
     dist_arr = dists(x1, y1, x2, y2, x3, y3, xo, yo)
-    print(dist_arr)
+    # print(dist_arr)
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]) or (
             dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):

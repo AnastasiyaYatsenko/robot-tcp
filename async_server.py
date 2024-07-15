@@ -2,6 +2,7 @@
 
 
 import errno
+import random
 import threading
 import socket
 import logging
@@ -22,7 +23,8 @@ BIND_ADDRESS = ('192.168.0.91', 8686)
 BACKLOG = 5
 
 ceil = Ceil()
-
+path = []
+ot = [-1, -1]
 
 def handle_read(sock, client_ip, client_port):
     # обробник, що працює у процесі-нащадку
@@ -103,19 +105,12 @@ def handle_write(sock, client_ip, client_port):
             # print(f"We've send all bytes")
 
 
-def imitate_command():
-    while len(ceil.robots) == 0:
-        time.sleep(0.1)
-    time.sleep(1)
-    print("in imitate")
-    # ceil.turn_robot_hu_to_vr(0)
-    # ceil.turn_robot_vr_to_hu(0)
-    # ceil.start_move(0, 500.0, 300.0)
-    ceil.start_move(0, 500.0, 700.0)
-    # ceil.move_robot(0, 400.0, 0)
-    # ceil.move_robot(0, 300.0, 0)
-    # ceil.turn_robot(0)
-    # ceil.robots[0].print()
+# def imitate_command():
+#     while len(ceil.robots) == 0:
+#         time.sleep(0.1)
+#     time.sleep(1)
+#     print("in imitate")
+#     ceil.start_move(0, 500.0, 700.0)
 
 
 def serve_forever():
@@ -232,25 +227,46 @@ def draw_ceil(screen):
 
             pg.draw.circle(screen, (255, 255, 255), (center_x, center_y), 5, 1)
 
+            if len(ceil.robots[i].opt_points) != 0:
+                for j in range(len(ceil.robots[i].opt_points)):
+                    hand_0_x, hand_0_y = (ceil.robots[i].opt_points[j][0] * rect_side / side + outer_border_add,
+                                          ceil.robots[i].opt_points[j][1] * rect_side / side + outer_border_add)
+                    pg.draw.circle(screen, (0, 255, 0), (hand_0_x,hand_0_y), 7, 2)
+
+            if len(ceil.robots[i].path) != 0:
+                for j in range(len(ceil.robots[i].path)):
+                    for l in range(len(ceil.robots[i].path[j])):
+                        hand_0_x, hand_0_y = (ceil.robots[i].path[j][l][0] * rect_side / side + outer_border_add,
+                                              ceil.robots[i].path[j][l][1] * rect_side / side + outer_border_add)
+
+                        pg.draw.circle(screen, (255, 0, 0), (hand_0_x,hand_0_y), 10, 2)
+
+
+        if ot[0] != -1:
+            x = ot[0] * rect_side / side + outer_border_add
+            y = ot[1] * rect_side / side + outer_border_add
+            pg.draw.circle(screen, (255, 0, 0), (x, y), 5, 0)
+
+
 
 def command_panel():
     pg.init()
     screen = pg.display.set_mode([1210, 750])
 
     # Inputs
-    robot_input = InputBox(870, 50, 200, 32)
-    x_input = InputBox(870, 100, 200, 32)
-    y_input = InputBox(870, 150, 200, 32)
+    robot_input = InputBox(870, 70, 200, 32)
+    x_input = InputBox(870, 120, 200, 32)
+    y_input = InputBox(870, 170, 200, 32)
 
-    r2_input = InputBox(900, 320)
-    x1_input = InputBox(750, 390)
-    y1_input = InputBox(750, 440)
+    r2_input = InputBox(900, 360)
+    x1_input = InputBox(790, 440, 100)
+    y1_input = InputBox(790, 490, 100)
 
-    x2_input = InputBox(900, 390)
-    y2_input = InputBox(900, 440)
+    x2_input = InputBox(940, 440, 100)
+    y2_input = InputBox(940, 490, 100)
 
-    x3_input = InputBox(1050, 390)
-    y3_input = InputBox(1050, 440)
+    x3_input = InputBox(1090, 440, 100)
+    y3_input = InputBox(1090, 490, 100)
 
     # Input surfaces
     robot_surface = pg.Surface((robot_input.inputBox.width, robot_input.inputBox.height))
@@ -268,22 +284,82 @@ def command_panel():
     # Create a surface for the button
     button_surface = pg.Surface((200, 50))
     button_surface_set = pg.Surface((200, 50))
+    button_surface_path = pg.Surface((200, 50))
+
+    # Button rectangles
+    button_start = pg.Rect(870, 220, 200, 50)
+    button_set_coord = pg.Rect(870, 550, 200, 50)
+    button_path = pg.Rect(870, 630, 200, 50)
 
     # Create a font object
-    font = pg.font.Font(None, 24)
+    font = pg.font.Font(None, 30)
 
-    # Render text
     text = font.render("Start move", True, (255, 255, 255))
     text_rect = text.get_rect(center=(button_surface.get_width() / 2, button_surface.get_height() / 2))
     text_set = font.render("Set coordinates", True, (255, 255, 255))
     text_rect_set = text_set.get_rect(center=(button_surface_set.get_width() / 2, button_surface_set.get_height() / 2))
+    text_path = font.render("Build path", True, (255, 255, 255))
+    text_path_set = text_path.get_rect(center=(button_surface_path.get_width() / 2, button_surface_path.get_height() / 2))
 
-    r_text1 = font.render("Robot №", True, (255, 255, 255))
-    r_text1_rect = text.get_rect(center=(robot_surface.get_width() / 2, robot_surface.get_height() / 2 - 50))
+    text_move = font.render("Start move", True, (255, 255, 255))
+    text_move_rect = text_move.get_rect(
+        center=(robot_input.inputBox.x + robot_input.inputBox.width / 2, robot_input.inputBox.y - 30))
 
-    # Button rectangles
-    button_start = pg.Rect(870, 200, 200, 50)
-    button_set_coord = pg.Rect(870, 500, 200, 50)
+    text_set_coords = font.render("Set robot coordinates", True, (255, 255, 255))
+    text_set_coords_rect = text_set_coords.get_rect(
+        center=(r2_input.inputBox.x + r2_input.inputBox.width / 2, r2_input.inputBox.y - 30))
+
+    r_text1 = font.render("Robot N.", True, (255, 255, 255))
+    r_text1_rect = text.get_rect(center=(
+        robot_input.inputBox.x - r_text1.get_width() + 40, robot_input.inputBox.y + robot_input.inputBox.height / 2))
+
+    x_text = font.render("X:", True, (255, 255, 255))
+    x_text_rect = text.get_rect(center=(
+        x_input.inputBox.x - x_text.get_width() + 40, x_input.inputBox.y + x_input.inputBox.height / 2))
+
+    y_text = font.render("Y:", True, (255, 255, 255))
+    y_text_rect = text.get_rect(center=(
+        y_input.inputBox.x - y_text.get_width() + 40, y_input.inputBox.y + y_input.inputBox.height / 2))
+
+    r_text2 = font.render("Robot N.", True, (255, 255, 255))
+    r_text2_rect = text.get_rect(center=(
+        r2_input.inputBox.x - r_text2.get_width() + 40, r2_input.inputBox.y + r2_input.inputBox.height / 2))
+
+    text_hand_1 = font.render("Hand 1", True, (255, 255, 255))
+    text_hand_1_rect = text_hand_1.get_rect(center=(
+        x1_input.inputBox.x + x1_input.inputBox.width / 2, x1_input.inputBox.y - 20))
+
+    text_hand_2 = font.render("Hand 2", True, (255, 255, 255))
+    text_hand_2_rect = text_hand_2.get_rect(center=(
+        x2_input.inputBox.x + x2_input.inputBox.width / 2, x2_input.inputBox.y - 20))
+
+    text_hand_3 = font.render("Hand 3", True, (255, 255, 255))
+    text_hand_3_rect = text_hand_3.get_rect(center=(
+        x3_input.inputBox.x + x3_input.inputBox.width / 2, x3_input.inputBox.y - 20))
+
+    x1_text = font.render("X:", True, (255, 255, 255))
+    x1_text_rect = x1_text.get_rect(center=(
+        x1_input.inputBox.x - x1_text.get_width(), x1_input.inputBox.y + x1_input.inputBox.height / 2))
+
+    x2_text = font.render("X:", True, (255, 255, 255))
+    x2_text_rect = x2_text.get_rect(center=(
+        x2_input.inputBox.x - x2_text.get_width(), x2_input.inputBox.y + x2_input.inputBox.height / 2))
+
+    x3_text = font.render("X:", True, (255, 255, 255))
+    x3_text_rect = x3_text.get_rect(center=(
+        x3_input.inputBox.x - x3_text.get_width(), x3_input.inputBox.y + x3_input.inputBox.height / 2))
+
+    y1_text = font.render("Y:", True, (255, 255, 255))
+    y1_text_rect = y1_text.get_rect(center=(
+        y1_input.inputBox.x - y1_text.get_width(), y1_input.inputBox.y + y1_input.inputBox.height / 2))
+
+    y2_text = font.render("Y:", True, (255, 255, 255))
+    y2_text_rect = y2_text.get_rect(center=(
+        y2_input.inputBox.x - y2_text.get_width(), y2_input.inputBox.y + y2_input.inputBox.height / 2))
+
+    y3_text = font.render("Y:", True, (255, 255, 255))
+    y3_text_rect = y3_text.get_rect(center=(
+        y3_input.inputBox.x - y3_text.get_width(), y3_input.inputBox.y + y3_input.inputBox.height / 2))
 
     clock = pg.time.Clock()
     screen.fill((48, 48, 48))
@@ -300,7 +376,6 @@ def command_panel():
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # Call the on_mouse_button_down() function
                 if button_start.collidepoint(event.pos):
-                    # print("Button clicked!")
                     if (robot_input.text == '') or (x_input.text == '') or (y_input.text == ''):
                         print("Invalid input")
                     else:
@@ -316,12 +391,10 @@ def command_panel():
                         elif (x < 0) or (x > 2000) or (y < 0) or (y > 2000):
                             print("Invalid coordinates")
                         else:
-                            # t1 = threading.Thread(target=ceil.start_move, args=[robot_num, x, y])
                             t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
                             t1.start()
-                            # t1 = threading.Thread(target=imitate_command)
                 if button_set_coord.collidepoint(event.pos):
-                    print("SET COORD BUTTON")
+                    # print("SET COORD BUTTON")
                     if (((x1_input.text == '') or (y1_input.text == '')
                             or (x2_input.text == '') or (y2_input.text == ''))
                             or (x3_input.text == '') or (y3_input.text == '')
@@ -356,6 +429,23 @@ def command_panel():
                             # t1.start()
                     # t1 = threading.Thread(target=imitate_command)
                     # t1.start()
+                if button_path.collidepoint(event.pos):
+                    if len(ceil.robots) == 0:
+                        break
+                    print("Build path")
+                    xo_t = random.randint(0, 2000)
+                    yo_t = random.randint(0, 2000)
+                    xo_s, yo_s = ceil.robots[0].get_center()
+                    print(f"Os: ({xo_s}, {yo_s}); Ot: ({xo_t}, {yo_t})")
+                    global ot
+                    ot[0] = xo_t
+                    ot[1] = yo_t
+                    # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
+                    t_path = threading.Thread(target=ceil.build_path, args=[0, xo_s, yo_s, xo_t, yo_t])
+                    t_path.start()
+                    # global path
+                    # path = path_[:]
+
 
             robot_input.handle_event(event)
             x_input.handle_event(event)
@@ -382,16 +472,43 @@ def command_panel():
         screen.blit(button_surface, (button_start.x, button_start.y))
 
         # SET COORDINATES BUTTON
-        # Check if the mouse is over the button. This will create the button hover effect
         if button_set_coord.collidepoint(pg.mouse.get_pos()):
             pg.draw.rect(button_surface_set, (5, 60, 57), (1, 1, 200, 48))
         else:
             pg.draw.rect(button_surface_set, (5, 99, 46), (1, 1, 200, 48))
 
-            # Show the button text
         button_surface_set.blit(text_set, text_rect_set)
-        # Draw the button on the screen
         screen.blit(button_surface_set, (button_set_coord.x, button_set_coord.y))
+
+        # BUILD PATH BUTTON
+        if button_path.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_path, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_path, (5, 99, 46), (1, 1, 200, 48))
+
+        button_surface_path.blit(text_path, text_path_set)
+        screen.blit(button_surface_path, (button_path.x, button_path.y))
+
+        pg.draw.line(screen, (255, 255, 255), (760, 290), (1090 + x3_input.inputBox.width, 290))
+        pg.draw.line(screen, (255, 255, 255), (760, 620), (1090 + x3_input.inputBox.width, 620))
+
+        screen.blit(text_move, text_move_rect)
+        screen.blit(text_set_coords, text_set_coords_rect)
+        screen.blit(r_text1, r_text1_rect)
+        screen.blit(x_text, x_text_rect)
+        screen.blit(y_text, y_text_rect)
+
+        screen.blit(r_text2, r_text2_rect)
+        screen.blit(text_hand_1, text_hand_1_rect)
+        screen.blit(text_hand_2, text_hand_2_rect)
+        screen.blit(text_hand_3, text_hand_3_rect)
+
+        screen.blit(x1_text, x1_text_rect)
+        screen.blit(x2_text, x2_text_rect)
+        screen.blit(x3_text, x3_text_rect)
+        screen.blit(y1_text, y1_text_rect)
+        screen.blit(y2_text, y2_text_rect)
+        screen.blit(y3_text, y3_text_rect)
 
         # Draw input boxes
         screen.blit(robot_surface, (robot_input.inputBox.x, robot_input.inputBox.y))

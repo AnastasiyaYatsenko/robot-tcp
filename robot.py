@@ -22,6 +22,9 @@ class Robot:
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.out_buffer = b''
+        self.path = []
+        self.centers = []
+        self.opt_points = []
                                 # x       y
         # self.real_coordinates = [(300, 300),  # hand 0
         #                          (100, 300),  # hand 1
