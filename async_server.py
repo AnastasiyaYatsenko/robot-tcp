@@ -9,6 +9,7 @@ import logging
 import time
 from struct import unpack
 
+import pygame as pg
 from pygame import font
 
 from arm_geometry_test import *
@@ -23,7 +24,8 @@ BIND_ADDRESS = ('192.168.0.91', 8686)
 BACKLOG = 5
 
 ceil = Ceil()
-path = []
+# path = []
+counter = 0
 ot = [-1, -1]
 
 def handle_read(sock, client_ip, client_port):
@@ -233,13 +235,37 @@ def draw_ceil(screen):
                                           ceil.robots[i].opt_points[j][1] * rect_side / side + outer_border_add)
                     pg.draw.circle(screen, (0, 255, 0), (hand_0_x,hand_0_y), 7, 2)
 
-            if len(ceil.robots[i].path) != 0:
-                for j in range(len(ceil.robots[i].path)):
-                    for l in range(len(ceil.robots[i].path[j])):
-                        hand_0_x, hand_0_y = (ceil.robots[i].path[j][l][0] * rect_side / side + outer_border_add,
-                                              ceil.robots[i].path[j][l][1] * rect_side / side + outer_border_add)
+                if not ceil.robots[i].isMoving:
+                    global counter
 
-                        pg.draw.circle(screen, (255, 0, 0), (hand_0_x,hand_0_y), 10, 2)
+                    if len(ceil.robots[i].path) != 0:
+                        for j in range(len(ceil.robots[i].path)):
+                            for l in range(len(ceil.robots[i].path[j])):
+                                hand_0_x, hand_0_y = (
+                                ceil.robots[i].path[j][l][0] * rect_side / side + outer_border_add,
+                                ceil.robots[i].path[j][l][1] * rect_side / side + outer_border_add)
+
+                                pg.draw.circle(screen, (255, 0, 0), (hand_0_x, hand_0_y), 10, 2)
+
+                    if counter == 500:
+                        counter = 0
+                        ceil.robots[i].curr_index += 1
+                        if ceil.robots[i].curr_index >= len(ceil.robots[i].path):
+                            ceil.robots[i].curr_index = 0
+                    j = ceil.robots[i].curr_index
+                    ax = ceil.robots[i].path[j][0][0] * rect_side / side + outer_border_add
+                    ay = ceil.robots[i].path[j][0][1] * rect_side / side + outer_border_add
+                    bx = ceil.robots[i].path[j][1][0] * rect_side / side + outer_border_add
+                    by = ceil.robots[i].path[j][1][1] * rect_side / side + outer_border_add
+                    cx = ceil.robots[i].path[j][2][0] * rect_side / side + outer_border_add
+                    cy = ceil.robots[i].path[j][2][1] * rect_side / side + outer_border_add
+                    cent_x, cent_y = (ceil.robots[i].centers[j][0] * rect_side / side + outer_border_add,
+                                      ceil.robots[i].centers[j][1] * rect_side / side + outer_border_add)
+
+                    pg.draw.line(screen, (255, 0, 0), (ax, ay), (cent_x, cent_y), 3)
+                    pg.draw.line(screen, (0, 255, 0), (bx, by), (cent_x, cent_y), 3)
+                    pg.draw.line(screen, (0, 0, 255), (cx, cy), (cent_x, cent_y), 3)
+                    counter += 1
 
 
         if ot[0] != -1:

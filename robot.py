@@ -19,6 +19,7 @@ class Robot:
         # self.move_dir = 0
         # self.hand_i = 0
         self.isMoving = False
+        self.curr_index = -1
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.out_buffer = b''
@@ -177,9 +178,9 @@ class Robot:
             return False
         if abs((self.hands[2].x - self.hands[0].x) / (self.hands[1].x - self.hands[0].x) -
                (self.hands[2].y - self.hands[0].y) / (self.hands[1].y - self.hands[0].y)) <= Tol:
-            print("---")
+            # print("---")
             return True
-        print("---")
+        # print("---")
         return False
 
     def is_horizontal_aligned(self):

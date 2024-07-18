@@ -514,7 +514,7 @@ def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
 
 def optimal_points(a, b, c):
     x_start, y_start = 100, 100
-    max_dist = size["netStep"] * math.sqrt(2)
+    max_dist = size["netStep"] * math.sqrt(2) * 2
     opt_points = []
     for y_step in range(10):
         for x_step in range(10):
@@ -526,23 +526,26 @@ def optimal_points(a, b, c):
     return opt_points
 
 def is_aligned(hand_coords):
+    # print(f"In is_aligned: {hand_coords}")
     if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
-        print("---")
+        # print("- horizontal or vertical -")
         return True
     Tol = 1e-10
     if (hand_coords[0][0] == hand_coords[2][0] and hand_coords[0][0] != hand_coords[1][0]) or (
             hand_coords[1][0] == hand_coords[2][0] and hand_coords[1][0] != hand_coords[0][0]) or (
             hand_coords[0][0] == hand_coords[1][0] and hand_coords[0][0] != hand_coords[2][0]):
+        # print("- not aligned -")
         return False
     if (hand_coords[0][1] == hand_coords[2][1] and hand_coords[0][1] != hand_coords[1][1]) or (
             hand_coords[1][1] == hand_coords[2][1] and hand_coords[1][1] != hand_coords[0][1]) or (
             hand_coords[0][1] == hand_coords[1][1] and hand_coords[0][1] != hand_coords[2][1]):
+        # print("- not aligned -")
         return False
     if abs((hand_coords[2][0] - hand_coords[0][0]) / (hand_coords[1][0] - hand_coords[0][0]) -
            (hand_coords[2][1] - hand_coords[0][1]) / (hand_coords[1][1] - hand_coords[0][1])) <= Tol:
-        print("---")
+        # print("- aligned -")
         return True
-    print("---")
+    # print("- not aligned -")
     return False
 
 def is_horizontal_aligned(hand_coords):
