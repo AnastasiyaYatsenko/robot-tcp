@@ -183,7 +183,7 @@ def draw_ceil(screen):
 
         for i in range(len(ceil.robots)):
             # print("in r loop")
-            points = ceil.robots[i].get_real_coordinates()
+            points = ceil.robots[i].get_real_coordinates_robot()
             hand_points = ceil.robots[i].get_real_coordinates_hand()
 
             hand_red_x, hand_red_y = (hand_points[0][0] * rect_side / side + outer_border_add,
@@ -229,6 +229,11 @@ def draw_ceil(screen):
 
             pg.draw.circle(screen, (255, 255, 255), (center_x, center_y), 5, 1)
 
+            if ot[0] != -1:
+                x = ot[0] * rect_side / side + outer_border_add
+                y = ot[1] * rect_side / side + outer_border_add
+                pg.draw.circle(screen, (255, 0, 0), (x, y), 5, 0)
+
             if len(ceil.robots[i].opt_points) != 0:
                 for j in range(len(ceil.robots[i].opt_points)):
                     hand_0_x, hand_0_y = (ceil.robots[i].opt_points[j][0] * rect_side / side + outer_border_add,
@@ -252,19 +257,19 @@ def draw_ceil(screen):
                         ceil.robots[i].curr_index += 1
                         if ceil.robots[i].curr_index >= len(ceil.robots[i].path):
                             ceil.robots[i].curr_index = 0
-                    j = ceil.robots[i].curr_index
-                    ax = ceil.robots[i].path[j][0][0] * rect_side / side + outer_border_add
-                    ay = ceil.robots[i].path[j][0][1] * rect_side / side + outer_border_add
-                    bx = ceil.robots[i].path[j][1][0] * rect_side / side + outer_border_add
-                    by = ceil.robots[i].path[j][1][1] * rect_side / side + outer_border_add
-                    cx = ceil.robots[i].path[j][2][0] * rect_side / side + outer_border_add
-                    cy = ceil.robots[i].path[j][2][1] * rect_side / side + outer_border_add
-                    cent_x, cent_y = (ceil.robots[i].centers[j][0] * rect_side / side + outer_border_add,
-                                      ceil.robots[i].centers[j][1] * rect_side / side + outer_border_add)
-
-                    pg.draw.line(screen, (255, 0, 0), (ax, ay), (cent_x, cent_y), 3)
-                    pg.draw.line(screen, (0, 255, 0), (bx, by), (cent_x, cent_y), 3)
-                    pg.draw.line(screen, (0, 0, 255), (cx, cy), (cent_x, cent_y), 3)
+                    # j = ceil.robots[i].curr_index
+                    # ax = ceil.robots[i].path[j][0][0] * rect_side / side + outer_border_add
+                    # ay = ceil.robots[i].path[j][0][1] * rect_side / side + outer_border_add
+                    # bx = ceil.robots[i].path[j][1][0] * rect_side / side + outer_border_add
+                    # by = ceil.robots[i].path[j][1][1] * rect_side / side + outer_border_add
+                    # cx = ceil.robots[i].path[j][2][0] * rect_side / side + outer_border_add
+                    # cy = ceil.robots[i].path[j][2][1] * rect_side / side + outer_border_add
+                    # cent_x, cent_y = (ceil.robots[i].centers[j][0] * rect_side / side + outer_border_add,
+                    #                   ceil.robots[i].centers[j][1] * rect_side / side + outer_border_add)
+                    #
+                    # pg.draw.line(screen, (255, 0, 0), (ax, ay), (cent_x, cent_y), 3)
+                    # pg.draw.line(screen, (0, 255, 0), (bx, by), (cent_x, cent_y), 3)
+                    # pg.draw.line(screen, (0, 0, 255), (cx, cy), (cent_x, cent_y), 3)
                     counter += 1
 
 
@@ -417,8 +422,20 @@ def command_panel():
                         elif (x < 0) or (x > 2000) or (y < 0) or (y > 2000):
                             print("Invalid coordinates")
                         else:
-                            t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
-                            t1.start()
+                            xo_s, yo_s = ceil.robots[0].get_center()
+                            print(f"Os: ({xo_s}, {yo_s}); Ot: ({x}, {y})")
+                            global ot
+                            ot[0] = x
+                            ot[1] = y
+                            # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
+                            t_path = threading.Thread(target=ceil.build_path, args=[robot_num, xo_s, yo_s, x, y])
+                            t_path.start()
+
+                            t_path.join()
+                            t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
+                            t_start.start()
+                            # t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
+                            # t1.start()
                 if button_set_coord.collidepoint(event.pos):
                     # print("SET COORD BUTTON")
                     if (((x1_input.text == '') or (y1_input.text == '')
@@ -463,12 +480,16 @@ def command_panel():
                     yo_t = random.randint(0, 2000)
                     xo_s, yo_s = ceil.robots[0].get_center()
                     print(f"Os: ({xo_s}, {yo_s}); Ot: ({xo_t}, {yo_t})")
-                    global ot
+                    # global ot
                     ot[0] = xo_t
                     ot[1] = yo_t
                     # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
                     t_path = threading.Thread(target=ceil.build_path, args=[0, xo_s, yo_s, xo_t, yo_t])
                     t_path.start()
+
+                    t_path.join()
+                    t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
+                    t_start.start()
                     # global path
                     # path = path_[:]
 

@@ -19,7 +19,7 @@ class Ceil:
         # масив лунок
         self.ceil_arr = [[0 for i in range(self.max_x)] for j in range(self.max_y)]
         #self.N = 2
-        self.N = 1
+        self.N = 2
 
         # дефолтні координати для роботів
         self.default_coordinates = {"x1": 300,
@@ -215,56 +215,52 @@ class Ceil:
         ab = normalize(angs[hand_b] - aa0)
         ac = normalize(angs[hand_c] - aa0)
 
-        # координати центру відносно А - це "віддзеркалені" кординати А відносно центру
-        # o = (-1 * sa * math.sin(aa * math.pi / 180),
-        #      -1 * sa * math.cos(aa * math.pi / 180))
-        # a = (0, 0)
-        # b = (sb * math.sin(ab * math.pi / 180) + o[0],
-        #      sb * math.cos(ab * math.pi / 180) + o[1])
-        # c = (sc * math.sin(ac * math.pi / 180) + o[0],
-        #      sc * math.cos(ac * math.pi / 180) + o[1])
-
         o = (0, 0)
-        a = (-sa * dsin(aa), -sa * dcos(aa))
-        b = (-sb * dsin(ab), -sb * dcos(ab))
-        c = (-sc * dsin(ac), -sc * dcos(ac))
+        a = (sa * dsin(aa), sa * dcos(aa))
+        b = (sb * dsin(ab), sb * dcos(ab))
+        c = (sc * dsin(ac), sc * dcos(ac))
 
-        # print(f"GRC: A: {a}, B: {b}, C: {c}, O: {o}")
+        base = a
+        base_i = hand_a
+        if self.robots[robot_num].hands[hand_a].hold == 0:
+            base = b
+            base_i = hand_b
 
         sa = sb = sc = size["outerRadLimit"]
 
         # ЛАПИ
         # Обчислюємо все відносно O
         o_ = (0, 0)
-        a_ = (-sa * dsin(aa), -sa * dcos(aa))  # координаты центра относительно А - это "отзеркаленные" кординаты А относительно це
-        b_ = (-sb * dsin(ab), -sb * dcos(ab))
-        c_ = (-sc * dsin(ac), -sc * dcos(ac))
+        a_ = (sa * dsin(aa),
+              sa * dcos(aa))  # координаты центра относительно А - это "отзеркаленные" кординаты А относительно центра
+        b_ = (sb * dsin(ab), sb * dcos(ab))
+        c_ = (sc * dsin(ac), sc * dcos(ac))
 
         # и смещаем зацеп A в начало координат, из координаты конца ЛИНИИ вычитаем координату ЗАЦЕПА!!
-        o_ = (o_[0]-a[0], o_[1]-a[1])
-        b_ = (b_[0]-a[0], b_[1]-a[1])
-        c_ = (c_[0]-a[0], c_[1]-a[1])
-        a_ = (a_[0]-a[0], a_[1]-a[1])
+        o_ = (o_[0] - base[0], o_[1] - base[1])
+        b_ = (b_[0] - base[0], b_[1] - base[1])
+        c_ = (c_[0] - base[0], c_[1] - base[1])
+        a_ = (a_[0] - base[0], a_[1] - base[1])
 
         # и смещаем зацеп A в начало координат
-        o = (o[0]-a[0], o[1]-a[1])
-        b = (b[0]-a[0], b[1]-a[1])
-        c = (c[0]-a[0], c[1]-a[1])
-        a = (a[0]-a[0], a[1]-a[1])
+        o = (o[0] - base[0], o[1] - base[1])
+        a = (a[0] - base[0], a[1] - base[1])
+        b = (b[0] - base[0], b[1] - base[1])
+        c = (c[0] - base[0], c[1] - base[1])
         # print(f"GRC: A1: {a}, B1: {b}, C1: {c}, O1: {o}")
 
-        a_x = float(self.robots[robot_num].hands[hand_a].x)
-        a_y = float(self.robots[robot_num].hands[hand_a].y)
-        a_real = a[0] + a_x, a[1] + a_y
-        b_real = b[0] + a_x, b[1] + a_y
-        c_real = c[0] + a_x, c[1] + a_y
-        o_real = o[0] + a_x, o[1] + a_y
+        base_x = float(self.robots[robot_num].hands[base_i].x)
+        base_y = float(self.robots[robot_num].hands[base_i].y)
+        a_real = a[0] + base_x, a[1] + base_y
+        b_real = b[0] + base_x, b[1] + base_y
+        c_real = c[0] + base_x, c[1] + base_y
+        o_real = o[0] + base_x, o[1] + base_y
         # print(f"GRC: A2: {a_real}, B2: {b_real}, C2: {c_real}, O2: {o_real}")
 
-        a_real_ = a_[0] + a_x, a_[1] + a_y
-        b_real_ = b_[0] + a_x, b_[1] + a_y
-        c_real_ = c_[0] + a_x, c_[1] + a_y
-        o_real_ = o_[0] + a_x, o_[1] + a_y
+        a_real_ = a_[0] + base_x, a_[1] + base_y
+        b_real_ = b_[0] + base_x, b_[1] + base_y
+        c_real_ = c_[0] + base_x, c_[1] + base_y
+        o_real_ = o_[0] + base_x, o_[1] + base_y
 
         coord = [(0, 0), (0, 0), (0, 0), (0, 0)]
         coord[hand_a] = (a_real[0], a_real[1])
@@ -292,44 +288,56 @@ class Ceil:
     def get_new_params_by_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, move_hand = -1):
         # TODO get params from robot
         ang_0 = self.robots[robot_num].hands[0].ang
-        x0, y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
-                                   xo_s, yo_s)
+        print(f"Angle A: {ang_0}")
+        # x0, y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
+        #                            xo_s, yo_s)
+        x0, y0 = get_vector_coords(xo_s, yo_s,
+                                   hand_coords[0][0], hand_coords[0][1])
 
         if move_hand == 0:
             ang_0 = self.robots[robot_num].hands[1].ang
-            x0, y0 = get_vector_coords(hand_coords[1][0], hand_coords[1][1],
-                                       xo_s, yo_s)
+            x0, y0 = get_vector_coords(xo_s, yo_s,
+                                       hand_coords[1][0], hand_coords[1][1])
+            # x0, y0 = get_vector_coords(hand_coords[1][0], hand_coords[1][1],
+            #                            xo_s, yo_s)
 
         a = get_abs_vector(x0, y0)
 
-        # print(f"GET VECTOR ABS a: {a}")
+        print(f"GET VECTOR ABS a: {a}, x0: {x0}, y0: {y0}")
 
         # base vector is vertical vector from which the angles and offset will be counted
         base_vector_x = 0
-        base_vector_y = 5
+        base_vector_y = -5
 
         base_to_0 = angle_between_vectors(base_vector_x, base_vector_y, x0, y0)
         shift = normalize(ang_0 - base_to_0)
-        # print(f"BASE TO A: {base_to_0} SHIFT: {shift}")
+        # shift = 4
+        print(f"BASE TO A: {base_to_0} SHIFT: {shift}")
 
         #x_head, y_head = get_head_vector(a, ang_a, b, ang_b, xa, ya, xb, yb)
         # print(f"GET HEAD head: ({x_head}, {y_head})")
 
-        new_x0, new_y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
-                                           xo_t, yo_t)
-        new_x1, new_y1 = get_vector_coords(hand_coords[1][0], hand_coords[1][1],
-                                           xo_t, yo_t)
+        # new_x0, new_y0 = get_vector_coords(hand_coords[0][0], hand_coords[0][1],
+        #                                    xo_t, yo_t)
+        # new_x1, new_y1 = get_vector_coords(hand_coords[1][0], hand_coords[1][1],
+        #                                    xo_t, yo_t)
+        # new_x2, new_y2 = get_vector_coords(hand_coords[2][0], hand_coords[2][1],
+        #                                    xo_t, yo_t)
 
-        new_x2, new_y2 = get_vector_coords(hand_coords[2][0], hand_coords[2][1],
-                                           xo_t, yo_t)
+        new_x0, new_y0 = get_vector_coords(xo_t, yo_t,
+                                   hand_coords[0][0], hand_coords[0][1])
+        new_x1, new_y1 = get_vector_coords(xo_t, yo_t,
+                                   hand_coords[1][0], hand_coords[1][1])
+        new_x2, new_y2 = get_vector_coords(xo_t, yo_t,
+                                   hand_coords[2][0], hand_coords[2][1])
 
-        # print(f"GET NEW VECTOR COORDS a: ({new_x0}, {new_y0}) b: ({new_x1}, {new_y1}) c: ({new_x2}, {new_y2})")
+        print(f"GET NEW VECTOR COORDS a: ({new_x0}, {new_y0}) b: ({new_x1}, {new_y1}) c: ({new_x2}, {new_y2})")
 
         new_0 = get_abs_vector(new_x0, new_y0)
         new_1 = get_abs_vector(new_x1, new_y1)
         new_2 = get_abs_vector(new_x2, new_y2)
 
-        # print(f"GET NEW VECTOR ABS a: {new_0} b: {new_1} c: {new_2}")
+        print(f"GET NEW VECTOR ABS a: {new_0} b: {new_1} c: {new_2}")
 
         '''new_ang_a = angle_between_vectors(x_head, y_head, new_xa, new_ya)
         new_ang_b = angle_between_vectors(x_head, y_head, new_xb, new_yb)
@@ -339,18 +347,19 @@ class Ceil:
         new_ang_1 = angle_between_vectors(base_vector_x, base_vector_y, new_x1, new_y1)
         new_ang_2 = angle_between_vectors(base_vector_x, base_vector_y, new_x2, new_y2)
 
-        # print(f"ANGS BEFORE SHIFT a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
+        print(f"ANGS BEFORE SHIFT a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
 
         new_ang_0 = normalize(new_ang_0 + shift)
         new_ang_1 = normalize(new_ang_1 + shift)
         new_ang_2 = normalize(new_ang_2 + shift)
 
-        # print(f"GET ANGS a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
+        print(f"GET ANGS a: {new_ang_0} b: {new_ang_1} c: {new_ang_2}")
 
         return new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, shift
 
     # check if hand shifts will be of possible lengths throughout the move
     def is_move_possible_two_holds(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, hand_c):
+        print(f"Is possible two holds; hand: {hand_c}, coords: {hand_coords}, Os: ({xo_s}, {yo_s}), On: ({xo_t}, {yo_t})")
         N = 10
         hands = [0, 1, 2]
         hands.remove(hand_c)
@@ -379,6 +388,7 @@ class Ceil:
         return True
 
     def is_move_possible_three_holds(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
+        print("is possible two holds")
         N = 10
         for n in range(N + 1):
             xo_n = xo_s
@@ -582,21 +592,78 @@ class Ceil:
 
         return new_xo_t, new_yo_t
 
-    #no hand change yet
+    def check_clockwise(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, old_shift, old_ang, delta_shift, new_ang, move_hand):
+        print(f"IN FUNC N = {self.N}; move_hand is {move_hand}; old_shift: {old_shift}, old_ang: {old_ang};"
+              f"delta_shift: {delta_shift}, new_ang: {new_ang}")
+        for n in range(self.N + 1):
+            xo_n = xo_s
+            yo_n = yo_s
+            if 0 < n < self.N:
+                l = n / (self.N - n)
+                xo_n = (xo_s + l * xo_t) / (1 + l)
+                yo_n = (yo_s + l * yo_t) / (1 + l)
+            elif n == (self.N):
+                xo_n = xo_t
+                yo_n = yo_t
+            # print("---------")
+            # print(f"s X: {xo_s} Y: {yo_s}")
+            # print(f"n X: {xo_n} Y: {yo_n}")
+            # print(f"t X: {xo_t} Y: {yo_t}")
+            # print("---------")
+            new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, robot_head = self.get_new_params_by_vector(robot_num,
+                                                                                                             xo_s, yo_s,
+                                                                                                             xo_n, yo_n,
+                                                                                                             hand_coords,
+                                                                                                             move_hand)
+            shifts = [0.0, 0.0, 0.0]
+            shifts[0] = new_0
+            shifts[1] = new_1
+            shifts[2] = new_2
+
+            angs = [0.0, 0.0, 0.0]
+            angs[0] = normalize(new_ang_0)
+            angs[1] = normalize(new_ang_1)
+            angs[2] = normalize(new_ang_2)
+
+            holds = [1, 1, 1]
+
+            # print(f"t_ang: {t_angs[move_hand]}, t_shift: {t_shifts[move_hand]}")
+
+            if move_hand != -1 and n < self.N:
+                # print(f"Hold 0: {n}")
+                holds[move_hand] = 0
+                shifts[move_hand] = old_shift + delta_shift * n
+                angs[move_hand] = normalize(old_ang + clockwise(new_ang - old_ang) * n / self.N)
+            print(f"n = {n}, shifts: {shifts}; angs: {angs}")
+
+            mirror = mirroring_check(angs[0], angs[1], angs[2])
+            if not mirror:
+                print("mirror false")
+                return False
+            else:
+                print("mirror true")
+        return True
+
     def move_vector(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, move_hand = -1):
         #robot_head = self.robots[robot_num].hands[hand_a].ang
 
         #self.N = 10
 
-        # move_hand = -1
-        # if self.check_coord_change(robot_num, 0, hand_coords[0][0], hand_coords[0][1]):
-        #     move_hand = 0
-        # elif self.check_coord_change(robot_num, 1, hand_coords[1][0], hand_coords[1][1]):
-        #     move_hand = 1
-        # elif self.check_coord_change(robot_num, 2, hand_coords[2][0], hand_coords[2][1]):
-        #     move_hand = 2
+        t_0, t_1, t_2, t_ang_0, t_ang_1, t_ang_2, robot_head = self.get_new_params_by_vector(robot_num,
+                                                                                             xo_s, yo_s,
+                                                                                             xo_t, yo_t,
+                                                                                             hand_coords,
+                                                                                             move_hand)
+        t_shifts = [t_0, t_1, t_2]
+        t_angs = [t_ang_0, t_ang_1, t_ang_2]
+        print(f"t_shifts: {t_shifts}; t_angs: {t_angs}")
+        delta_ang = -1.0
+        delta_shift = -1
+        old_ang = -1.0
+        old_shift = -1
+        is_clockwise = -1
 
-        print(f"move hand: {move_hand}")
+        # print(f"move hand: {move_hand}")
 
         is_possible = False
         if move_hand == -1:
@@ -606,7 +673,19 @@ class Ceil:
 
         if not is_possible:
             print("MOVE IS NOT POSSIBLE")
-            return
+            return -1
+
+        if move_hand != -1:
+            delta_ang = (t_angs[move_hand] - self.robots[robot_num].hands[move_hand].ang) / self.N
+            delta_shift = (t_shifts[move_hand] - self.robots[robot_num].hands[move_hand].lin) / self.N
+            old_ang = self.robots[robot_num].hands[move_hand].ang
+            old_shift = self.robots[robot_num].hands[move_hand].lin
+            is_clockwise = self.check_clockwise(robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords,
+                                                old_shift, old_ang,
+                                                delta_shift, t_angs[move_hand], move_hand)
+        print(f"move_hand is {move_hand}; old_shift: {old_shift}, old_ang: {old_ang}; delta_shift: {delta_shift}, delta_ang: {delta_ang}")
+
+        prev_x_n, prev_y_n = xo_s, yo_s
 
         for n in range(self.N + 1):
             xo_n = xo_s
@@ -623,16 +702,9 @@ class Ceil:
             print(f"n X: {xo_n} Y: {yo_n}")
             print(f"t X: {xo_t} Y: {yo_t}")
             print("---------")
-            # in_reach_zone = is_in_three_hands_area(hand_coords[0][0], hand_coords[0][1],
-            #                                        hand_coords[1][0], hand_coords[1][1],
-            #                                        hand_coords[2][0], hand_coords[2][1],
-            #                                        xo_n, yo_n)
-            # if not in_reach_zone:
-            #     print("NOT IN REACH ZONE")
-            #     return
-            # print("IN REACH ZONE")
+            print(f"Coords: {hand_coords}")
             new_0, new_1, new_2, new_ang_0, new_ang_1, new_ang_2, robot_head = self.get_new_params_by_vector(robot_num,
-                                                                                                             xo_s, yo_s,
+                                                                                                             prev_x_n, prev_y_n,
                                                                                                              xo_n, yo_n,
                                                                                                              hand_coords,
                                                                                                              move_hand)
@@ -648,9 +720,37 @@ class Ceil:
 
             #TODO
             holds = [1, 1, 1]
-            print(f"n = {n}; move_hand is {move_hand}")
-            if move_hand != -1 and n != self.N:
+            print(f"n = {n}; N = {self.N}")
+            # print(f"t_ang: {t_angs[move_hand]}, t_shift: {t_shifts[move_hand]}")
+
+            print(f"1 Shifts {shifts}, Angs: {angs}")
+            if move_hand != -1 and n < self.N:
+                # print(f"Hold 0: {n}")
                 holds[move_hand] = 0
+                shifts[move_hand] = old_shift + delta_shift * n
+                if is_clockwise:
+                    print("clockwise")
+                    print(f"delta: {(t_angs[move_hand] - old_ang) / self.N}")
+                    print(f"clockwise: {clockwise(t_angs[move_hand] - old_ang)}")
+                    print(f"old_ang: {old_ang}")
+                    print(f"new ang: {old_ang + clockwise(t_angs[move_hand] - old_ang) * n / self.N}")
+                    angs[move_hand] = normalize(old_ang + clockwise(t_angs[move_hand] - old_ang) * n / self.N)
+                else:
+                    print("counterclockwise")
+                    # angs[move_hand] = old_ang + n * (t_angs[move_hand] - old_ang) / self.N
+                    print(f"delta: {(t_angs[move_hand] - old_ang) / self.N}")
+                    print(f"counterclockwise: {counterclockwise(t_angs[move_hand] - old_ang) * n / self.N}")
+                    print(f"old_ang: {old_ang}")
+                    print(f"new ang: {old_ang + counterclockwise(t_angs[move_hand] - old_ang) * n / self.N}")
+                    angs[move_hand] = normalize(old_ang + counterclockwise(t_angs[move_hand] - old_ang) * n / self.N)
+
+            mirror = mirroring_check(angs[0], angs[1], angs[2])
+            print(f"2 Shifts {shifts}, Angs: {angs}")
+            if not mirror:
+                print("Critical error with angles, abort!")
+                return -1
+
+            # time.sleep(2)
 
             p = pack('@ffiffiffi',
                      shifts[0], angs[0], holds[0],
@@ -664,6 +764,7 @@ class Ceil:
             print(f"Shifts {shifts}, Angs: {angs}")
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
+            prev_x_n, prev_y_n = xo_n, yo_n
             self.move_hand(robot_num, 0, hand_coords[0][0], hand_coords[0][1])
             self.move_hand(robot_num, 1, hand_coords[1][0], hand_coords[1][1])
             self.move_hand(robot_num, 2, hand_coords[2][0], hand_coords[2][1])
@@ -1556,50 +1657,6 @@ class Ceil:
                     print("Didn't find the point!!!")
                     move_finished = True
                     break
-                    # if hand_found:
-                    #     best_center = (-1, -1)
-                    #     best_hand = -1
-                    #     for j in range(3):
-                    #         if centers_for_hand_moves[j][0] != -1 and centers_for_hand_moves[j][1] != -1:
-                    #             print(f"temp before: {temp_coords}")
-                    #             temp_coords = hand_coords[:]
-                    #             print(f"temp after: {temp_coords}")
-                    #             temp_coords[j] = point
-                    #             if best_hand == -1 and not (temp_coords in path):
-                    #                 best_center = (centers_for_hand_moves[j][0], centers_for_hand_moves[j][1])
-                    #                 best_hand = j
-                    #             dist_old = dist(center_x, center_y,
-                    #                             xo_t, yo_t)
-                    #             dist_new = dist(centers_for_hand_moves[j][0], centers_for_hand_moves[j][0],
-                    #                             xo_t, yo_t)
-                    #             # TODO detect if corner pos
-                    #             if dist_new < dist_old and (is_aligned(temp_coords)) and not (temp_coords in path):
-                    #                 best_center = (centers_for_hand_moves[j][0], centers_for_hand_moves[j][1])
-                    #                 best_hand = j
-                    #     if best_hand != -1:
-                    #         temp_coords = hand_coords[:]
-                    #         temp_coords[best_hand] = point
-                    #         print(f"Temo coords in analysis: {temp_coords}, hand: {best_hand}")
-                    #         print(f"Best center in analysis: {best_center}")
-                    #         path.append(temp_coords)
-                    #         centers.append(best_center)
-                    #         point_found = True
-                    #         new_0, new_1, new_2, ang_0, ang_1, ang_2, rh = self.get_new_params_by_vector(robot_num,
-                    #                                                                                      center_x,
-                    #                                                                                      center_y,
-                    #                                                                                      best_center[0],
-                    #                                                                                      best_center[1],
-                    #                                                                                      temp_coords)
-                    #         robot_shifts[0] = new_0
-                    #         robot_shifts[1] = new_1
-                    #         robot_shifts[2] = new_2
-                    #         robot_angs[0] = ang_0
-                    #         robot_angs[1] = ang_1
-                    #         robot_angs[2] = ang_2
-                    #         center_x = best_center[0]
-                    #         center_y = best_center[1]
-                    #         hand_coords = temp_coords[:]
-                    #         break
 
         print(f"AFTER Is move finished? {move_finished}")
         self.robots[robot_num].path = path[:]
@@ -1607,7 +1664,27 @@ class Ceil:
         print(path)
         print(centers)
         self.robots[robot_num].isMoving = False
-        # return path, centers
+
+    def start_robot_by_path(self, robot_num):
+        for i in range(1, len(self.robots[robot_num].path)):
+            x_t, y_t = self.robots[robot_num].centers[i]
+            x_s, y_s = self.robots[robot_num].get_center()
+            print(f"Iteration No.{i}: Os = ({x_s}, {y_s}); Ot = ({x_t}, {y_t});")
+            pos = self.robots[robot_num].path[i]
+            print(f"Position: {pos}")
+            move_hand = -1
+            for j in range(3):
+                if pos[j][0] != self.robots[robot_num].hands[j].x or pos[j][1] != self.robots[robot_num].hands[j].y:
+                    if move_hand != -1:
+                        print("Need to move two hands at the same time, impossible!")
+                        return -1
+                    else:
+                        move_hand = j
+            res = self.move_vector(robot_num, x_s, y_s, x_t, y_t, pos, move_hand)
+            if res == -1:
+                print("Critical error, return")
+                return
+        return 1
 
 
     # --- OLD FUNCTIONS ---

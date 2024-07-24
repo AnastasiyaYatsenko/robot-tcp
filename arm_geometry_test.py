@@ -227,7 +227,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
     x_horizontal = 5 # horizontal vector
     y_horizontal = 0
-    shift_angle = normalize(-angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector))
+    shift_angle = normalize(-angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector)) # TODO invert + ?
     # print(f"shift angle: {shift_angle}")
 
     # if robot is facing down or left, modify the angle
@@ -283,7 +283,8 @@ def get_shift_angle(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 # for when holders are NOT on one line
 def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # eps = 1e-6
-    eps = 0.003
+    # eps = 0.003
+    eps = 20 # TODO find the suitable eps
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     # print(f"r1: {r1} r2: {r2}")
     if (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3)) == 0) or (
@@ -299,7 +300,7 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("x=" + str(x) + " y=" + str(y))
     # print(f"abs = {abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1)}")
     if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
-        print("x=" + str(x) + " y=" + str(y))
+        # print("x=" + str(x) + " y=" + str(y))
         return x, y
     # else:
         # print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
@@ -363,7 +364,7 @@ def middle_point(p1, p2, p3):
         return -1
 
 def dist(x1, y1, x2, y2):
-    return math.hypot(x2 - x1, y2 - y1)
+    return math.hypot(x2 - x1, y1 - y2) # TODO invert +
 
 def dists(x1, y1, x2, y2, x3, y3, xc, yc):
     return [dist(x1, y1, xc, yc), dist(x2, y2, xc, yc), dist(x3, y3, xc, yc)]
@@ -391,7 +392,8 @@ def get_dist_point_line(x, y, a, b, c):
     return d
 
 def get_vector_coords(x1, y1, x2, y2):
-    return x2 - x1, y2 - y1
+    # return x2 - x1, y1 - y2
+    return x2 - x1, y1 - y2 # TODO invert +
 
 def get_abs_vector(x, y):
     return math.sqrt(x**2 + y**2)
@@ -415,12 +417,20 @@ def get_head_vector(a, ang_a, b, ang_b, xa, ya, xb, yb):
 
     return x_robot_head, y_robot_head
 
+# computes clockwise angle between two vectors
+# with inverted Y axis in calculations, this func MUST return CLOCKWISE angle;
+# other option - normal Y and counterclockwise func return - for this change params to (xb, yb, xa, ya)
 def angle_between_vectors(xa, ya, xb, yb):
+    # print("--- get angle ---")
     dot_product = xa * xb + ya * yb
     cross_product = xa * yb - ya * xb
-    angle_rad = math.atan2(cross_product, dot_product)
-    angle_deg = -math.degrees(angle_rad) # *-1 because of inverted y
+    # print(f"dot: {dot_product}; cross: {cross_product}")
+    angle_rad = math.atan2(-cross_product, -dot_product) + math.pi
+    # print(f"Angle in rad: {angle_rad}")
+    angle_deg = math.degrees(angle_rad) # *-1 because of inverted y # TODO INVERTED
+    # print(f"Angle in deg: {angle_deg}")
     angle_deg = normalize(angle_deg)
+    # print(f"Normalized angle: {angle_deg}")
     return angle_deg
 
 def mirroring_check(ang1, ang2, ang3):
@@ -438,9 +448,13 @@ def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]) or (
             dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):
         return False
-    xa, ya = get_vector_coords(x1, y1, xo, yo)
-    xb, yb = get_vector_coords(x2, y2, xo, yo)
-    xc, yc = get_vector_coords(x3, y3, xo, yo)
+    # xa, ya = get_vector_coords(x1, y1, xo, yo) # TODO invert +
+    # xb, yb = get_vector_coords(x2, y2, xo, yo)
+    # xc, yc = get_vector_coords(x3, y3, xo, yo)
+
+    xa, ya = get_vector_coords(xo, yo, x1, y1) # (xo, yo) - start point, (xN, yN) - end point
+    xb, yb = get_vector_coords(xo, yo, x2, y2)
+    xc, yc = get_vector_coords(xo, yo, x3, y3)
 
     aob = angle_between_vectors(xa, ya, xb, yb)
     boc = angle_between_vectors(xb, yb, xc, yc)
@@ -461,8 +475,11 @@ def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]):
         return False
-    xa, ya = get_vector_coords(x1, y1, xo, yo)
-    xb, yb = get_vector_coords(x2, y2, xo, yo)
+    # xa, ya = get_vector_coords(x1, y1, xo, yo) # TODO invert +
+    # xb, yb = get_vector_coords(x2, y2, xo, yo)
+
+    xa, ya = get_vector_coords(xo, yo, x1, y1)
+    xb, yb = get_vector_coords(xo, yo, x2, y2)
 
     aob = angle_between_vectors(xa, ya, xb, yb)
 
@@ -482,9 +499,13 @@ def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
             dist_arr[2] > size["outerRadLimit"] or dist_arr[2] < size["innerRadLimit"]):
         # print("false")
         return False
-    xa, ya = get_vector_coords(x1, y1, xo, yo)
-    xb, yb = get_vector_coords(x2, y2, xo, yo)
-    xc, yc = get_vector_coords(x3, y3, xo, yo)
+    # xa, ya = get_vector_coords(x1, y1, xo, yo) # TODO invert +
+    # xb, yb = get_vector_coords(x2, y2, xo, yo)
+    # xc, yc = get_vector_coords(x3, y3, xo, yo)
+
+    xa, ya = get_vector_coords(xo, yo, x1, y1)
+    xb, yb = get_vector_coords(xo, yo, x2, y2)
+    xc, yc = get_vector_coords(xo, yo, x3, y3)
 
     aob = angle_between_vectors(xa, ya, xb, yb)
     boc = angle_between_vectors(xb, yb, xc, yc)
@@ -569,13 +590,15 @@ def normalize(a):
         return a - 360*(int(a/360)-1)
     return a
 
-def clockwise(delta):
-    if delta > 0 or delta < -360:
+def  clockwise(delta):
+    d = round(delta, 3)
+    if d > 0 or d < -360:
         delta = delta - 360 * (math.floor(delta / 360) + 1)
     return delta
 
 def counterclockwise(delta):
-    if delta > 360 or delta < 0:
+    d = round(delta, 3)
+    if d > 360 or d < 0:
         delta = delta - 360 * math.floor(delta / 360)
     return delta
 
@@ -756,7 +779,7 @@ size = {
     #"innerRadLimit": 48,  # min shift pos
     "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
     "outerRadLimit": 260,  # max shift pos
-    "minAngle": 40,
+    "minAngle": 30,
     "netStep": 200,
     "netBorder": 100
 }

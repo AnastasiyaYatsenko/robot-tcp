@@ -121,7 +121,7 @@ class Robot:
         self.real_coordinates[2] = c3
         self.real_coordinates[3] = co
 
-    def get_real_coordinates(self):
+    def get_real_coordinates_robot(self):
         return self.real_coordinates
 
     def set_real_coordinates_hand(self, c1, c2, c3, co):
