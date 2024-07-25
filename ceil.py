@@ -1,12 +1,12 @@
-import math
-import select
-import sys
-import time
+# import math
+# import select
+# import sys
+# import time
 from struct import pack
 from waiting import wait
 
-import arm_geometry_test
-from arm_geometry_test import *
+# import arm_geometry_test
+# from arm_geometry_test import *
 from robot import *
 
 
@@ -602,7 +602,7 @@ class Ceil:
                 l = n / (self.N - n)
                 xo_n = (xo_s + l * xo_t) / (1 + l)
                 yo_n = (yo_s + l * yo_t) / (1 + l)
-            elif n == (self.N):
+            elif n == self.N:
                 xo_n = xo_t
                 yo_n = yo_t
             # print("---------")
@@ -1448,24 +1448,24 @@ class Ceil:
         # 3. Align robot +- to the OsOt vector, so it can reach more path holes
         # 4. Start algorithm of point (holes) selection
 
-        x_horizontal = 5  # horizontal vector
-        y_horizontal = 0
+        # x_horizontal = 5  # horizontal vector
+        # y_horizontal = 0
 
-        x_osot_vector, y_osot_vector = get_vector_coords(xo_s, yo_s, xo_t, yo_t)  # vector of Os-Ot line
-        osot_angle = angle_between_vectors(x_horizontal, y_horizontal, x_osot_vector, y_osot_vector)
+        # x_osot_vector, y_osot_vector = get_vector_coords(xo_s, yo_s, xo_t, yo_t)  # vector of Os-Ot line
+        # osot_angle = angle_between_vectors(x_horizontal, y_horizontal, x_osot_vector, y_osot_vector)
 
-        robot_angle = self.get_robot_angle(hand_coords, xo_t, yo_t)
+        # robot_angle = self.get_robot_angle(hand_coords, xo_t, yo_t)
 
         # now compare osot and robot angles and try to align robot (mark points for alignment)
-        # TODO take the 180 angle into account
-        delta_ang = min(abs(osot_angle - robot_angle), 360-abs(osot_angle - robot_angle))
-        eps = 22.5 # 45 degrees, might change later TODO check this value mathematically
-        best_delta = delta_ang
+        #  take the 180 angle into account
+        # delta_ang = min(abs(osot_angle - robot_angle), 360-abs(osot_angle - robot_angle))
+        # eps = 22.5 # 45 degrees, might change later  check this value mathematically
+        # best_delta = delta_ang
         center_x, center_y = center_by_params(hand_coords, robot_shifts[0], robot_shifts[1], robot_shifts[2])
-        best_center = (-1, -1)
+        # best_center = (-1, -1)
         # turn_pos = []
-        counter = 0
-        print(f"BEFORE BUILD PATH TURN, DELTA IS: {best_delta}")
+        # counter = 0
+        # print(f"BEFORE BUILD PATH TURN, DELTA IS: {best_delta}")
 
         '''
         while best_delta > eps and counter < 2 and yo_t-yo_s > size["netStep"]:

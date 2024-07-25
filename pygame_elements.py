@@ -1,6 +1,6 @@
 import pygame
 
-class InputBox():
+class InputBox:
 
     def __init__(self, x, y, w = 140, h = 32):
 

@@ -10,7 +10,7 @@ def get_arm_angle_by_y(x, y):
 def get_arm_shift_by_y(x, y):
     return math.sqrt(x ** 2 + y ** 2)
 
-
+'''
 def get_arm_state_by_pos(pos, size, id=''):
     # here will be result of arm state:
     # a - angle
@@ -62,7 +62,7 @@ def get_arm_state_by_pos(pos, size, id=''):
     res['a'] = res['a'] % 360
 
     return res
-
+'''
 
 def ceil_to_coordinates(a):
     a = size["netBorder"] + a * size["netStep"]
@@ -124,6 +124,8 @@ def point_in_sector(px, py, cx, cy, v1x, v1y, v2x, v2y):
 
 # обчислення координат центру за наявних координат лап
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
+# OLD
+'''
 def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
@@ -203,7 +205,7 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     else:
         x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
     return x, y
-
+'''
 
 def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("---")

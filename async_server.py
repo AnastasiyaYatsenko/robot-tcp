@@ -4,17 +4,18 @@
 import errno
 import random
 import threading
-import socket
+# import socket
 import logging
-import time
+# import time
 from struct import unpack
 
 import pygame as pg
-from pygame import font
+import sys
+# from pygame import font
 
-from arm_geometry_test import *
+# from arm_geometry_test import *
 from pygame_elements import InputBox
-from robot import *
+# from robot import *
 from ceil import *
 
 logger = logging.getLogger('main')
