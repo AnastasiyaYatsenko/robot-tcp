@@ -1399,7 +1399,7 @@ class Ceil:
 
     # first we determine optimal path by holes, then robot moves to a specified holes
     def build_path(self, robot_num, xo_s, yo_s, xo_t, yo_t):
-        self.robots[robot_num].isMoving = True
+        self.robots[robot_num].isMovingPath = True
         self.robots[robot_num].curr_index = -1
         a, b, c = get_line_equation(xo_s, yo_s, xo_t, yo_t)
         opt_points = optimal_points(a, b, c)
@@ -1429,7 +1429,7 @@ class Ceil:
             self.robots[robot_num].centers = centers[:]
             print(path)
             print(centers)
-            self.robots[robot_num].isMoving = False
+            self.robots[robot_num].isMovingPath = False
             return
 
         # temp_hand_coords = [(self.robots[robot_num].hands[0].x, self.robots[robot_num].hands[0].y),
@@ -1467,6 +1467,7 @@ class Ceil:
         counter = 0
         print(f"BEFORE BUILD PATH TURN, DELTA IS: {best_delta}")
 
+        '''
         while best_delta > eps and counter < 2 and yo_t-yo_s > size["netStep"]:
             turn_pos = []
             # TODO secure from dead-end positions AND T-pos should have different angle calc
@@ -1555,7 +1556,7 @@ class Ceil:
                 robot_angs[2] = ang_2
                 center_x = best_center[0]
                 center_y = best_center[1]
-
+        '''
 
         # TODO protect from dead-end positions
         move_finished = False
@@ -1663,7 +1664,7 @@ class Ceil:
         self.robots[robot_num].centers = centers[:]
         print(path)
         print(centers)
-        self.robots[robot_num].isMoving = False
+        self.robots[robot_num].isMovingPath = False
 
     def start_robot_by_path(self, robot_num):
         for i in range(1, len(self.robots[robot_num].path)):

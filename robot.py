@@ -19,6 +19,9 @@ class Robot:
         # self.move_dir = 0
         # self.hand_i = 0
         self.isMoving = False
+        self.isMovingPath = False
+        self.os = (-1, -1)
+        self.ot = (-1, -1)
         self.curr_index = -1
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
