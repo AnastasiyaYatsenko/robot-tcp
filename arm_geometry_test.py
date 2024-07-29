@@ -781,7 +781,7 @@ size = {
     #"innerRadLimit": 48,  # min shift pos
     "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
     "outerRadLimit": 260,  # max shift pos
-    "minAngle": 68.0,
+    "minAngle": 68,
     "netStep": 200,
     "netBorder": 100
 }
