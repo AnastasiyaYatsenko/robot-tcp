@@ -592,17 +592,20 @@ class Ceil:
 
         return new_xo_t, new_yo_t
 
-    def check_clockwise(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, old_shift, old_ang, delta_shift, new_ang, move_hand):
-        print(f"IN FUNC N = {self.N}; move_hand is {move_hand}; old_shift: {old_shift}, old_ang: {old_ang};"
-              f"delta_shift: {delta_shift}, new_ang: {new_ang}")
-        for n in range(self.N + 1):
+    def check_clockwise(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, old_shift, old_ang, new_shift, new_ang, move_hand):
+        N = 10
+        print(f"IN FUNC N = {N}; move_hand is {move_hand}; old_shift: {old_shift}, old_ang: {old_ang};"
+              f"new_shift: {new_shift}, new_ang: {new_ang}")
+        hands = [0, 1, 2]
+        hands.remove(move_hand)
+        for n in range(N + 1):
             xo_n = xo_s
             yo_n = yo_s
-            if 0 < n < self.N:
-                l = n / (self.N - n)
+            if 0 < n < N:
+                l = n / (N - n)
                 xo_n = (xo_s + l * xo_t) / (1 + l)
                 yo_n = (yo_s + l * yo_t) / (1 + l)
-            elif n == self.N:
+            elif n == N:
                 xo_n = xo_t
                 yo_n = yo_t
             # print("---------")
@@ -628,16 +631,20 @@ class Ceil:
             holds = [1, 1, 1]
 
             # print(f"t_ang: {t_angs[move_hand]}, t_shift: {t_shifts[move_hand]}")
+            delta_shift = (new_shift - old_shift) / N
 
-            if move_hand != -1 and n < self.N:
+            if move_hand != -1 and n < N:
                 # print(f"Hold 0: {n}")
                 holds[move_hand] = 0
                 shifts[move_hand] = old_shift + delta_shift * n
-                angs[move_hand] = normalize(old_ang + clockwise(new_ang - old_ang) * n / self.N)
+                angs[move_hand] = normalize(old_ang + clockwise(new_ang - old_ang) * n / N)
             print(f"n = {n}, shifts: {shifts}; angs: {angs}")
 
             mirror = mirroring_check(angs[0], angs[1], angs[2])
-            if not mirror:
+            in_reach_zone = is_in_two_hands_area(hand_coords[hands[0]][0], hand_coords[hands[0]][1],
+                                                 hand_coords[hands[1]][0], hand_coords[hands[1]][1],
+                                                 xo_n, yo_n)
+            if not mirror or not in_reach_zone:
                 print("mirror false")
                 return False
             else:
@@ -682,7 +689,7 @@ class Ceil:
             old_shift = self.robots[robot_num].hands[move_hand].lin
             is_clockwise = self.check_clockwise(robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords,
                                                 old_shift, old_ang,
-                                                delta_shift, t_angs[move_hand], move_hand)
+                                                t_shifts[move_hand], t_angs[move_hand], move_hand)
         print(f"move_hand is {move_hand}; old_shift: {old_shift}, old_ang: {old_ang}; delta_shift: {delta_shift}, delta_ang: {delta_ang}")
 
         prev_x_n, prev_y_n = xo_s, yo_s
