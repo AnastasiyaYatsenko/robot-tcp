@@ -125,8 +125,8 @@ def point_in_sector(px, py, cx, cy, v1x, v1y, v2x, v2y):
 # обчислення координат центру за наявних координат лап
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
 # OLD
-'''
-def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+
+def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
     #
@@ -205,43 +205,67 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     else:
         x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
     return x, y
-'''
 
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+
+def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("---")
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     #todo ensure that x1y1 and x2y2 are neighbouring
-    l = dist(x1, y1, x2, y2)
-    s = (r1 + r2 + l) / 2
-    # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
-    h = round((2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l), 10) # altitude
-    # print(f"H: {h}")
+    are_12_neighbours = are_neighbours(x1, y1, x2, y2)
+    are_23_neighbours = are_neighbours(x2, y2, x3, y3)
+    are_13_neighbours = are_neighbours(x1, y1, x3, y3)
+    l, s, h = -1, -1, -1
+    if are_12_neighbours:
+        l = dist(x1, y1, x2, y2)
+        s = (r1 + r2 + l) / 2
+        # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+        h = round((2 * math.sqrt(s * (s - r1) * (s - r2) * (s - l)) / l), 10)  # altitude
+    elif are_23_neighbours:
+        l = dist(x2, y2, x3, y3)
+        s = (r2 + r3 + l) / 2
+        # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+        h = round((2 * math.sqrt(s * (s - r2) * (s - r3) * (s - l)) / l), 10)  # altitude
+    elif are_13_neighbours:
+        l = dist(x1, y1, x3, y3)
+        s = (r1 + r3 + l) / 2
+        # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+        h = round((2 * math.sqrt(s * (s - r1) * (s - r3) * (s - l)) / l), 10)  # altitude
+    else:
+        print("Something is wrong, no neighbouring points")
+        return -1
+
+    # l = dist(x1, y1, x2, y2)
+    # s = (r1 + r2 + l) / 2
+    print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    # h = round((2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l), 10) # altitude
+    print(f"H: {h}")
 
     # find the right triangle where r1 - hypotenuse and h - one of the legs
     x = x1
     y = y1
     r = r1
     d = math.sqrt(r**2 - h**2) # the second leg; on the holders line
-    # print(f"d: {d}")
+    print(f"d: {d}")
 
     # find the angle between the horizontal of the ceiling and the robot line
     x_r_vector, y_r_vector = get_vector_coords(x1, y1, x2, y2) # vector of robot line
     # print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
     x_horizontal = 5 # horizontal vector
     y_horizontal = 0
+    # 09.08 REMOVED "-" FOR angle_between_vectors
     shift_angle = normalize(-angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector)) # TODO invert + ?
-    # print(f"shift angle: {shift_angle}")
+    print(f"shift angle: {shift_angle}")
 
     # if robot is facing down or left, modify the angle
 
     x_rotated, y_rotated = rotate_point(x, y, x2, y2, shift_angle)
-    # print(f"ROTATED x: {x_rotated} y: {y_rotated}")
+    print(f"ROTATED x: {x_rotated} y: {y_rotated}")
 
     x_rotated_vector, y_rotated_vector = get_vector_coords(x2, y2, x_rotated, y_rotated)  # vector of robot line
     # print(f"ROTATED VECTOR x: {x_rotated_vector} y: {y_rotated_vector}")
     #hand_angle = angle_between_vectors(x_rotated_vector, y_rotated_vector, x_horizontal, y_horizontal)
     hand_angle = math.degrees(math.acos((r1**2 + l**2 - r2**2) / (2 * r1 * l)))
-    # print(f"HAND ANGLE: {hand_angle}")
+    print(f"HAND ANGLE: {hand_angle}")
 
     if hand_angle > 90:
         # print("minus")
@@ -250,10 +274,10 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         # print("plus")
         ox_ = x_rotated + d
     oy_ = y_rotated - h
-    # print(f"ROTATED O x: {ox_} y: {oy_}")
+    print(f"ROTATED O x: {ox_} y: {oy_}")
 
     ox, oy = rotate_point(ox_, oy_, x2, y2, normalize(-shift_angle))
-    # print(f"UNROTATED O x: {ox} y: {oy}")
+    print(f"UNROTATED O x: {ox} y: {oy}")
 
     return ox, oy
 
@@ -349,15 +373,22 @@ def middle_point(p1, p2, p3):
     # Check if points are collinear
     # (y2 - y1) / (x2 - x1) should be equal to (y3 - y1) / (x3 - x1)
     # To avoid division by zero, use cross multiplication
+    print("outside")
     if (-y2 + y1) * (x3 - x1) == (-y3 + y1) * (x2 - x1):
         # Create a list of the points
+        print("inside")
+        orig_points = [p1, p2, p3]
         points = [p1, p2, p3]
+        print(f"unsorted points: {points}")
 
         # Sort points by their x-coordinates first, and y-coordinates as tie-breaker
         points.sort(key=lambda point: (point[0], point[1]))
+        print(f"sorted points: {points}")
         middle_coord = points[1]
+        print(f"middle coord: {middle_coord}")
         for i in range(3):
-            if middle_coord[0] == points[i][0] and middle_coord[1] == points[i][1]:
+            if middle_coord[0] == orig_points[i][0] and middle_coord[1] == orig_points[i][1]:
+                print(f"middle: {i}")
                 return i
 
         # The middle point after sorting will be the one in between
@@ -571,6 +602,43 @@ def is_aligned(hand_coords):
     # print("- not aligned -")
     return False
 
+def is_aligned_stable(hand_coords):
+    # Sort the dots based on their coordinates
+    dots = sorted([(hand_coords[0][0], hand_coords[0][1]),
+                   (hand_coords[1][0], hand_coords[1][1]),
+                   (hand_coords[2][0], hand_coords[2][1])])
+    (x1, y1), (x2, y2), (x3, y3) = dots
+
+    # Check for a horizontal line with adjacent dots
+    if x1 + size["netStep"] == x2 == x3 - size["netStep"] and y1 == y2 == y3:
+        return True
+
+    # Check for a vertical line with adjacent dots
+    elif y1 + size["netStep"] == y2 == y3 - size["netStep"] and x1 == x2 == x3:
+        return True
+
+    # Check for L-position
+    elif (x1 == x2 and y2 == y3 and x3 == x2 + size["netStep"] and y1 == y2 - size["netStep"]) or \
+            (x1 == x2 and y2 == y3 and x3 == x2 - size["netStep"] and y1 == y2 + size["netStep"]) or \
+            (y1 == y2 and x2 == x3 and y3 == y2 + size["netStep"] and x1 == x2 - size["netStep"]) or \
+            (y1 == y2 and x2 == x3 and y3 == y2 - size["netStep"] and x1 == x2 + size["netStep"]):
+        return True
+    return False
+
+def are_neighbours(x1, y1, x2, y2):
+    # Sort the dots based on their coordinates
+    dots = sorted([(x1, y1),
+                   (x2, y2)])
+    (x1, y1), (x2, y2) = dots
+
+    # Check for a horizontal line with adjacent dots
+    if (x1 + size["netStep"] == x2 and y1 == y2) or \
+            (x1 - size["netStep"] == x2 and y1 == y2) or \
+            (y1 + size["netStep"] == y2 and x1 == x2) or \
+            (y1 - size["netStep"] == y2 and x1 == x2):
+        return True
+    return False
+
 def is_horizontal_aligned(hand_coords):
     if (hand_coords[0][1] == hand_coords[1][1] and
             hand_coords[1][1] == hand_coords[2][1]):
@@ -780,7 +848,7 @@ def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 size = {
     #"innerRadLimit": 48,  # min shift pos
     "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
-    "outerRadLimit": 260,  # max shift pos
+    "outerRadLimit": 220,  # max shift pos
     "minAngle": 68,
     "netStep": 200,
     "netBorder": 100

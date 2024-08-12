@@ -28,6 +28,7 @@ ceil = Ceil()
 # path = []
 counter = 0
 ot = [-1, -1]
+running = True
 
 def handle_read(sock, client_ip, client_port):
     # обробник, що працює у процесі-нащадку
@@ -135,10 +136,13 @@ def serve_forever():
 
     # cp = ControlPanel()
     t_cp = threading.Thread(target=command_panel)
+    t_cp.daemon = True
     t_cp.start()
 
-    while True:
-        # print("in serve forever loop")
+    global running
+    while running:
+        print("in serve forever loop")
+        print(f"Running: {running}")
         try:
             connection, (client_ip, client_port) = sock.accept()
         except IOError as e:
@@ -150,17 +154,9 @@ def serve_forever():
             target=handle_read,
             args=(connection, client_ip, client_port)
         )
+        print("ehe")
         thread_rx.daemon = True
         thread_rx.start()
-
-        # thread_tx = threading.Thread(
-        #     target=handle_write,
-        #     args=(connection, client_ip, clinet_port)
-        # )
-        # thread_tx.daemon = True
-        # thread_tx.start()
-        # time.sleep(5)
-        # ceil.move_robot(0,0,0)
 
 
 def draw_ceil(screen):
@@ -383,14 +379,19 @@ def command_panel():
     clock = pg.time.Clock()
     screen.fill((48, 48, 48))
 
-    running = True
-    while True:  # main loop
+    # running = True
+    global running
+    while running:  # main loop
         events = pg.event.get()
         # BUTTON EVENTS
         for event in events:
             if event.type == pg.QUIT:
+                print(f"trying to set running false: {running}")
+                running = False
+                print(f"running must be false: {running}")
                 pg.quit()
-                sys.exit()
+                return
+                # sys.exit(1)
                 # Check for the mouse button down event
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # Call the on_mouse_button_down() function
@@ -418,7 +419,7 @@ def command_panel():
                             ceil.robots[robot_num].os = (xo_s, yo_s)
                             ceil.robots[robot_num].ot = (x, y)
                             # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
-                            t_path = threading.Thread(target=ceil.build_path, args=[robot_num, xo_s, yo_s, x, y])
+                            t_path = threading.Thread(target=ceil.build_path_lines, args=[robot_num, xo_s, yo_s, x, y])
                             t_path.start()
 
                             t_path.join()
@@ -468,11 +469,11 @@ def command_panel():
                     print("Build path")
                     xo_t = random.randint(0, 2000)
                     yo_t = random.randint(0, 2000)
-                    xo_s, yo_s = ceil.robots[robot_num].get_center()
+                    xo_s, yo_s = ceil.robots[0].get_center()
                     print(f"Os: ({xo_s}, {yo_s}); Ot: ({xo_t}, {yo_t})")
                     # global ot
-                    ot[0] = xo_t
-                    ot[1] = yo_t
+                    ceil.robots[0].ot[0] = xo_t
+                    ceil.robots[0].ot[1] = yo_t
 
                     # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
                     t_path = threading.Thread(target=ceil.build_path, args=[0, xo_s, yo_s, xo_t, yo_t])
