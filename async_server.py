@@ -472,16 +472,15 @@ def command_panel():
                     xo_s, yo_s = ceil.robots[0].get_center()
                     print(f"Os: ({xo_s}, {yo_s}); Ot: ({xo_t}, {yo_t})")
                     # global ot
-                    ceil.robots[0].ot[0] = xo_t
-                    ceil.robots[0].ot[1] = yo_t
+                    ceil.robots[0].ot = (xo_t, yo_t)
 
                     # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
-                    t_path = threading.Thread(target=ceil.build_path, args=[0, xo_s, yo_s, xo_t, yo_t])
+                    t_path = threading.Thread(target=ceil.build_path_lines, args=[0, xo_s, yo_s, xo_t, yo_t])
                     t_path.start()
 
-                    t_path.join()
-                    t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
-                    t_start.start()
+                    # t_path.join()
+                    # t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
+                    # t_start.start()
                     # global path
                     # path = path_[:]
 

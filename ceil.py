@@ -1698,11 +1698,7 @@ class Ceil:
         return False
 
     def build_path_lines(self, robot_num, xo_s, yo_s, xo_t, yo_t):
-        # TODO check the Ot in the beginning; if robot can't move into Ot, find closest possible point
         is_ot_possible = self.check_if_ot_possible(xo_t, yo_t)
-        if not is_ot_possible:
-            print("Ot is not possible!")
-            return -1
 
         self.robots[robot_num].isMovingPath = True
         self.robots[robot_num].curr_index = -1
