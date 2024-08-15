@@ -8,3 +8,7 @@ python3 -m pip install -r requirements.txt
 
 3. Start  
 python3 main.py
+
+<p>Once the corresponding script is started on robot, it connects to the server and is shown in the default coordinates: (300, 300), (500, 300), (100, 300).
+<p>The disconnect button disconnects the robot, which number is specified in "Robot N." field in "Start move" area.
+<p>The "Build path" requires the robot №0 to exist and be connected, as it builds the path from it's position to a random point.  
