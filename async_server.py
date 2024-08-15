@@ -39,6 +39,7 @@ def handle_read(sock, client_ip, client_port):
         robot_num = len(ceil.robots)
         ceil.add_robot(client_ip)
     ceil.robots[robot_num].set_socket(sock)
+    ceil.robots[robot_num].isAlive = True
     thread_tx = threading.Thread(
         target=handle_write,
         args=(sock, client_ip, client_port)
@@ -105,7 +106,7 @@ def handle_write(sock, client_ip, client_port):
             # print(robot_num)
             to_send = ceil.robots[robot_num].out_buffer
             ceil.robots[robot_num].out_buffer = b''
-            sock.sendall(to_send)
+            ceil.robots[robot_num].socket.sendall(to_send)
             # print(f"We've send all bytes")
 
 
@@ -116,11 +117,12 @@ def handle_write(sock, client_ip, client_port):
 #     print("in imitate")
 #     ceil.start_move(0, 500.0, 700.0)
 
-
+sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 def serve_forever():
     # створюємо сокет для прослуховування
-    sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # re-use port
+    global sock
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(BIND_ADDRESS)
     sock.listen(BACKLOG)
@@ -139,22 +141,22 @@ def serve_forever():
     t_cp.daemon = True
     t_cp.start()
 
+
     global running
     while running:
-        print("in serve forever loop")
-        print(f"Running: {running}")
         try:
             connection, (client_ip, client_port) = sock.accept()
         except IOError as e:
             if e.errno == errno.EINTR:
                 continue
+            elif e.errno == errno.EINVAL:
+                sys.exit(1)
             raise
         # запускаємо тред
         thread_rx = threading.Thread(
             target=handle_read,
             args=(connection, client_ip, client_port)
         )
-        print("ehe")
         thread_rx.daemon = True
         thread_rx.start()
 
@@ -173,12 +175,36 @@ def draw_ceil(screen):
     pg.draw.rect(screen, (255, 255, 255), (20, 20, rect_side+2*outer_border, rect_side+2*outer_border))
     pg.draw.rect(screen, (0, 0, 0), (outer_border_add, outer_border_add, rect_side, rect_side), 1)
 
+    # Create a font object
+    font = pg.font.Font(None, 30)
+    top_text = font.render("top", True, (0, 0, 0))
+    top_text_rect = top_text.get_rect(center=(20 + (rect_side+2*outer_border) / 2, 10 + outer_border_add / 2))
+    bottom_text = font.render("bottom", True, (0, 0, 0))
+    bottom_text_rect = bottom_text.get_rect(center=(20 + (rect_side + 2 * outer_border) / 2,
+                                                    rect_side + 1.5 * outer_border_add - 10))
+
+    left_text = font.render("left", True, (0, 0, 0))
+    left_r_text = pg.transform.rotate(left_text, 90)
+    left_text_rect = left_text.get_rect(center=(10 + outer_border_add / 2, 20 + (rect_side + 2 * outer_border) / 2))
+    right_text = font.render("right", True, (0, 0, 0))
+    right_r_text = pg.transform.rotate(right_text, -90)
+    right_text_rect = right_text.get_rect(center=(rect_side + 1.5 * outer_border_add - 10,
+                                                  20 + (rect_side + 2 * outer_border) / 2))
+
+    screen.blit(top_text, top_text_rect)
+    screen.blit(bottom_text, bottom_text_rect)
+    screen.blit(left_r_text, left_text_rect)
+    screen.blit(right_r_text, right_text_rect)
+
     for y in range(ceil.max_y):
         for x in range(ceil.max_x):
             pg.draw.circle(screen, (0, 0, 0), (rect_border+x*rect_step+outer_border_add,
                                                rect_border+y*rect_step+outer_border_add), 5, 1)
 
         for i in range(len(ceil.robots)):
+            if not ceil.robots[i].isAlive:
+                print("Robot is inactive")
+                continue
             # print("in r loop")
             if ceil.robots[i].ot[0] != -1:
                 x = ceil.robots[i].ot[0] * rect_side / side + outer_border_add
@@ -300,17 +326,23 @@ def command_panel():
     button_surface = pg.Surface((200, 50))
     button_surface_set = pg.Surface((200, 50))
     button_surface_path = pg.Surface((200, 50))
+    button_surface_disconnect = pg.Surface((200, 50))
 
     # Button rectangles
-    button_start = pg.Rect(870, 220, 200, 50)
+    button_start = pg.Rect(760, 220, 200, 50)
+    button_disconnect = pg.Rect(990, 220, 200, 50)
     button_set_coord = pg.Rect(870, 550, 200, 50)
     button_path = pg.Rect(870, 630, 200, 50)
+    # (760, 290), (1190, 290)
 
     # Create a font object
     font = pg.font.Font(None, 30)
 
     text = font.render("Start move", True, (255, 255, 255))
     text_rect = text.get_rect(center=(button_surface.get_width() / 2, button_surface.get_height() / 2))
+    text_disconnect = font.render("Disconnect", True, (255, 255, 255))
+    text_disconnect_rect = text_disconnect.get_rect(
+        center=(button_surface_disconnect.get_width() / 2, button_surface_disconnect.get_height() / 2))
     text_set = font.render("Set coordinates", True, (255, 255, 255))
     text_rect_set = text_set.get_rect(center=(button_surface_set.get_width() / 2, button_surface_set.get_height() / 2))
     text_path = font.render("Build path", True, (255, 255, 255))
@@ -380,18 +412,18 @@ def command_panel():
     screen.fill((48, 48, 48))
 
     # running = True
-    global running
+    global running, sock
     while running:  # main loop
         events = pg.event.get()
         # BUTTON EVENTS
         for event in events:
             if event.type == pg.QUIT:
-                print(f"trying to set running false: {running}")
                 running = False
-                print(f"running must be false: {running}")
                 pg.quit()
-                return
-                # sys.exit(1)
+                sock.settimeout(1.0)
+                sock.shutdown(socket.SHUT_RDWR)
+                sock.close()
+                sys.exit(1)
                 # Check for the mouse button down event
             if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
                 # Call the on_mouse_button_down() function
@@ -405,6 +437,11 @@ def command_panel():
                         robot_input.text = ''
                         x_input.text = ''
                         y_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
                         print(f"Robot no. {robot_num} to ({x}, {y})")
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
                             print("There's no robot with such No.")
@@ -419,7 +456,7 @@ def command_panel():
                             ceil.robots[robot_num].os = (xo_s, yo_s)
                             ceil.robots[robot_num].ot = (x, y)
                             # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
-                            t_path = threading.Thread(target=ceil.build_path_lines, args=[robot_num, xo_s, yo_s, x, y])
+                            t_path = threading.Thread(target=ceil.build_path_lines_2, args=[robot_num, xo_s, yo_s, x, y])
                             t_path.start()
 
                             t_path.join()
@@ -427,6 +464,16 @@ def command_panel():
                             t_start.start()
                             # t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
                             # t1.start()
+                if button_disconnect.collidepoint(event.pos):
+                    # print("SET COORD BUTTON")
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        print("disconnect")
+                        robot_num = int(robot_input.text)
+                        ceil.robots[robot_num].socket.shutdown(2)
+                        ceil.robots[robot_num].socket.close()
+                        ceil.robots[robot_num].isAlive = False
                 if button_set_coord.collidepoint(event.pos):
                     # print("SET COORD BUTTON")
                     if (((x1_input.text == '') or (y1_input.text == '')
@@ -449,6 +496,11 @@ def command_panel():
                         y2_input.text = ''
                         x3_input.text = ''
                         y3_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
                         print(f"Set coords: Robot no. {robot_num} to ({x1}, {y1}), ({x2}, {y2}), ({x3}, {y3})")
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
                             print("There's no robot with such No.")
@@ -508,6 +560,18 @@ def command_panel():
         button_surface.blit(text, text_rect)
         # Draw the button on the screen
         screen.blit(button_surface, (button_start.x, button_start.y))
+
+        # DISCONNECT BUTTON
+        # Check if the mouse is over the button. This will create the button hover effect
+        if button_disconnect.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_disconnect, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_disconnect, (5, 99, 46), (1, 1, 200, 48))
+
+        # Show the button text
+        button_surface_disconnect.blit(text_disconnect, text_disconnect_rect)
+        # Draw the button on the screen
+        screen.blit(button_surface_disconnect, (button_disconnect.x, button_disconnect.y))
 
         # SET COORDINATES BUTTON
         if button_set_coord.collidepoint(pg.mouse.get_pos()):

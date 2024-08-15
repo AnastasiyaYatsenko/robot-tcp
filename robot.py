@@ -25,6 +25,7 @@ class Robot:
         self.curr_index = -1
         self.robot_ip = ""
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.isAlive = False
         self.out_buffer = b''
         self.path = []
         self.centers = []
