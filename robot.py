@@ -1,6 +1,8 @@
 import socket
+from struct import pack
 from typing import NamedTuple
 from arm_geometry_test import *
+from waiting import wait
 
 
 class Params(NamedTuple):
@@ -30,6 +32,8 @@ class Robot:
         self.path = []
         self.centers = []
         self.opt_points = []
+        self.params_updated = False
+
                                 # x       y
         # self.real_coordinates = [(300, 300),  # hand 0
         #                          (100, 300),  # hand 1
@@ -60,6 +64,18 @@ class Robot:
 
     def get_ip(self):
         return self.robot_ip
+
+    def get_robot_params(self):
+        p = pack('@ffiffiffi',
+                 0, 0, 50,
+                 0, 0, 50,
+                 0, 0, 50)
+        # print(f"PACKAGE: {p}")
+        # self.isMoving = True
+        self.params_updated = False
+        self.out_buffer = p
+        wait(lambda: self.is_params_recieved(), timeout_seconds=120,
+             waiting_for="waiting for robot to return params")
 
     def set_robot_params_hands(self, hand1, hand2, hand3):
         self.hands[0] = Params(hand1.lin, hand1.ang, hand1.hold, hand1.x, hand1.y)
@@ -162,6 +178,9 @@ class Robot:
         if not self.isMoving:
             return True
         return False
+
+    def is_params_recieved(self):
+        return self.params_updated
 
     def is_aligned(self):
         # print("---")

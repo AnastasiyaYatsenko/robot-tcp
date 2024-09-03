@@ -67,6 +67,7 @@ def handle_read(sock, client_ip, client_port):
         try:
             unpacked_struct = unpack('@ffiffiffi', in_buffer)
             LS = list(unpacked_struct)
+            ceil.robots[robot_num].params_updated = True
             ceil.robots[robot_num].set_robot_params(LS[0], LS[1], LS[2],
                                                     LS[3], LS[4], LS[5],
                                                     LS[6], LS[7], LS[8])
@@ -327,12 +328,14 @@ def command_panel():
     button_surface_set = pg.Surface((200, 50))
     button_surface_path = pg.Surface((200, 50))
     button_surface_disconnect = pg.Surface((200, 50))
+    button_surface_update = pg.Surface((200, 50))
 
     # Button rectangles
     button_start = pg.Rect(760, 220, 200, 50)
     button_disconnect = pg.Rect(990, 220, 200, 50)
     button_set_coord = pg.Rect(870, 550, 200, 50)
-    button_path = pg.Rect(870, 630, 200, 50)
+    button_path = pg.Rect(760, 630, 200, 50)
+    button_update = pg.Rect(990, 630, 200, 50)
     # (760, 290), (1190, 290)
 
     # Create a font object
@@ -344,9 +347,11 @@ def command_panel():
     text_disconnect_rect = text_disconnect.get_rect(
         center=(button_surface_disconnect.get_width() / 2, button_surface_disconnect.get_height() / 2))
     text_set = font.render("Set coordinates", True, (255, 255, 255))
-    text_rect_set = text_set.get_rect(center=(button_surface_set.get_width() / 2, button_surface_set.get_height() / 2))
+    text_rect_set = text_set.get_rect(
+        center=(button_surface_set.get_width() / 2, button_surface_set.get_height() / 2))
     text_path = font.render("Build path", True, (255, 255, 255))
-    text_path_set = text_path.get_rect(center=(button_surface_path.get_width() / 2, button_surface_path.get_height() / 2))
+    text_path_set = text_path.get_rect(
+        center=(button_surface_path.get_width() / 2, button_surface_path.get_height() / 2))
 
     text_move = font.render("Start move", True, (255, 255, 255))
     text_move_rect = text_move.get_rect(
@@ -355,6 +360,10 @@ def command_panel():
     text_set_coords = font.render("Set robot coordinates", True, (255, 255, 255))
     text_set_coords_rect = text_set_coords.get_rect(
         center=(r2_input.inputBox.x + r2_input.inputBox.width / 2, r2_input.inputBox.y - 30))
+
+    text_update = font.render("Update", True, (255, 255, 255))
+    text_update_rect = text_update.get_rect(
+        center=(button_surface_update.get_width() / 2, button_surface_update.get_height() / 2))
 
     r_text1 = font.render("Robot N.", True, (255, 255, 255))
     r_text1_rect = text.get_rect(center=(
@@ -448,6 +457,7 @@ def command_panel():
                         elif (x < 0) or (x > 2000) or (y < 0) or (y > 2000):
                             print("Invalid coordinates")
                         else:
+                            ceil.robots[robot_num].get_robot_params()
                             xo_s, yo_s = ceil.robots[robot_num].get_center()
                             print(f"Os: ({xo_s}, {yo_s}); Ot: ({x}, {y})")
                             global ot
@@ -474,6 +484,15 @@ def command_panel():
                         ceil.robots[robot_num].socket.shutdown(2)
                         ceil.robots[robot_num].socket.close()
                         ceil.robots[robot_num].isAlive = False
+                if button_update.collidepoint(event.pos):
+                    # print("SET COORD BUTTON")
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        print("update")
+                        robot_num = int(robot_input.text)
+                        ceil.robots[robot_num].get_robot_params()
+                        draw_ceil(screen)
                 if button_set_coord.collidepoint(event.pos):
                     # print("SET COORD BUTTON")
                     if (((x1_input.text == '') or (y1_input.text == '')
@@ -509,6 +528,7 @@ def command_panel():
                               or (x3 < 0) or (x3 > 2000) or (y3 < 0) or (y3 > 2000)):
                             print("Invalid coordinates")
                         else:
+                            ceil.robots[robot_num].get_robot_params()
                             ceil.set_hand_coordinates(robot_num, x1, y1, x2, y2, x3, y3)
                             draw_ceil(screen)
                             # t1 = threading.Thread(target=ceil.start_move, args=[robot_num, x, y])
@@ -591,11 +611,21 @@ def command_panel():
         button_surface_path.blit(text_path, text_path_set)
         screen.blit(button_surface_path, (button_path.x, button_path.y))
 
+        # UPDATE PARAMS BUTTON
+        if button_update.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_update, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_update, (5, 99, 46), (1, 1, 200, 48))
+
+        button_surface_update.blit(text_update, text_update_rect)
+        screen.blit(button_surface_update, (button_update.x, button_update.y))
+
         pg.draw.line(screen, (255, 255, 255), (760, 290), (1090 + x3_input.inputBox.width, 290))
         pg.draw.line(screen, (255, 255, 255), (760, 620), (1090 + x3_input.inputBox.width, 620))
 
         screen.blit(text_move, text_move_rect)
         screen.blit(text_set_coords, text_set_coords_rect)
+        screen.blit(text_update, text_update_rect)
         screen.blit(r_text1, r_text1_rect)
         screen.blit(x_text, x_text_rect)
         screen.blit(y_text, y_text_rect)

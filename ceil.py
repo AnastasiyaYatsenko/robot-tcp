@@ -2513,6 +2513,7 @@ class Ceil:
                         return -1
                     else:
                         move_hand = j
+            self.robots[robot_num].get_robot_params()
             res = self.move_vector(robot_num, x_s, y_s, x_t, y_t, pos, move_hand)
             if res == -1:
                 print("Critical error, return")
