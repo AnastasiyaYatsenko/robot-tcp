@@ -18,6 +18,7 @@ class Ceil:
         self.max_x = 10
         self.max_y = 10
         # масив лунок
+        # “even-q” vertical layout in offset coordinates
         self.ceil_arr = [[0 for i in range(self.max_x)] for j in range(self.max_y)]
         #self.N = 2
         self.N = 2
