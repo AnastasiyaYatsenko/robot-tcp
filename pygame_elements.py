@@ -32,7 +32,7 @@ class InputBox:
                     self.text = ''
                     self.text = text
                 else:
-                    if event.unicode.isdigit():
+                    if event.unicode.isdigit() or event.key == pygame.K_PERIOD:
                         self.text += event.unicode
 
     def draw(self, screen):

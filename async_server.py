@@ -102,9 +102,10 @@ def handle_write(sock, client_ip, client_port):
 
         # if we have parameters to send in buffer, send
         if ceil.robots[robot_num].out_buffer:
-            # logger.info('Out buffer = ' + repr(ceil.robots[robot_num].out_buffer))
+            logger.info('Out buffer = ' + repr(ceil.robots[robot_num].out_buffer))
+            unp = unpack('ffiffiffi', ceil.robots[robot_num].out_buffer)
             # sending
-            # print(robot_num)
+            print(unp)
             to_send = ceil.robots[robot_num].out_buffer
             ceil.robots[robot_num].out_buffer = b''
             ceil.robots[robot_num].socket.sendall(to_send)
@@ -167,9 +168,15 @@ def draw_ceil(screen):
     # rect_side = 1000
     outer_border = 60  # 20 + 60
     outer_border_add = 20 + outer_border
-    side = 2 * size["netBorder"] + (ceil.max_x - 1) * size["netStep"]
+    # side = 2 * size["netBorder"] + (ceil.max_x - 1) * size["netStep"]
+    side = (ceil.max_x - 1)*size["d2"] / 2 + 2*size["netBorder"]
     rect_border = int(size["netBorder"]*rect_side / side)
-    rect_step = int(size["netStep"] * rect_side / side)
+    # rect_step = int(rect_side / ceil.max_x)
+    rect_step = int(size["d2"]/2 * rect_side / side)
+
+    # D1 = (size["d2"] / 3) * 2
+    # side = size["d2"] / 2 + size["netBorder"]
+    # ceil_y = D1 + (1 - (x % 2)) * (size["D2"] / 4) + size["netBorder"]
 
     # side_x = 2*size["netBorder"]+(self.max_x-1)*size["netStep"]
     # side_y = 2 * size["netBorder"] + (self.max_y - 1) * size["netStep"]
@@ -199,8 +206,19 @@ def draw_ceil(screen):
 
     for y in range(ceil.max_y):
         for x in range(ceil.max_x):
-            pg.draw.circle(screen, (0, 0, 0), (rect_border+x*rect_step+outer_border_add,
-                                               rect_border+y*rect_step+outer_border_add), 5, 1)
+            # D1 = (size["d2"] / 3) * 2
+            # ceil_x = x*size["d2"]/2 + size["netBorder"]
+            # ceil_y = y*D1 + (1 - (x % 2))*(size["D2"]/4) + size["netBorder"]
+            # # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
+            # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+            # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+            fin_x, fin_y = get_ceil_coords(x, y, rect_side, outer_border)
+            r = to_range(size["holeRad"], 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+            pg.draw.circle(screen, (0, 0, 0), (fin_x + outer_border_add,
+                                               fin_y + outer_border_add), r, 1)
+            # pg.draw.circle(screen, (0, 0, 0), (rect_border+x*rect_step+outer_border_add,
+            #                                    rect_border+y*rect_step+outer_border_add), r, 1)
+        # print("\n")
 
         for i in range(len(ceil.robots)):
             if not ceil.robots[i].isAlive:
@@ -208,8 +226,8 @@ def draw_ceil(screen):
                 continue
             # print("in r loop")
             if ceil.robots[i].ot[0] != -1:
-                x = ceil.robots[i].ot[0] * rect_side / side + outer_border_add
-                y = ceil.robots[i].ot[1] * rect_side / side + outer_border_add
+                x = ceil.robots[i].ot[0] * rect_side / side + outer_border_add + rect_border
+                y = ceil.robots[i].ot[1] * rect_side / side + outer_border_add + rect_border
 
                 # xs = ceil.robots[i].os[0] * rect_side / side + outer_border_add
                 # ys = ceil.robots[i].os[1] * rect_side / side + outer_border_add
@@ -219,10 +237,19 @@ def draw_ceil(screen):
                 # pg.draw.circle(screen, (255, 0, 0), (xs, ys), 5, 0)
 
             if len(ceil.robots[i].opt_points) != 0:
+                # print(f"trying to print opt points: {ceil.robots[i].opt_points}")
                 for j in range(len(ceil.robots[i].opt_points)):
-                    hand_0_x, hand_0_y = (ceil.robots[i].opt_points[j][0] * rect_side / side + outer_border_add,
-                                          ceil.robots[i].opt_points[j][1] * rect_side / side + outer_border_add)
-                    pg.draw.circle(screen, (0, 255, 0), (hand_0_x,hand_0_y), 7, 2)
+                    # hand_0_x, hand_0_y = get_ceil_coords(ceil.robots[i].opt_points[j][0],
+                    #                                      ceil.robots[i].opt_points[j][1],
+                    #                                      rect_side, outer_border)
+                    hand_0_x, hand_0_y = get_visual_coords(ceil.robots[i].opt_points[j][0],
+                                                         ceil.robots[i].opt_points[j][1],
+                                                         rect_side, outer_border)
+                    # print(f"Opt point: {hand_0_x}, {hand_0_y}")
+                    # hand_0_x, hand_0_y = (ceil.robots[i].opt_points[j][0] * rect_side / side + outer_border_add,
+                    #                       ceil.robots[i].opt_points[j][1] * rect_side / side + outer_border_add)
+                    pg.draw.circle(screen, (0, 255, 0),
+                                   (hand_0_x + outer_border_add, hand_0_y + outer_border_add), 7, 2)
 
                 if not ceil.robots[i].isMovingPath:
                     global counter
@@ -230,38 +257,48 @@ def draw_ceil(screen):
                     if len(ceil.robots[i].path) != 0:
                         for j in range(len(ceil.robots[i].path)):
                             for l in range(len(ceil.robots[i].path[j])):
-                                hand_0_x, hand_0_y = (
-                                ceil.robots[i].path[j][l][0] * rect_side / side + outer_border_add,
-                                ceil.robots[i].path[j][l][1] * rect_side / side + outer_border_add)
+                                # hand_0_x, hand_0_y = (
+                                # ceil.robots[i].path[j][l][0] * rect_side / side + outer_border_add,
+                                # ceil.robots[i].path[j][l][1] * rect_side / side + outer_border_add)
+
+                                hand_0_x, hand_0_y = get_ceil_coords(ceil.robots[i].path[j][l][0],
+                                                                     ceil.robots[i].path[j][l][1],
+                                                                     rect_side, outer_border)
 
                                 pg.draw.circle(screen, (255, 0, 0), (hand_0_x, hand_0_y), 10, 2)
 
                     if len(ceil.robots[i].centers) != 0:
                         for j in range(1, len(ceil.robots[i].centers)):
-                            x_old = ceil.robots[i].centers[j-1][0]  * rect_side / side + outer_border_add
-                            y_old = ceil.robots[i].centers[j-1][1]  * rect_side / side + outer_border_add
-                            x_new = ceil.robots[i].centers[j][0]  * rect_side / side + outer_border_add
-                            y_new = ceil.robots[i].centers[j][1]  * rect_side / side + outer_border_add
+                            x_old = ceil.robots[i].centers[j-1][0]  * rect_side / side + outer_border_add + rect_border
+                            y_old = ceil.robots[i].centers[j-1][1]  * rect_side / side + outer_border_add + rect_border
+                            x_new = ceil.robots[i].centers[j][0]  * rect_side / side + outer_border_add + rect_border
+                            y_new = ceil.robots[i].centers[j][1]  * rect_side / side + outer_border_add + rect_border
                             pg.draw.line(screen, (0, 0, 255), (x_old, y_old), (x_new, y_new), 2)
 
             points = ceil.robots[i].get_real_coordinates_robot()
             hand_points = ceil.robots[i].get_real_coordinates_hand()
 
-            hand_red_x, hand_red_y = (hand_points[0][0] * rect_side / side + outer_border_add,
-                                      hand_points[0][1] * rect_side / side + outer_border_add)
-            hand_green_x, hand_green_y = (hand_points[1][0] * rect_side / side + outer_border_add,
-                                          hand_points[1][1] * rect_side / side + outer_border_add)
-            hand_blue_x, hand_blue_y = (hand_points[2][0] * rect_side / side + outer_border_add,
-                                        hand_points[2][1] * rect_side / side + outer_border_add)
+            hand_red_x, hand_red_y = (hand_points[0][0] * rect_side / side + outer_border_add + rect_border,
+                                      hand_points[0][1] * rect_side / side + outer_border_add + rect_border)
+            # hand_red_x, hand_red_y = get_ceil_coords(hand_points[0][0], hand_points[0][1],
+            #                                          rect_border, rect_step, outer_border_add)
+            hand_green_x, hand_green_y = (hand_points[1][0] * rect_side / side + outer_border_add + rect_border,
+                                          hand_points[1][1] * rect_side / side + outer_border_add + rect_border)
+            # hand_green_x, hand_green_y = get_ceil_coords(hand_points[1][0], hand_points[1][1],
+            #                                          rect_border, rect_step, outer_border_add)
+            hand_blue_x, hand_blue_y = (hand_points[2][0] * rect_side / side + outer_border_add + rect_border,
+                                        hand_points[2][1] * rect_side / side + outer_border_add + rect_border)
+            # hand_blue_x, hand_blue_y = get_ceil_coords(hand_points[2][0], hand_points[2][1],
+            #                                          rect_border, rect_step, outer_border_add)
 
-            red_x, red_y = (points[0][0] * rect_side / side + outer_border_add,
-                            points[0][1] * rect_side / side + outer_border_add)
-            green_x, green_y = (points[1][0] * rect_side / side + outer_border_add,
-                                points[1][1] * rect_side / side + outer_border_add)
-            blue_x, blue_y = (points[2][0] * rect_side / side + outer_border_add,
-                              points[2][1] * rect_side / side + outer_border_add)
-            center_x, center_y = (points[3][0] * rect_side / side + outer_border_add,
-                                  points[3][1] * rect_side / side + outer_border_add)
+            red_x, red_y = (points[0][0] * rect_side / side + outer_border_add + rect_border,
+                            points[0][1] * rect_side / side + outer_border_add + rect_border)
+            green_x, green_y = (points[1][0] * rect_side / side + outer_border_add + rect_border,
+                                points[1][1] * rect_side / side + outer_border_add + rect_border)
+            blue_x, blue_y = (points[2][0] * rect_side / side + outer_border_add + rect_border,
+                              points[2][1] * rect_side / side + outer_border_add + rect_border)
+            center_x, center_y = (points[3][0] * rect_side / side + outer_border_add + rect_border,
+                                  points[3][1] * rect_side / side + outer_border_add + rect_border)
 
             pg.draw.line(screen, (255, 0, 0), (hand_red_x, hand_red_y), (center_x, center_y), 3)
             pg.draw.line(screen, (0, 255, 0), (hand_green_x, hand_green_y), (center_x, center_y), 3)
@@ -441,8 +478,14 @@ def command_panel():
                         print("Invalid input")
                     else:
                         robot_num = int(robot_input.text)
-                        x = int(x_input.text)
-                        y = int(y_input.text)
+                        try:
+                            x = float(x_input.text)
+                            y = float(y_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # x = int(x_input.text)
+                        # y = int(y_input.text)
                         robot_input.text = ''
                         x_input.text = ''
                         y_input.text = ''
@@ -495,6 +538,7 @@ def command_panel():
                         draw_ceil(screen)
                 if button_set_coord.collidepoint(event.pos):
                     # print("SET COORD BUTTON")
+                    x1, x2, x3, y1, y2, y3 = 0.0, 0.0, 0.0, 0.0, 0.0, 0.0
                     if (((x1_input.text == '') or (y1_input.text == '')
                             or (x2_input.text == '') or (y2_input.text == ''))
                             or (x3_input.text == '') or (y3_input.text == '')
@@ -502,12 +546,16 @@ def command_panel():
                         print("Invalid input")
                     else:
                         robot_num = int(r2_input.text)
-                        x1 = int(x1_input.text)
-                        y1 = int(y1_input.text)
-                        x2 = int(x2_input.text)
-                        y2 = int(y2_input.text)
-                        x3 = int(x3_input.text)
-                        y3 = int(y3_input.text)
+                        try:
+                            x1 = float(x1_input.text)
+                            y1 = float(y1_input.text)
+                            x2 = float(x2_input.text)
+                            y2 = float(y2_input.text)
+                            x3 = float(x3_input.text)
+                            y3 = float(y3_input.text)
+                        except:
+                            print("Invalid input")
+                            break
                         r2_input.text = ''
                         x1_input.text = ''
                         y1_input.text = ''

@@ -4,6 +4,8 @@
 # import time
 import time
 from struct import pack
+from time import sleep
+
 from waiting import wait
 
 # import arm_geometry_test
@@ -24,55 +26,42 @@ class Ceil:
         self.N = 2
 
         # дефолтні координати для роботів
-        self.default_coordinates = {"x1": 300,
-                                    "y1": 300,
-                                    "x2": 500,
-                                    "y2": 300,
-                                    "x3": 100,
-                                    "y3": 300}
+        # self.default_coordinates = {"x1": 300,
+        #                             "y1": 300,
+        #                             "x2": 500,
+        #                             "y2": 300,
+        #                             "x3": 100,
+        #                             "y3": 300}
+
+        self.default_coordinates_hex = {"x1": 173.205,
+                                        "y1": 230.940,
+                                        "x2": 346.410,
+                                        "y2": 100.0,
+                                        "x3": 0.0,
+                                        "y3": 100.0}
 
         # self.default_ceil = {"x1": 1,
         #                      "y1": 1,
-        #                      "x2": 0,
+        #                      "x2": 2,
         #                      "y2": 1,
-        #                      "x3": 2,
+        #                      "x3": 0,
         #                      "y3": 1}
 
-        # self.default_coordinates = {"x1": 100,
-        #                             "y1": 300,
-        #                             "x2": 300,
-        #                             "y2": 300,
-        #                             "x3": 500,
-        #                             "y3": 300}
-        #
-        # self.default_ceil = {"x1": 0,
-        #                      "y1": 1,
-        #                      "x2": 1,
-        #                      "y2": 1,
-        #                      "x3": 2,
-        #                      "y3": 1}
+        self.default_ceil_hex = {"x1": 1,
+                                 "y1": 1,
+                                 "x2": 2,
+                                 "y2": 0,
+                                 "x3": 0,
+                                 "y3": 2}
 
-        # self.default_coordinates = {"x3": 500,
-        #                             "y3": 300,
-        #                             "x1": 300,
-        #                             "y1": 300,
-        #                             "x2": 100,
-        #                             "y2": 300}
-        #
-        # self.default_ceil = {"x3": 2,
-        #                      "y3": 1,
-        #                      "x1": 1,
-        #                      "y1": 1,
-        #                      "x2": 0,
-        #                      "y2": 1}
 
         # масив роботів
         self.robots = []
 
-        self.rect_side = 620
-        self.side = 2 * size["netBorder"] + (self.max_x - 1) * size["netStep"]
-        self.rect_border = int(size["netBorder"] * self.rect_side / self.side)
-        self.rect_step = int(size["netStep"] * self.rect_side / self.side)
+        # self.rect_side = 620
+        # self.side = 2 * size["netBorder"] + (self.max_x - 1) * size["netStep"]
+        # self.rect_border = int(size["netBorder"] * self.rect_side / self.side)
+        # self.rect_step = int(size["netStep"] * self.rect_side / self.side)
 
     # додавання роботу
     def add_robot(self, ip):
@@ -84,16 +73,23 @@ class Ceil:
         r = Robot()
         r.set_ip(ip)
         # set default coordinates
-        r.set_coordinates(self.default_coordinates["x1"], self.default_coordinates["y1"],
-                          self.default_coordinates["x2"], self.default_coordinates["y2"],
-                          self.default_coordinates["x3"], self.default_coordinates["y3"])
+        r.set_coordinates(self.default_coordinates_hex["x1"], self.default_coordinates_hex["y1"],
+                          self.default_coordinates_hex["x2"], self.default_coordinates_hex["y2"],
+                          self.default_coordinates_hex["x3"], self.default_coordinates_hex["y3"])
 
-        y1 =  int((self.default_coordinates["y1"] - 100) / 200)
-        x1 = int((self.default_coordinates["x1"] - 100) / 200)
-        y2 = int((self.default_coordinates["y2"] - 100) / 200)
-        x2 = int((self.default_coordinates["x2"] - 100) / 200)
-        y3 = int((self.default_coordinates["y3"] - 100) / 200)
-        x3 = int((self.default_coordinates["x3"] - 100) / 200)
+        # y1 =  int((self.default_coordinates["y1"] - 100) / 200)
+        # x1 = int((self.default_coordinates["x1"] - 100) / 200)
+        # y2 = int((self.default_coordinates["y2"] - 100) / 200)
+        # x2 = int((self.default_coordinates["x2"] - 100) / 200)
+        # y3 = int((self.default_coordinates["y3"] - 100) / 200)
+        # x3 = int((self.default_coordinates["x3"] - 100) / 200)
+
+        y1 = self.default_ceil_hex["y1"]
+        x1 = self.default_ceil_hex["x1"]
+        y2 = self.default_ceil_hex["y2"]
+        x2 = self.default_ceil_hex["x2"]
+        y3 = self.default_ceil_hex["y3"]
+        x3 = self.default_ceil_hex["x3"]
 
         # mark default coordinates as occupied in ceil array
         self.ceil_arr[y1][x1] = 1
@@ -185,8 +181,11 @@ class Ceil:
 
     def get_robot_angle_shift(self, robot_num):
         ang_a = self.robots[robot_num].hands[0].ang
+        print(f"Hands: {self.robots[robot_num].hands}")
+        print(f"Ang: {self.robots[robot_num].hands[0].ang}")
 
         center_x, center_y = self.robots[robot_num].get_center()
+        print(f"Center: {center_x}, {center_y}")
 
         print(f"START ANGLES a: {ang_a}")
 
@@ -279,7 +278,7 @@ class Ceil:
         coord_[3] = (o_real_[0], o_real_[1])
         center_x, center_y = self.robots[robot_num].get_center()
         # print(f"IN COORD SCENTER x: ({center_x}, {center_y})")
-        # print(f"Coord: {coord}")
+        print(f"Coord: {coord}")
 
         self.robots[robot_num].set_real_coordinates(coord[0], coord[1], coord[2], coord[3])
         self.robots[robot_num].set_real_coordinates_hand(coord_[0], coord_[1], coord_[2], coord_[3])
@@ -786,6 +785,7 @@ class Ceil:
             print(f"Shifts {shifts}, Angs: {angs}")
             wait(lambda: self.robots[robot_num].is_finished_move(), timeout_seconds=120,
                  waiting_for="waiting for robot to finish move")
+            # sleep(10.0)
             prev_x_n, prev_y_n = xo_n, yo_n
             self.move_hand(robot_num, 0, hand_coords[0][0], hand_coords[0][1])
             self.move_hand(robot_num, 1, hand_coords[1][0], hand_coords[1][1])
@@ -1119,8 +1119,11 @@ class Ceil:
 
         for y in range(min_y, max_y):
             for x in range(min_x, max_x):
-                x_ceil = ceil_to_coordinates(x)
-                y_ceil = ceil_to_coordinates(y)
+                # x_ceil = ceil_to_coordinates(x)
+                # y_ceil = ceil_to_coordinates(y)
+                D1 = (size["d2"] / 3) * 2
+                x_ceil = x * size["d2"] / 2 + size["netBorder"]
+                y_ceil = y * D1 + (1 - (x % 2)) * (size["D2"] / 4) + size["netBorder"]
                 is_in_circle_1 = False
                 is_in_circle_2 = False
                 is_in_circle_3 = False
@@ -1704,7 +1707,7 @@ class Ceil:
         self.robots[robot_num].isMovingPath = True
         self.robots[robot_num].curr_index = -1
         a, b, c = get_line_equation(xo_s, yo_s, xo_t, yo_t)
-        opt_points = optimal_points(a, b, c)
+        opt_points = optimal_points(a, b, c, self.max_x, self.max_y)
         self.robots[robot_num].opt_points = opt_points[:]
         # print(f"Start optimal: {opt_points}")
 
@@ -1862,7 +1865,7 @@ class Ceil:
         self.robots[robot_num].isMovingPath = True
         self.robots[robot_num].curr_index = -1
         a, b, c = get_line_equation(xo_s, yo_s, xo_t, yo_t)
-        opt_points = optimal_points(a, b, c)
+        opt_points = optimal_points(a, b, c, self.max_x, self.max_y)
         self.robots[robot_num].opt_points = opt_points[:]
         # print(f"Start optimal: {opt_points}")
 
@@ -1943,9 +1946,9 @@ class Ceil:
                         break
                     print(f"Point: {point}")
                     print(f"Hand coords: {hand_coords}")
-                    if not point in opt_points:
-                        print("Not optimal")
-                        continue
+                    # if not point in opt_points:
+                    #     print("Not optimal")
+                    #     continue
                     if (hand_coords[0][0] == point[0] and hand_coords[0][1] == point[1]) or (
                             hand_coords[1][0] == point[0] and hand_coords[1][1] == point[1]) or (
                             hand_coords[2][0] == point[0] and hand_coords[2][1] == point[1]):
@@ -1965,7 +1968,7 @@ class Ceil:
                         print(f"Hand {j}: ({new_x}, {new_y}); is stable? {is_line_L}")
                         # print(f"Temp coords: {temp_hand_coords}")
                         # print(f"Loop optimal: {opt_points}")
-                        if (new_x != -1 and new_y != -1) and is_line_L:
+                        if (new_x != -1 and new_y != -1):# and is_line_L:
                             print(f"ADDING {point} FOR {j}")
                             if temp_coords in path:
                                 print("There is already such position in path, aborting the loop!")
@@ -2503,7 +2506,7 @@ class Ceil:
         for i in range(1, len(self.robots[robot_num].path)):
             x_t, y_t = self.robots[robot_num].centers[i]
             x_s, y_s = self.robots[robot_num].get_center()
-            print(f"Iteration No.{i}: Os = ({x_s}, {y_s}); Ot = ({x_t}, {y_t});")
+            print(f"Iteration No.{i}: Os = ({x_s}, {y_s}); Ot = ({x_t}, {y_t}); global Ot: {self.robots[robot_num].ot[0]}, {self.robots[robot_num].ot[1]}")
             pos = self.robots[robot_num].path[i]
             print(f"Position: {pos}")
             move_hand = -1
@@ -2514,7 +2517,9 @@ class Ceil:
                         return -1
                     else:
                         move_hand = j
+            # sleep(10.0)
             self.robots[robot_num].get_robot_params()
+            # sleep(10.0)
             res = self.move_vector(robot_num, x_s, y_s, x_t, y_t, pos, move_hand)
             if res == -1:
                 print("Critical error, return")
@@ -3488,8 +3493,8 @@ class Ceil:
                             x_path = abs(delta_x)
                             y_path = abs(delta_y)
                 x_move = True
-                y_move = False'''
-
+                y_move = False
+'''
 
 '''        while x_path > 100:# or y_path > 100:
             self.show_ceil()

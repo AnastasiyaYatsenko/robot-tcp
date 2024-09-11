@@ -566,14 +566,21 @@ def is_limited_by_others(x1, y1, x2, y2, x3, y3, xo, yo, hand_num):
     # print("false")
     return False
 
-def optimal_points(a, b, c):
-    x_start, y_start = 100, 100
+def optimal_points(a, b, c, max_x, max_y):
+    # x_start, y_start = 100, 100
+    x_start = size["netBorder"]
+    y_start = (size["D2"] / 4) + size["netBorder"]
+
     max_dist = size["netStep"] * math.sqrt(2) * 2
     opt_points = []
-    for y_step in range(10):
-        for x_step in range(10):
-            x = x_start + size["netStep"] * x_step
-            y = y_start + size["netStep"] * y_step
+    for y_step in range(max_y):
+        for x_step in range(max_x):
+            # x = x_start + size["netStep"] * x_step
+            # y = y_start + size["netStep"] * y_step
+
+            x = x_step * size["d2"] / 2 + size["netBorder"]
+            y = y_step * size["D2"] / 2 + (size["D2"] / 4) * (1 - (x_step % 2)) + size["netBorder"]
+
             d = abs(a * x + b * y + c) / math.sqrt(a**2 + b**2)
             if d <= max_dist:
                 opt_points.append((x, y))
@@ -787,7 +794,33 @@ def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 
     return shifts, angs, holds
 
+def to_range(num, inMin, inMax, outMin, outMax):
+  return outMin + (float(num - inMin) / float(inMax - inMin) * (outMax
+                  - outMin))
 
+def get_ceil_coords(x, y, rect_side, outer_border):
+    D1 = (size["d2"] / 3) * 2
+    # ceil_x = x * size["d2"] / 2 + size["netBorder"]
+    ceil_x = x * size["d2"] / 2 + size["netBorder"]
+    ceil_y = y * size["D2"] / 2 + (size["D2"] / 4) * (1 - (x % 2)) + size["netBorder"]
+    # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
+    # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+    # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+    fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side+2*outer_border)
+    fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side+2*outer_border)
+    return fin_x, fin_y
+
+def get_visual_coords(x, y, rect_side, outer_border):
+    D1 = (size["d2"] / 3) * 2
+    # ceil_x = x * size["d2"] / 2 + size["netBorder"]
+    # ceil_x = x * size["d2"] / 2 + size["netBorder"]
+    # ceil_y = y * size["D2"] / 2 + (size["D2"] / 4) * (1 - (x % 2)) + size["netBorder"]
+    # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
+    # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+    # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+    fin_x = to_range(x, 0, size["ceilLenX"], 0, rect_side+2*outer_border)
+    fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side+2*outer_border)
+    return fin_x, fin_y
 
 # def get_ang(x1, y1, xc, yc):
 #     ax = x1 - xc
@@ -851,7 +884,12 @@ size = {
     "outerRadLimit": 220,  # max shift pos
     "minAngle": 68,
     "netStep": 200,
-    "netBorder": 100
+    "ceilLenX": 2000,
+    "ceilLenY": 2000,
+    "netBorder": 100,
+    "D2": 400,
+    "d2": 200*math.sqrt(3),
+    "holeRad": 40
 }
 
 # arm_state = get_arm_state_by_pos(7, size, 'b')

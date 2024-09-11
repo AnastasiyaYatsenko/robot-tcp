@@ -45,15 +45,25 @@ class Robot:
         #                               (500, 300),  # hand 2
         #                               (300, 252)]  # center
 
-        self.real_coordinates = [(300, 300),  # hand 0
-                                 (500, 300),  # hand 1
-                                 (100, 300),  # hand 2
-                                 (300, 252)]  # center
+        # self.real_coordinates = [(300, 300),  # hand 0
+        #                          (500, 300),  # hand 1
+        #                          (100, 300),  # hand 2
+        #                          (300, 252)]  # center
+        #
+        # self.real_coordinates_hand = [(300, 300),  # hand 0
+        #                               (500, 300),  # hand 1
+        #                               (100, 300),  # hand 2
+        #                               (300, 252)]  # center
 
-        self.real_coordinates_hand = [(300, 300),  # hand 0
-                                      (500, 300),  # hand 1
-                                      (100, 300),  # hand 2
-                                      (300, 252)]  # center
+        self.real_coordinates = [(173.205, 230.940),  # hand 0
+                                 (346.410, 100.000),  # hand 1
+                                 (0.000, 100.000),  # hand 2
+                                 (173.205, 100.0)]  # center
+
+        self.real_coordinates_hand = [(173.205, 230.940),  # hand 0
+                                      (346.410, 100.000),  # hand 1
+                                      (0.000, 100.000),  # hand 2
+                                      (173.205, 100.0)]  # center
 
     def set_socket(self, new_socket):
         print(new_socket)
@@ -157,13 +167,13 @@ class Robot:
         # print("--- get center ---")
         center_x, center_y = 0, 0
         if self.is_aligned():
-            # print("aligned")
+            print("aligned")
             center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
                                                   self.hands[1].x, self.hands[1].y,
                                                   self.hands[2].x, self.hands[2].y,
                                                   self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
         else:
-            # print("not aligned")
+            print("not aligned")
             center_x, center_y = calculate_center_three_points(self.hands[0].x, self.hands[0].y,
                                                                self.hands[1].x, self.hands[1].y,
                                                                self.hands[2].x, self.hands[2].y,
@@ -219,8 +229,8 @@ class Robot:
         return False
 
 
-    def print(self):
-        print("Robot "+self.robot_ip)
-        print("Hand 1: " + str(self.hands[0]))
-        print("Hand 2: " + str(self.hands[1]))
-        print("Hand 3: " + str(self.hands[2]))
+    # def print(self):
+    #     print("Robot "+self.robot_ip)
+    #     print("Hand 1: " + str(self.hands[0]))
+    #     print("Hand 2: " + str(self.hands[1]))
+    #     print("Hand 3: " + str(self.hands[2]))
