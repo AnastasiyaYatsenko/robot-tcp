@@ -64,10 +64,14 @@ def get_arm_state_by_pos(pos, size, id=''):
     return res
 '''
 
-def ceil_to_coordinates(a):
+def ceil_to_coordinates_(a):
     a = size["netBorder"] + a * size["netStep"]
     return a
 
+def ceil_to_coordinates(x, y):
+    x_ceil = x * size["d2"] / 2 + size["netBorder"]
+    y_ceil = y * size["D2"] / 2 + (1 - (x % 2)) * (size["D2"] / 4) + size["netBorder"]
+    return x_ceil, y_ceil
 
 def ceil_to_coordinates_all(x1, y1, x2, y2, x3, y3):
     x1 = size["netBorder"] + x1 * size["netStep"]
@@ -82,10 +86,14 @@ def ceil_to_coordinates_all(x1, y1, x2, y2, x3, y3):
     return x1, y1, x2, y2, x3, y3
 
 
-def coordinates_to_ceil(a):
+def coordinates_to_ceil_(a):
     a = (a - size["netBorder"]) / size["netStep"]
     return int(a)
 
+def coordinates_to_ceil(x, y):
+    ceil_x = round((x - size["netBorder"]) / (size["d2"] / 2))
+    ceil_y = round((y - size["netBorder"] - (size["D2"] / 4) * (1 - (x % 2))) / (size["D2"] / 2))
+    return int(ceil_x), int(ceil_y)
 
 def coordinates_to_ceil_all(x1, y1, x2, y2, x3, y3):
     x1 = (x1 - size["netBorder"]) / size["netStep"]
@@ -126,7 +134,7 @@ def point_in_sector(px, py, cx, cy, v1x, v1y, v2x, v2y):
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
 # OLD
 
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
     #
@@ -207,7 +215,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     return x, y
 
 
-def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("---")
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     #todo ensure that x1y1 and x2y2 are neighbouring
@@ -310,28 +318,38 @@ def get_shift_angle(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # eps = 1e-6
     # eps = 0.003
+    # print("at least he tried")
     eps = 20 # TODO find the suitable eps
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
-    # print(f"r1: {r1} r2: {r2}")
+    # print(f"r1: {r1} r2: {r2} r3: {r3}")
     if (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3)) == 0) or (
             (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))) == 0):
+        # print("oups")
         return -1, -1
 
-    x = (((y2 - y1) * (r2 * r2 - r3 * r3 - y2 * y2 + y3 * y3 - x2 * x2 + x3 * x3) - (y3 - y2) *
-          (r1 * r1 - r2 * r2 - y1 * y1 + y2 * y2 - x1 * x1 + x2 * x2)) /
+    # x = (((y2 - y1) * (r2 * r2 - r3 * r3 - y2 * y2 + y3 * y3 - x2 * x2 + x3 * x3) - (y3 - y2) *
+    #       (r1 * r1 - r2 * r2 - y1 * y1 + y2 * y2 - x1 * x1 + x2 * x2)) /
+    #      (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3))))
+    # y = (((x2 - x1) * (r2 * r2 - r3 * r3 - x2 * x2 + x3 * x3 - y2 * y2 + y3 * y3) - (x3 - x2) *
+    #       (r1 * r1 - r2 * r2 - x1 * x1 + x2 * x2 - y1 * y1 + y2 * y2)) /
+    #      (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
+
+    x = (((y2 - y1) * (r2**2 - r3**2 - y2**2 + y3**2 - x2**2 + x3**2) - (y3 - y2) *
+          (r1**2 - r2**2 - y1**2 + y2**2 - x1**2 + x2**2)) /
          (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3))))
-    y = (((x2 - x1) * (r2 * r2 - r3 * r3 - x2 * x2 + x3 * x3 - y2 * y2 + y3 * y3) - (x3 - x2) *
-          (r1 * r1 - r2 * r2 - x1 * x1 + x2 * x2 - y1 * y1 + y2 * y2)) /
+    y = (((x2 - x1) * (r2**2 - r3**2 - x2**2 + x3**2 - y2**2 + y3**2) - (x3 - x2) *
+          (r1**2 - r2**2 - x1**2 + x2**2 - y1**2 + y2**2)) /
          (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
     # print("x=" + str(x) + " y=" + str(y))
     # print(f"abs = {abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1)}")
-    if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
+    # if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
+    if abs((x1 - x)**2 + (y1 - y)**2 - r1**2) < eps:
         # print("x=" + str(x) + " y=" + str(y))
         return x, y
-    # else:
-        # print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
-        # print(f"x: {x} y: {y}")
-        # print("Impossible")
+    else:
+        print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
+        print(f"x: {x} y: {y}")
+        print("Impossible")
     return -1, -1
 
 def center_by_params(hand_coords, shift_1, shift_2, shift_3):
@@ -632,6 +650,7 @@ def is_aligned_stable(hand_coords):
         return True
     return False
 
+# TODO
 def are_neighbours(x1, y1, x2, y2):
     # Sort the dots based on their coordinates
     dots = sorted([(x1, y1),
@@ -798,7 +817,7 @@ def to_range(num, inMin, inMax, outMin, outMax):
   return outMin + (float(num - inMin) / float(inMax - inMin) * (outMax
                   - outMin))
 
-def get_ceil_coords(x, y, rect_side, outer_border):
+def get_ceil_coords(x, y, rect_side, outer_border, outer_border_add):
     D1 = (size["d2"] / 3) * 2
     # ceil_x = x * size["d2"] / 2 + size["netBorder"]
     ceil_x = x * size["d2"] / 2 + size["netBorder"]
@@ -806,20 +825,22 @@ def get_ceil_coords(x, y, rect_side, outer_border):
     # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
     # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
     # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
-    fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side+2*outer_border)
-    fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side+2*outer_border)
+    # fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side + 2 * outer_border) + outer_border_add
+    # fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side + 2 * outer_border) + outer_border_add
+    fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
+    fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
     return fin_x, fin_y
 
-def get_visual_coords(x, y, rect_side, outer_border):
-    D1 = (size["d2"] / 3) * 2
+def get_visual_coords(x, y, rect_side, outer_border, outer_border_add):
+    # D1 = (size["d2"] / 3) * 2
     # ceil_x = x * size["d2"] / 2 + size["netBorder"]
     # ceil_x = x * size["d2"] / 2 + size["netBorder"]
     # ceil_y = y * size["D2"] / 2 + (size["D2"] / 4) * (1 - (x % 2)) + size["netBorder"]
     # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
     # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
     # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
-    fin_x = to_range(x, 0, size["ceilLenX"], 0, rect_side+2*outer_border)
-    fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side+2*outer_border)
+    fin_x = to_range(x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
+    fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
     return fin_x, fin_y
 
 # def get_ang(x1, y1, xc, yc):

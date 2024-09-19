@@ -55,15 +55,25 @@ class Robot:
         #                               (100, 300),  # hand 2
         #                               (300, 252)]  # center
 
-        self.real_coordinates = [(173.205, 230.940),  # hand 0
-                                 (346.410, 100.000),  # hand 1
-                                 (0.000, 100.000),  # hand 2
-                                 (173.205, 100.0)]  # center
+        self.real_coordinates = [(273.205, 300.0),  # hand 0
+                                 (446.410, 200.000),  # hand 1
+                                 (100.000, 200.000),  # hand 2
+                                 (273.205, 200.0)]  # center
 
-        self.real_coordinates_hand = [(173.205, 230.940),  # hand 0
-                                      (346.410, 100.000),  # hand 1
-                                      (0.000, 100.000),  # hand 2
-                                      (173.205, 100.0)]  # center
+        self.real_coordinates_hand = [(273.205, 300.0),  # hand 0
+                                      (446.410, 200.000),  # hand 1
+                                      (100.000, 200.000),  # hand 2
+                                      (273.205, 200.0)]  # center
+
+        # self.real_coordinates = [(173.205, 230.940),  # hand 0
+        #                          (346.410, 100.000),  # hand 1
+        #                          (0.000, 100.000),  # hand 2
+        #                          (173.205, 100.0)]  # center
+        #
+        # self.real_coordinates_hand = [(173.205, 230.940),  # hand 0
+        #                               (346.410, 100.000),  # hand 1
+        #                               (0.000, 100.000),  # hand 2
+        #                               (173.205, 100.0)]  # center
 
     def set_socket(self, new_socket):
         print(new_socket)
@@ -82,6 +92,7 @@ class Robot:
                  0, 0, 50)
         # print(f"PACKAGE: {p}")
         # self.isMoving = True
+        print("sent update params request")
         self.params_updated = False
         self.out_buffer = p
         wait(lambda: self.is_params_recieved(), timeout_seconds=120,
