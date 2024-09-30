@@ -365,9 +365,9 @@ def command_panel():
     screen = pg.display.set_mode([1210, 750])
 
     # Inputs
-    robot_input = InputBox(870, 70, 200, 32)
-    x_input = InputBox(870, 120, 200, 32)
-    y_input = InputBox(870, 170, 200, 32)
+    robot_input = InputBox(810, 70, 200, 32)
+    x_input = InputBox(810, 120, 200, 32)
+    y_input = InputBox(810, 170, 200, 32)
 
     r2_input = InputBox(900, 360)
     x1_input = InputBox(790, 440, 100)
@@ -399,16 +399,30 @@ def command_panel():
     button_surface_disconnect = pg.Surface((200, 50))
     button_surface_update = pg.Surface((200, 50))
 
+    button_surface_lu = pg.Surface((35, 35))
+    button_surface_ld = pg.Surface((35, 35))
+    button_surface_u = pg.Surface((35, 35))
+    button_surface_d = pg.Surface((35, 35))
+    button_surface_ru = pg.Surface((35, 35))
+    button_surface_rd = pg.Surface((35, 35))
+
     # Button rectangles
     button_start = pg.Rect(760, 220, 200, 50)
     button_disconnect = pg.Rect(990, 220, 200, 50)
     button_set_coord = pg.Rect(870, 550, 200, 50)
     button_path = pg.Rect(760, 630, 200, 50)
     button_update = pg.Rect(990, 630, 200, 50)
+
+    button_lu = pg.Rect(1050, 90, 35, 35)
+    button_ld = pg.Rect(1050, 130, 35, 35)
+    button_u = pg.Rect(1090, 70, 35, 35)
+    button_d = pg.Rect(1090, 150, 35, 35)
+    button_ru = pg.Rect(1130, 90, 35, 35)
+    button_rd = pg.Rect(1130, 130, 35, 35)
     # (760, 290), (1190, 290)
 
     # Create a font object
-    font = pg.font.Font(None, 30)
+    font = pg.font.Font(None, 29)
 
     text = font.render("Start move", True, (255, 255, 255))
     text_rect = text.get_rect(center=(button_surface.get_width() / 2, button_surface.get_height() / 2))
@@ -434,7 +448,7 @@ def command_panel():
     text_update_rect = text_update.get_rect(
         center=(button_surface_update.get_width() / 2, button_surface_update.get_height() / 2))
 
-    r_text1 = font.render("Robot N.", True, (255, 255, 255))
+    r_text1 = font.render("Robot:", True, (255, 255, 255))
     r_text1_rect = text.get_rect(center=(
         robot_input.inputBox.x - r_text1.get_width() + 40, robot_input.inputBox.y + robot_input.inputBox.height / 2))
 
@@ -534,6 +548,9 @@ def command_panel():
                         else:
                             ceil.robots[robot_num].get_robot_params()
                             xo_s, yo_s = ceil.robots[robot_num].get_center()
+                            # t_path = threading.Thread(target=ceil.path_manual, args=[robot_num, x])
+                            # t_path.start()
+
                             print(f"Os: ({xo_s}, {yo_s}); Ot: ({x}, {y})")
                             # break
                             global ot
@@ -636,6 +653,133 @@ def command_panel():
                     # t_start.start()
                     # global path
                     # path = path_[:]
+                if button_lu.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 0])
+                            t_step.start()
+                if button_ld.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 1])
+                            t_step.start()
+                if button_u.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 2])
+                            t_step.start()
+                if button_d.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 3])
+                            t_step.start()
+                if button_ru.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 4])
+                            t_step.start()
+                if button_rd.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 5])
+                            t_step.start()
+
 
 
             robot_input.handle_event(event)
@@ -700,6 +844,49 @@ def command_panel():
 
         button_surface_update.blit(text_update, text_update_rect)
         screen.blit(button_surface_update, (button_update.x, button_update.y))
+
+
+        # manual control buttons
+        if button_lu.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_lu, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_lu, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_ld.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_ld, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_ld, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_u.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_u, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_u, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_d.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_d, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_d, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_ru.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_ru, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_ru, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_rd.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_rd, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_rd, (5, 99, 46), (1, 1, 200, 48))
+
+        # Show the button text
+        # button_surface.blit(text, text_rect)
+        # Draw the button on the screen
+        screen.blit(button_surface_lu, (button_lu.x, button_lu.y))
+        screen.blit(button_surface_ld, (button_ld.x, button_ld.y))
+        screen.blit(button_surface_u, (button_u.x, button_u.y))
+        screen.blit(button_surface_d, (button_d.x, button_d.y))
+        screen.blit(button_surface_ru, (button_ru.x, button_ru.y))
+        screen.blit(button_surface_rd, (button_rd.x, button_rd.y))
+
 
         pg.draw.line(screen, (255, 255, 255), (760, 290), (1090 + x3_input.inputBox.width, 290))
         pg.draw.line(screen, (255, 255, 255), (760, 620), (1090 + x3_input.inputBox.width, 620))

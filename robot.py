@@ -55,15 +55,15 @@ class Robot:
         #                               (100, 300),  # hand 2
         #                               (300, 252)]  # center
 
-        self.real_coordinates = [(273.205, 300.0),  # hand 0
-                                 (446.410, 200.000),  # hand 1
-                                 (100.000, 200.000),  # hand 2
-                                 (273.205, 200.0)]  # center
+        self.real_coordinates = [(446.410, 400.000),  # hand 0
+                                 (619.615, 500.000),  # hand 1
+                                 (273.205, 300.0),  # hand 2
+                                 (471.555, 356.447)]  # center
 
-        self.real_coordinates_hand = [(273.205, 300.0),  # hand 0
-                                      (446.410, 200.000),  # hand 1
-                                      (100.000, 200.000),  # hand 2
-                                      (273.205, 200.0)]  # center
+        self.real_coordinates_hand = [(446.410, 400.000),  # hand 0
+                                      (619.615, 500.000),  # hand 1
+                                      (273.205, 300.0),  # hand 2
+                                      (471.555, 356.447)]  # center
 
         # self.real_coordinates = [(173.205, 230.940),  # hand 0
         #                          (346.410, 100.000),  # hand 1
@@ -147,14 +147,11 @@ class Robot:
     #         print("Point occupied!")
 
     def get_all_points(self):
-        center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
-                                              self.hands[1].x, self.hands[1].y,
-                                              self.hands[2].x, self.hands[2].y,
-                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
-        return [self.hands[0].x, self.hands[0].y,
-                self.hands[1].x, self.hands[1].y,
-                self.hands[2].x, self.hands[2].y,
-                center_x, center_y]
+        center_x, center_y = self.get_center()
+        return [(self.hands[0].x, self.hands[0].y),
+                (self.hands[1].x, self.hands[1].y),
+                (self.hands[2].x, self.hands[2].y),
+                (center_x, center_y)]
 
     def set_real_coordinates(self, c1, c2, c3, co):
         self.real_coordinates[0] = c1
@@ -179,10 +176,10 @@ class Robot:
         center_x, center_y = 0, 0
         if self.is_aligned():
             print("aligned")
-            center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
-                                                  self.hands[1].x, self.hands[1].y,
-                                                  self.hands[2].x, self.hands[2].y,
-                                                  self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+            center_x, center_y = calculate_center([(self.hands[0].x, self.hands[0].y),
+                                                   (self.hands[1].x, self.hands[1].y),
+                                                   (self.hands[2].x, self.hands[2].y)],
+                                                  [self.hands[0].lin, self.hands[1].lin, self.hands[2].lin])
         else:
             print("not aligned")
             center_x, center_y = calculate_center_three_points(self.hands[0].x, self.hands[0].y,
@@ -211,17 +208,20 @@ class Robot:
         if self.is_horizontal_aligned() or self.is_vertical_aligned():
             # print("---")
             return True
-        Tol = 1e-10
-        if (self.hands[0].x == self.hands[2].x and self.hands[0].x != self.hands[1].x) or (
-                self.hands[1].x == self.hands[2].x and self.hands[1].x != self.hands[0].x) or (
-                self.hands[0].x == self.hands[1].x and self.hands[0].x != self.hands[2].x):
-            return False
-        if (self.hands[0].y == self.hands[2].y and self.hands[0].y != self.hands[1].y) or (
-                self.hands[1].y == self.hands[2].y and self.hands[1].y != self.hands[0].y) or (
-                self.hands[0].y == self.hands[1].y and self.hands[0].y != self.hands[2].y):
-            return False
-        if abs((self.hands[2].x - self.hands[0].x) / (self.hands[1].x - self.hands[0].x) -
-               (self.hands[2].y - self.hands[0].y) / (self.hands[1].y - self.hands[0].y)) <= Tol:
+        # Tol = 1e-10
+        Tol = 2
+        # if (self.hands[0].x == self.hands[2].x and self.hands[0].x != self.hands[1].x) or (
+        #         self.hands[1].x == self.hands[2].x and self.hands[1].x != self.hands[0].x) or (
+        #         self.hands[0].x == self.hands[1].x and self.hands[0].x != self.hands[2].x):
+        #     return False
+        # if (self.hands[0].y == self.hands[2].y and self.hands[0].y != self.hands[1].y) or (
+        #         self.hands[1].y == self.hands[2].y and self.hands[1].y != self.hands[0].y) or (
+        #         self.hands[0].y == self.hands[1].y and self.hands[0].y != self.hands[2].y):
+        #     return False
+        x1, y1 = ceil_to_coordinates(self.hands[0].x, self.hands[0].y)
+        x2, y2 = ceil_to_coordinates(self.hands[1].x, self.hands[1].y)
+        x3, y3 = ceil_to_coordinates(self.hands[2].x, self.hands[2].y)
+        if abs((x3 - x1) / (x2 - x1) - (y3 - y1) / (y2 - y1)) <= Tol:
             # print("---")
             return True
         # print("---")

@@ -92,7 +92,7 @@ def coordinates_to_ceil_(a):
 
 def coordinates_to_ceil(x, y):
     ceil_x = round((x - size["netBorder"]) / (size["d2"] / 2))
-    ceil_y = round((y - size["netBorder"] - (size["D2"] / 4) * (1 - (x % 2))) / (size["D2"] / 2))
+    ceil_y = round((y - size["netBorder"] - (size["D2"] / 4) * (1 - (ceil_x % 2))) / (size["D2"] / 2))
     return int(ceil_x), int(ceil_y)
 
 def coordinates_to_ceil_all(x1, y1, x2, y2, x3, y3):
@@ -215,7 +215,7 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     return x, y
 
 
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center_neighbouring_func(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("---")
     # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
     #todo ensure that x1y1 and x2y2 are neighbouring
@@ -289,6 +289,85 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
     return ox, oy
 
+def calculate_center(coords, shifts):
+    # print("---")
+    # print(f"START coords: {coords} shifts: {shifts}")
+    mid_coord = middle_point(coords[0], coords[1], coords[2])
+    # print(f"mid_coord: {mid_coord}")
+    # return -1, -1
+    non_middle = [0, 1, 2]
+    non_middle.remove(mid_coord)
+    left_coord = non_middle[0]
+    # print(f"left_coord: {left_coord}")
+
+    x1 = coords[mid_coord][0]
+    y1 = coords[mid_coord][1]
+    x2 = coords[left_coord][0]
+    y2 = coords[left_coord][1]
+    r1 = shifts[mid_coord]
+    r2 = shifts[left_coord]
+    l = dist(x1, y1, x2, y2)
+    s = (r1 + r2 + l) / 2
+    # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    h = round((2 * math.sqrt(s * (s - r1) * (s - r2) * (s - l)) / l), 10)  # altitude
+
+    # l = dist(x1, y1, x2, y2)
+    # s = (r1 + r2 + l) / 2
+    # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    # h = round((2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l), 10) # altitude
+    # print(f"H: {h}")
+
+    # find the right triangle where r1 - hypotenuse and h - one of the legs
+    x = x1
+    y = y1
+    r = r1
+    d = math.sqrt(r**2 - h**2) # the second leg; on the holders line
+    # print(f"d: {d}")
+
+    # find the angle between the horizontal of the ceiling and the robot line
+    x_r_vector, y_r_vector = get_vector_coords(x, y, x2, y2) # vector of robot line
+    # print(f"ROBOT VECTOR x: {x_r_vector} y: {y_r_vector}")
+    x_horizontal = 5 # horizontal vector
+    y_horizontal = 0
+    # 09.08 REMOVED "-" FOR angle_between_vectors
+    shift_angle = normalize(
+        -angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector))  # TODO invert + ?
+    if shift_angle > 180:
+        shift_angle = normalize(-(shift_angle - 180))
+    # print(f"shift angle: {shift_angle}")
+
+    # if robot is facing down or left, modify the angle
+
+    # x_rotated, y_rotated = -1, -1
+    # if y2 > y:
+    #     x_rotated, y_rotated = rotate_point(x2, y2, x, y, normalize(-shift_angle))
+    # else:
+    #     x_rotated, y_rotated = rotate_point(x2, y2, x, y, shift_angle)
+    # print(f"ROTATED x: {x_rotated} y: {y_rotated}")
+
+    # print(f"ROTATED VECTOR x: {x_rotated_vector} y: {y_rotated_vector}")
+    #hand_angle = angle_between_vectors(x_rotated_vector, y_rotated_vector, x_horizontal, y_horizontal)
+    hand_angle = math.degrees(math.acos((r1**2 + l**2 - r2**2) / (2 * r1 * l)))
+    # print(f"HAND ANGLE: {hand_angle}")
+
+    if hand_angle > 90:
+        # print("minus")
+        ox_ = x - d
+    else:
+        # print("plus")
+        ox_ = x + d
+    oy_ = y - h
+    # print(f"ROTATED O x: {ox_} y: {oy_}")
+
+    ox, oy = -1, -1
+    if y2 > y:
+        ox, oy = rotate_point(ox_, oy_, x, y, shift_angle)
+    else:
+        ox, oy = rotate_point(ox_, oy_, x, y, normalize(-shift_angle))
+    # print(f"UNROTATED O x: {ox} y: {oy}")
+
+    return ox, oy
+
 def get_shift_angle(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
     # print("---")
@@ -356,11 +435,11 @@ def center_by_params(hand_coords, shift_1, shift_2, shift_3):
     center_x, center_y = -1, -1
     try:
         if is_aligned(hand_coords):
-            center_x, center_y = calculate_center(hand_coords[0][0], hand_coords[0][1],
-                                                  hand_coords[1][0], hand_coords[1][1],
-                                                  hand_coords[2][0], hand_coords[2][1],
-                                                  shift_1, shift_2, shift_3)
+            # print("another aligned")
+            center_x, center_y = calculate_center(hand_coords,
+                                                  [shift_1, shift_2, shift_3])
         else:
+            # print("another non-aligned")
             center_x, center_y = calculate_center_three_points(hand_coords[0][0], hand_coords[0][1],
                                                                hand_coords[1][0], hand_coords[1][1],
                                                                hand_coords[2][0], hand_coords[2][1],
@@ -391,22 +470,22 @@ def middle_point(p1, p2, p3):
     # Check if points are collinear
     # (y2 - y1) / (x2 - x1) should be equal to (y3 - y1) / (x3 - x1)
     # To avoid division by zero, use cross multiplication
-    print("outside")
-    if (-y2 + y1) * (x3 - x1) == (-y3 + y1) * (x2 - x1):
+    # print("outside")
+    if (-y2 + y1) * (x3 - x1) - (-y3 + y1) * (x2 - x1) < 0.05:
         # Create a list of the points
-        print("inside")
+        # print("inside")
         orig_points = [p1, p2, p3]
         points = [p1, p2, p3]
-        print(f"unsorted points: {points}")
+        # print(f"unsorted points: {points}")
 
         # Sort points by their x-coordinates first, and y-coordinates as tie-breaker
         points.sort(key=lambda point: (point[0], point[1]))
-        print(f"sorted points: {points}")
+        # print(f"sorted points: {points}")
         middle_coord = points[1]
-        print(f"middle coord: {middle_coord}")
+        # print(f"middle coord: {middle_coord}")
         for i in range(3):
             if middle_coord[0] == orig_points[i][0] and middle_coord[1] == orig_points[i][1]:
-                print(f"middle: {i}")
+                # print(f"middle: {i}")
                 return i
 
         # The middle point after sorting will be the one in between
@@ -523,6 +602,7 @@ def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
 def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
     # print("2hands: IN CONDITION CHECK")
     dist_arr = [dist(x1, y1, xo, yo), dist(x2, y2, xo, yo)]
+    # print(f"Dists: {dist_arr}")
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]):
         return False
@@ -609,17 +689,18 @@ def is_aligned(hand_coords):
     if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
         # print("- horizontal or vertical -")
         return True
-    Tol = 1e-10
-    if (hand_coords[0][0] == hand_coords[2][0] and hand_coords[0][0] != hand_coords[1][0]) or (
-            hand_coords[1][0] == hand_coords[2][0] and hand_coords[1][0] != hand_coords[0][0]) or (
-            hand_coords[0][0] == hand_coords[1][0] and hand_coords[0][0] != hand_coords[2][0]):
-        # print("- not aligned -")
-        return False
-    if (hand_coords[0][1] == hand_coords[2][1] and hand_coords[0][1] != hand_coords[1][1]) or (
-            hand_coords[1][1] == hand_coords[2][1] and hand_coords[1][1] != hand_coords[0][1]) or (
-            hand_coords[0][1] == hand_coords[1][1] and hand_coords[0][1] != hand_coords[2][1]):
-        # print("- not aligned -")
-        return False
+    # Tol = 1e-10
+    Tol = 2
+    # if (hand_coords[0][0] == hand_coords[2][0] and hand_coords[0][0] != hand_coords[1][0]) or (
+    #         hand_coords[1][0] == hand_coords[2][0] and hand_coords[1][0] != hand_coords[0][0]) or (
+    #         hand_coords[0][0] == hand_coords[1][0] and hand_coords[0][0] != hand_coords[2][0]):
+    #     # print("- not aligned -")
+    #     return False
+    # if (hand_coords[0][1] == hand_coords[2][1] and hand_coords[0][1] != hand_coords[1][1]) or (
+    #         hand_coords[1][1] == hand_coords[2][1] and hand_coords[1][1] != hand_coords[0][1]) or (
+    #         hand_coords[0][1] == hand_coords[1][1] and hand_coords[0][1] != hand_coords[2][1]):
+    #     # print("- not aligned -")
+    #     return False
     if abs((hand_coords[2][0] - hand_coords[0][0]) / (hand_coords[1][0] - hand_coords[0][0]) -
            (hand_coords[2][1] - hand_coords[0][1]) / (hand_coords[1][1] - hand_coords[0][1])) <= Tol:
         # print("- aligned -")

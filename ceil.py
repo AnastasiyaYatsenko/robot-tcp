@@ -33,12 +33,12 @@ class Ceil:
         #                             "x3": 100,
         #                             "y3": 300}
 
-        self.default_coordinates_hex = {"x1": 173.205,
-                                        "y1": 230.940,
-                                        "x2": 346.410,
-                                        "y2": 100.0,
-                                        "x3": 0.0,
-                                        "y3": 100.0}
+        #self.default_coordinates_hex = {"x1": 173.205,
+        #                                "y1": 230.940,
+        #                                "x2": 346.410,
+        #                                "y2": 100.0,
+        #                                "x3": 0.0,
+        #                                "y3": 100.0}
 
         # self.default_ceil = {"x1": 1,
         #                      "y1": 1,
@@ -47,12 +47,12 @@ class Ceil:
         #                      "x3": 0,
         #                      "y3": 1}
 
-        self.default_ceil_hex = {"x1": 1,
+        self.default_ceil_hex = {"x1": 2,
                                  "y1": 1,
-                                 "x2": 2,
-                                 "y2": 0,
-                                 "x3": 0,
-                                 "y3": 0}
+                                 "x2": 3,
+                                 "y2": 2,
+                                 "x3": 1,
+                                 "y3": 1}
 
 
         # масив роботів
@@ -375,6 +375,7 @@ class Ceil:
         N = 10
         hands = [0, 1, 2]
         hands.remove(hand_c)
+        # print(f"CHECK t X: {xo_t} Y: {yo_t}")
         for n in range(N + 1):
             xo_n = xo_s
             yo_n = yo_s
@@ -386,9 +387,9 @@ class Ceil:
                 xo_n = xo_t
                 yo_n = yo_t
             # print("---------")
-            # print(f"s X: {xo_s} Y: {yo_s}")
-            # print(f"n X: {xo_n} Y: {yo_n}")
-            # print(f"t X: {xo_t} Y: {yo_t}")
+            # print(f"CHECK s X: {xo_s} Y: {yo_s}")
+            # print(f"CHECK n X: {xo_n} Y: {yo_n}")
+            # print(f"CHECK t X: {xo_t} Y: {yo_t}")
             # print("---------")
             in_reach_zone = is_in_two_hands_area(hand_coords[hands[0]][0], hand_coords[hands[0]][1],
                                                  hand_coords[hands[1]][0], hand_coords[hands[1]][1],
@@ -400,7 +401,7 @@ class Ceil:
         return True
 
     def is_move_possible_three_holds(self, robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords):
-        print("is possible two holds")
+        print("is possible three holds")
         N = 10
         for n in range(N + 1):
             xo_n = xo_s
@@ -484,12 +485,12 @@ class Ceil:
         # min2, max2 = size["innerRadLimit"], size["outerRadLimit"] + 1
         # min3, max3 = size["innerRadLimit"], size["outerRadLimit"] + 1
 
-        min1, max1 = (int(max(start_shifts[0] - size["innerRadLimit"], size["innerRadLimit"])),
-                      int(min(start_shifts[0] + size["innerRadLimit"] + 1, size["outerRadLimit"] + 1)))
-        min2, max2 = (int(max(start_shifts[1] - size["innerRadLimit"], size["innerRadLimit"])),
-                      int(min(start_shifts[1] + size["innerRadLimit"] + 1, size["outerRadLimit"] + 1)))
-        min3, max3 = (int(max(start_shifts[2] - size["innerRadLimit"], size["innerRadLimit"])),
-                      int(min(start_shifts[2] + size["innerRadLimit"] + 1, size["outerRadLimit"] + 1)))
+        min1, max1 = (int(max(start_shifts[0] - 2*size["innerRadLimit"], size["innerRadLimit"])),
+                      int(min(start_shifts[0] + 2*size["innerRadLimit"] + 1, size["outerRadLimit"] + 1)))
+        min2, max2 = (int(max(start_shifts[1] - 2*size["innerRadLimit"], size["innerRadLimit"])),
+                      int(min(start_shifts[1] + 2*size["innerRadLimit"] + 1, size["outerRadLimit"] + 1)))
+        min3, max3 = (int(max(start_shifts[2] - 2*size["innerRadLimit"], size["innerRadLimit"])),
+                      int(min(start_shifts[2] + 2*size["innerRadLimit"] + 1, size["outerRadLimit"] + 1)))
 
         # brute force through all possible options
         for shift_1 in range(min1, max1):
@@ -535,6 +536,7 @@ class Ceil:
             print("Can't find proper position for these coordinates")
             return -1, -1
 
+        print(f"Best center: {best_center}")
         return best_center
 
     # finds the suitable shifts for the robot; TODO change brute force search to smth more effective
@@ -705,7 +707,7 @@ class Ceil:
             is_possible = self.is_move_possible_two_holds(robot_num, xo_s, yo_s, xo_t, yo_t, hand_coords, move_hand)
 
         if not is_possible:
-            print("MOVE IS NOT POSSIBLE")
+            print("! MOVE IS NOT POSSIBLE !")
             return -1
 
         if move_hand != -1:
@@ -717,6 +719,7 @@ class Ceil:
                                                 old_shift, old_ang,
                                                 t_shifts[move_hand], t_angs[move_hand], move_hand)
         print(f"move_hand is {move_hand}; old_shift: {old_shift}, old_ang: {old_ang}; delta_shift: {delta_shift}, delta_ang: {delta_ang}")
+        # print(f"Os: ({xo_s}, {yo_s}) Ot: ({xo_t}, {yo_t}), self.N = {self.N}")
 
         prev_x_n, prev_y_n = xo_s, yo_s
 
@@ -2706,6 +2709,488 @@ class Ceil:
         print(centers)
         self.robots[robot_num].isMovingPath = False
 
+    def get_allowed_poses(self, robot_num, xo = -1, yo = -1, x_center_hand = -1, y_center_hand = -1):
+        if x_center_hand == -1:
+            hand_coords = self.robots[robot_num].get_all_points()
+            middle = middle_point((hand_coords[0][0], hand_coords[0][1]),
+                                  (hand_coords[1][0], hand_coords[1][1]),
+                                  (hand_coords[2][0], hand_coords[2][1]))
+            xo = hand_coords[3][0]
+            yo = hand_coords[3][1]
+            x_center_hand = hand_coords[middle][0]
+            y_center_hand = hand_coords[middle][1]
+        x, y = x_center_hand, y_center_hand
+        allowed_positions = [[(x - size["d2"] / 2, y - size["D2"] / 4), (x, y), (x + size["d2"] / 2, y + size["D2"] / 4)], # left hand higher
+                             [(x - size["d2"] / 2, y + size["D2"] / 4), (x, y), (x + size["d2"] / 2, y - size["D2"] / 4)], # right hand higher
+                             [(x, y - size["D2"] / 4), (x, y), (x, y + size["D2"] / 4)]]   # vertical
+        print(f"allowed_positions:\n{allowed_positions[0]}\n{allowed_positions[1]}\n{allowed_positions[2]}")
+        return allowed_positions
+
+    def current_pos(self, robot_num, points):
+        current_pose = -1  # 0 - left hand higher, 1 - right hand higher, 2 - vertical, 3 - unaligned, needs improving
+        Tol = 2
+        print(f"Points: {points}")
+        print(f"difs: {abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol} {abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol} {abs(points[1][1] - (points[0][1] + size['D2'] / 4)) < Tol} {abs(points[1][1] - (points[2][1] - size['D2'] / 4)) < Tol}")
+        print(f'Condition: {(abs(points[1][0] - (points[0][0] + size["d2"]) / 2) < Tol) and (abs(points[1][0] - (points[2][0] - size["d2"] / 2)) < Tol) and (abs(points[1][1] - (points[0][1] + size["D2"] / 4)) < Tol) and (abs(points[1][1] - (points[2][1] - size["D2"] / 4)) < Tol)}')
+
+        if (abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[1][1] - (points[0][1] + size['D2'] / 4)) < Tol) and (
+                abs(points[1][1] - (points[2][1] - size['D2'] / 4)) < Tol):
+            print("0")
+            current_pose = 0 # 0 - left hand higher
+
+        elif (abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[1][1] - (points[0][1] - size['D2'] / 4) < Tol)) and (
+                abs(points[1][1] - (points[2][1] + size['D2'] / 4)) < Tol):
+            print("1")
+            current_pose = 1 # 1 - right hand higher
+
+        elif (abs(points[1][0] - points[0][0]) < Tol) and (
+                abs(points[1][0] - points[2][0]) < Tol) and (
+                abs(points[1][1] - (points[0][1] + size["d2"] / 2)) < Tol) and (
+                abs(points[1][1] - (points[2][1] - size["D2"] / 4)) < Tol):
+            print("2")
+            current_pose = 2 # 2 - vertical
+        else:
+            print("3")
+            current_pose = 3 # 3 - unaligned, needs improving
+        return current_pose
+
+    def align_to_allowed(self, robot_num):
+        # if the robot is not aligned to any of three allowed positions
+        pass
+
+    def turn(self, robot_num, allowed_poses, pos_num):
+        hand_coords = self.robots[robot_num].get_all_points()
+        middle = middle_point((hand_coords[0][0], hand_coords[0][1]),
+                              (hand_coords[1][0], hand_coords[1][1]),
+                              (hand_coords[2][0], hand_coords[2][1]))
+        non_middle = [0, 1, 2]
+        non_middle.remove(middle)
+        xo = hand_coords[3][0]
+        yo = hand_coords[3][1]
+        x_center_hand = hand_coords[middle][0]
+        y_center_hand = hand_coords[middle][1]
+
+        left_hand = allowed_poses[pos_num][0]
+        right_hand = allowed_poses[pos_num][2]
+
+        # these are possible positions for the first turn move
+        possible_first_move = [ [(-1, -1), (-1, -1), (-1, -1)],
+                                [(-1, -1), (-1, -1), (-1, -1)],
+                                [(-1, -1), (-1, -1), (-1, -1)],
+                                [(-1, -1), (-1, -1), (-1, -1)] ]
+        move_hands = [non_middle[1], non_middle[0], non_middle[1], non_middle[0]]
+
+        possible_first_move[0][non_middle[0]] = hand_coords[non_middle[0]]
+        possible_first_move[0][non_middle[1]] = left_hand
+        possible_first_move[0][middle] = hand_coords[middle]
+
+        possible_first_move[1][non_middle[1]] = hand_coords[non_middle[1]]
+        possible_first_move[1][non_middle[0]] = left_hand
+        possible_first_move[1][middle] = hand_coords[middle]
+
+        possible_first_move[2][non_middle[0]] = hand_coords[non_middle[0]]
+        possible_first_move[2][non_middle[1]] = right_hand
+        possible_first_move[2][middle] = hand_coords[middle]
+
+        possible_first_move[3][non_middle[1]] = hand_coords[non_middle[1]]
+        possible_first_move[3][non_middle[0]] = right_hand
+        possible_first_move[3][middle] = hand_coords[middle]
+        print(
+            f"Possible first:\n{possible_first_move[0]}\n{possible_first_move[1]}\n{possible_first_move[2]}\n{possible_first_move[3]}")
+        print(f"Move hands: {move_hands}")
+
+        # is_move_possible = [-1, -1, -1, -1]
+        chosen_pos = -1
+        new_x, new_y = -1, -1
+        for i in range(len(possible_first_move)):
+            # new_center_x = (possible_first_move[i][0][0] + possible_first_move[i][1][0] + possible_first_move[i][2][0]) / 3
+            # new_center_y = (possible_first_move[i][0][1] + possible_first_move[i][1][1] + possible_first_move[i][2][1]) / 3
+            new_center_x = (possible_first_move[i][non_middle[0]][0] + possible_first_move[i][non_middle[1]][0]) / 2
+            new_center_y = (possible_first_move[i][non_middle[0]][1] + possible_first_move[i][non_middle[1]][1]) / 2
+            print(f"Center: ({new_center_x}, {new_center_y})")
+            can_move = self.is_move_possible_two_holds(robot_num, xo, yo,
+                                                       new_center_x, new_center_y,
+                                                       possible_first_move[i], move_hands[i])
+            is_possible = is_in_three_hands_area(possible_first_move[i][0][0], possible_first_move[i][0][1],
+                                                 possible_first_move[i][1][0], possible_first_move[i][1][1],
+                                                 possible_first_move[i][2][0], possible_first_move[i][2][1],
+                                                 new_center_x, new_center_y)
+            new_0, new_1, new_2, ang_0, ang_1, ang_2, rh = self.get_new_params_by_vector(robot_num,
+                                                                                         xo, yo,
+                                                                                         new_center_x, new_center_y,
+                                                                                         possible_first_move[i])
+            is_correct_hand_order = mirroring_check(ang_0, ang_1, ang_2)
+            # is_move_possible[i] = can_move
+            if can_move and is_correct_hand_order and is_possible:
+                chosen_pos = i
+                new_x, new_y = new_center_x, new_center_y
+                break
+        print(f"Chosen pos: {possible_first_move[chosen_pos]}")
+        last_pos = possible_first_move[chosen_pos][:]
+        print(f"Last pos 1: {last_pos}")
+        non_middle.remove(move_hands[chosen_pos])
+        print(f"Non-middle: {non_middle[0]}")
+        if chosen_pos >= 2:
+            # the left_hand was chosen for possible_first_move
+            last_pos[non_middle[0]] = right_hand
+        else:
+            last_pos[non_middle[0]] = left_hand
+        print(f"Last pos 2: {last_pos}")
+
+        shifts = [-1, -1, -1]
+        shifts[middle] = 1.07 * size["innerRadLimit"]
+        shifts[non_middle[0]] = shifts[move_hands[chosen_pos]] = math.sqrt(
+            (1.07 * size["innerRadLimit"]) ** 2 + (size["D2"] / 2) ** 2)
+        print(f"Shifts: {shifts}")
+        last_center_x, last_center_y = center_by_params(last_pos, shifts[0], shifts[1], shifts[2])
+        can_move = self.is_move_possible_two_holds(robot_num, new_x, new_y,
+                                                   last_center_x, last_center_y,
+                                                   last_pos, non_middle[0])
+        is_possible = is_in_three_hands_area(last_pos[0][0], last_pos[0][1],
+                                             last_pos[1][0], last_pos[1][1],
+                                             last_pos[2][0], last_pos[2][1],
+                                             last_center_x, last_center_y)
+        print(f"Can move? {can_move} Is possible? {is_possible}")
+        if not (can_move and is_possible):
+            last_center_x, last_center_y = self.find_pos_by_shifts(robot_num, new_x, new_y,
+                                                                   last_pos, shifts, non_middle[0])
+
+        path = [hand_coords[:3], possible_first_move[chosen_pos], last_pos]
+        centers = [(xo, yo), (new_x, new_y), (last_center_x, last_center_y)]
+        print(f"Path: {path}")
+        print(f"Centers: {centers}")
+
+        self.turn_by_path(robot_num, path, centers)
+        return 1
+
+
+    def path_macroses(self):
+        pass
+
+    def path_manual(self, robot_num, direction):
+        '''
+        :param direction: 0 - left up, 1 - left down, 2 - up, 3 - down, 4 - right up, 5 - right down
+        :return:
+        '''
+        hand_coords = self.robots[robot_num].get_all_points()
+        print(f"Hand coords: {hand_coords}")
+        x1, y1 = (hand_coords[0][0], hand_coords[0][1])
+        x2, y2 = (hand_coords[1][0], hand_coords[1][1])
+        x3, y3 = (hand_coords[2][0], hand_coords[2][1])
+        points = [(x1, y1),
+                  (x2, y2),
+                  (x3, y3)]
+        points.sort(key=lambda point: (point[0], point[1]))
+        allowed_poses = self.get_allowed_poses(robot_num)
+        current_pose = self.current_pos(robot_num, points)
+        print(f"Current pose: {current_pose}")
+
+
+        if current_pose == 3:
+            # align the robot to allowed pos
+            pass
+
+        if (direction == 0 or direction == 5) and current_pose != 0:
+            self.turn(robot_num, allowed_poses, 0)
+        elif (direction == 1 or direction == 4) and current_pose != 1:
+            self.turn(robot_num, allowed_poses, 1)
+        elif (direction == 2 or direction == 3) and current_pose != 2:
+            self.turn(robot_num, allowed_poses, 2)
+
+        hand_coords = self.robots[robot_num].get_all_points()
+        points = [coordinates_to_ceil(hand_coords[0][0], hand_coords[0][1]),
+                  coordinates_to_ceil(hand_coords[1][0], hand_coords[1][1]),
+                  coordinates_to_ceil(hand_coords[2][0], hand_coords[2][1])]
+        sorted_points = points
+        sorted_points.sort(key=lambda point: (point[0], point[1]))
+        new_coords = [(hand_coords[0][0], hand_coords[0][1]),
+                      (hand_coords[1][0], hand_coords[1][1]),
+                      (hand_coords[2][0], hand_coords[2][1])]
+
+        if direction == 0:
+            print("left up")
+            new_middle = sorted_points[0]
+            new_right = sorted_points[1]
+            mid_x_ceil, mid_y_ceil = ceil_to_coordinates(new_middle[0], new_middle[1])
+            print(f"Mid: {mid_x_ceil}, {mid_y_ceil}")
+            left_x_ceil = mid_x_ceil - size["d2"] / 2
+            left_y_ceil = mid_y_ceil - size["D2"] / 4
+            print(f"Left: {left_x_ceil}, {left_y_ceil}")
+            new_left = coordinates_to_ceil(left_x_ceil, left_y_ceil)
+            print(f"Mid: {new_middle} Left: {new_left} Right: {new_right}")
+            # new_left = (new_middle[0] - 1, new_middle[1] - 1)
+            if new_left[0] < 0 or new_left[1] < 0:
+                print("Move impossible!")
+                return -1
+            mid_coord = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_coord = ceil_to_coordinates(new_right[0], new_right[1])
+            left_coord = ceil_to_coordinates(new_left[0], new_left[1])
+            left_hand = [0, 1, 2]
+            mid_hand = -1
+            right_hand = -1
+            Tol = 2
+            for i in range(3):
+                if (abs(mid_coord[0] - hand_coords[i][0]) < Tol) and (abs(mid_coord[1] - hand_coords[i][1]) < Tol):
+                    left_hand.remove(i)
+                    mid_hand = i
+                if (abs(right_coord[0] - hand_coords[i][0]) < Tol) and (abs(right_coord[1] - hand_coords[i][1]) < Tol):
+                    left_hand.remove(i)
+                    right_hand = i
+            if len(left_hand) != 1:
+                print("Something went wrong, abort!")
+                return -1
+            new_coords[left_hand[0]] = (left_coord[0], left_coord[1])
+
+            # calc center
+            shifts = [-1, -1, -1]
+            shifts[mid_hand] = 1.07*size["innerRadLimit"]
+            shifts[left_hand[0]] = shifts[right_hand] = math.sqrt((1.07*size["innerRadLimit"])**2 + (size["D2"]/2)**2)
+            new_center_x, new_center_y = center_by_params(new_coords, shifts[0], shifts[1], shifts[2])
+            print(f"New coords: {new_coords} New center: ({new_center_x}, {new_center_y})")
+            res = self.move_vector(robot_num, hand_coords[3][0], hand_coords[3][1],
+                                   new_center_x, new_center_y, new_coords, left_hand[0])
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return -1
+
+        elif direction == 1:
+            print("left down")
+            new_middle = sorted_points[0]
+            new_right = sorted_points[1]
+            mid_x_ceil, mid_y_ceil = ceil_to_coordinates(new_middle[0], new_middle[1])
+            print(f"Mid: {mid_x_ceil}, {mid_y_ceil}")
+            left_x_ceil = mid_x_ceil - size["d2"] / 2
+            left_y_ceil = mid_y_ceil + size["D2"] / 4
+            print(f"Left: {left_x_ceil}, {left_y_ceil}")
+            new_left = coordinates_to_ceil(left_x_ceil, left_y_ceil)
+            print(f"Mid: {new_middle} Left: {new_left} Right: {new_right}")
+            # new_left = (new_middle[0] - 1, new_middle[1] - 1)
+            if new_left[0] < 0 or new_left[1] < 0:
+                print("Move impossible!")
+                return -1
+            mid_coord = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_coord = ceil_to_coordinates(new_right[0], new_right[1])
+            left_coord = ceil_to_coordinates(new_left[0], new_left[1])
+            left_hand = [0, 1, 2]
+            mid_hand = -1
+            right_hand = -1
+            Tol = 2
+            for i in range(3):
+                if (abs(mid_coord[0] - hand_coords[i][0]) < Tol) and (abs(mid_coord[1] - hand_coords[i][1]) < Tol):
+                    left_hand.remove(i)
+                    mid_hand = i
+                if (abs(right_coord[0] - hand_coords[i][0]) < Tol) and (abs(right_coord[1] - hand_coords[i][1]) < Tol):
+                    left_hand.remove(i)
+                    right_hand = i
+            if len(left_hand) != 1:
+                print("Something went wrong, abort!")
+                return -1
+            new_coords[left_hand[0]] = (left_coord[0], left_coord[1])
+
+            # calc center
+            shifts = [-1, -1, -1]
+            shifts[mid_hand] = 1.07 * size["innerRadLimit"]
+            shifts[left_hand[0]] = shifts[right_hand] = math.sqrt(
+                (1.07 * size["innerRadLimit"]) ** 2 + (size["D2"] / 2) ** 2)
+            new_center_x, new_center_y = center_by_params(new_coords, shifts[0], shifts[1], shifts[2])
+            print(f"New coords: {new_coords} New center: ({new_center_x}, {new_center_y})")
+            res = self.move_vector(robot_num, hand_coords[3][0], hand_coords[3][1],
+                                   new_center_x, new_center_y, new_coords, left_hand[0])
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return -1
+        elif direction == 2:
+            print("up")
+            new_middle = sorted_points[0]
+            new_right = sorted_points[1]
+            mid_x_ceil, mid_y_ceil = ceil_to_coordinates(new_middle[0], new_middle[1])
+            print(f"Mid: {mid_x_ceil}, {mid_y_ceil}")
+            left_x_ceil = mid_x_ceil
+            left_y_ceil = mid_y_ceil - size["D2"] / 4
+            print(f"Left: {left_x_ceil}, {left_y_ceil}")
+            new_left = coordinates_to_ceil(left_x_ceil, left_y_ceil)
+            print(f"Mid: {new_middle} Left: {new_left} Right: {new_right}")
+            # new_left = (new_middle[0] - 1, new_middle[1] - 1)
+            if new_left[0] < 0 or new_left[1] < 0:
+                print("Move impossible!")
+                return -1
+            mid_coord = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_coord = ceil_to_coordinates(new_right[0], new_right[1])
+            left_coord = ceil_to_coordinates(new_left[0], new_left[1])
+            left_hand = [0, 1, 2]
+            mid_hand = -1
+            right_hand = -1
+            Tol = 2
+            for i in range(3):
+                if (abs(mid_coord[0] - hand_coords[i][0]) < Tol) and (abs(mid_coord[1] - hand_coords[i][1]) < Tol):
+                    left_hand.remove(i)
+                    mid_hand = i
+                if (abs(right_coord[0] - hand_coords[i][0]) < Tol) and (abs(right_coord[1] - hand_coords[i][1]) < Tol):
+                    left_hand.remove(i)
+                    right_hand = i
+            if len(left_hand) != 1:
+                print("Something went wrong, abort!")
+                return -1
+            new_coords[left_hand[0]] = (left_coord[0], left_coord[1])
+
+            # calc center
+            shifts = [-1, -1, -1]
+            shifts[mid_hand] = 1.07 * size["innerRadLimit"]
+            shifts[left_hand[0]] = shifts[right_hand] = math.sqrt(
+                (1.07 * size["innerRadLimit"]) ** 2 + (size["D2"] / 2) ** 2)
+            new_center_x, new_center_y = center_by_params(new_coords, shifts[0], shifts[1], shifts[2])
+            print(f"New coords: {new_coords} New center: ({new_center_x}, {new_center_y})")
+            res = self.move_vector(robot_num, hand_coords[3][0], hand_coords[3][1],
+                                   new_center_x, new_center_y, new_coords, left_hand[0])
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return -1
+
+        elif direction == 3:
+            print("down")
+            new_middle = sorted_points[2]
+            new_left = sorted_points[1]
+            mid_x_ceil, mid_y_ceil = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_x_ceil = mid_x_ceil
+            right_y_ceil = mid_y_ceil + size["D2"] / 4
+            new_right = coordinates_to_ceil(right_x_ceil, right_y_ceil)
+            # new_right = (new_middle[0] + 1, new_middle[1])
+            print(f"Mid: {new_middle} Left: {new_left} Right: {new_right}")
+            if new_right[0] >= self.max_x:  # or new_right[1] < 0:
+                print("Move impossible!")
+                return -1
+            mid_coord = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_coord = ceil_to_coordinates(new_right[0], new_right[1])
+            left_coord = ceil_to_coordinates(new_left[0], new_left[1])
+            right_hand = [0, 1, 2]
+            mid_hand = -1
+            left_hand = -1
+            Tol = 2
+            for i in range(3):
+                if (abs(mid_coord[0] - hand_coords[i][0]) < Tol) and (abs(mid_coord[1] - hand_coords[i][1]) < Tol):
+                    right_hand.remove(i)
+                    mid_hand = i
+                if (abs(left_coord[0] - hand_coords[i][0]) < Tol) and (abs(left_coord[1] - hand_coords[i][1]) < Tol):
+                    right_hand.remove(i)
+                    left_hand = i
+            if len(right_hand) != 1:
+                print("Something went wrong, abort!")
+                return -1
+            new_coords[right_hand[0]] = (right_coord[0], right_coord[1])
+
+            # calc center
+            shifts = [-1, -1, -1]
+            shifts[mid_hand] = 1.07 * size["innerRadLimit"]
+            shifts[right_hand[0]] = shifts[left_hand] = math.sqrt(
+                (1.07 * size["innerRadLimit"]) ** 2 + (size["D2"] / 2) ** 2)
+            new_center_x, new_center_y = center_by_params(new_coords, shifts[0], shifts[1], shifts[2])
+            print(f"New coords: {new_coords} New center: ({new_center_x}, {new_center_y})")
+            res = self.move_vector(robot_num, hand_coords[3][0], hand_coords[3][1],
+                                   new_center_x, new_center_y, new_coords, right_hand[0])
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return -1
+
+        elif direction == 4:
+            print("right up")
+            new_middle = sorted_points[2]
+            new_left = sorted_points[1]
+            mid_x_ceil, mid_y_ceil = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_x_ceil = mid_x_ceil + size["d2"] / 2
+            right_y_ceil = mid_y_ceil - size["D2"] / 4
+            new_right = coordinates_to_ceil(right_x_ceil, right_y_ceil)
+            # new_right = (new_middle[0] + 1, new_middle[1])
+            print(f"Mid: {new_middle} Left: {new_left} Right: {new_right}")
+            if new_right[0] >= self.max_x:  # or new_right[1] < 0:
+                print("Move impossible!")
+                return -1
+            mid_coord = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_coord = ceil_to_coordinates(new_right[0], new_right[1])
+            left_coord = ceil_to_coordinates(new_left[0], new_left[1])
+            right_hand = [0, 1, 2]
+            mid_hand = -1
+            left_hand = -1
+            Tol = 2
+            for i in range(3):
+                if (abs(mid_coord[0] - hand_coords[i][0]) < Tol) and (abs(mid_coord[1] - hand_coords[i][1]) < Tol):
+                    right_hand.remove(i)
+                    mid_hand = i
+                if (abs(left_coord[0] - hand_coords[i][0]) < Tol) and (abs(left_coord[1] - hand_coords[i][1]) < Tol):
+                    right_hand.remove(i)
+                    left_hand = i
+            if len(right_hand) != 1:
+                print("Something went wrong, abort!")
+                return -1
+            new_coords[right_hand[0]] = (right_coord[0], right_coord[1])
+
+            # calc center
+            shifts = [-1, -1, -1]
+            shifts[mid_hand] = 1.07 * size["innerRadLimit"]
+            shifts[right_hand[0]] = shifts[left_hand] = math.sqrt(
+                (1.07 * size["innerRadLimit"]) ** 2 + (size["D2"] / 2) ** 2)
+            new_center_x, new_center_y = center_by_params(new_coords, shifts[0], shifts[1], shifts[2])
+            print(f"New coords: {new_coords} New center: ({new_center_x}, {new_center_y})")
+            res = self.move_vector(robot_num, hand_coords[3][0], hand_coords[3][1],
+                                   new_center_x, new_center_y, new_coords, right_hand[0])
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return -1
+        elif direction == 5:
+            print("right down")
+            new_middle = sorted_points[2]
+            new_left = sorted_points[1]
+            mid_x_ceil, mid_y_ceil = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_x_ceil = mid_x_ceil + size["d2"] / 2
+            right_y_ceil = mid_y_ceil + size["D2"] / 4
+            new_right = coordinates_to_ceil(right_x_ceil, right_y_ceil)
+            # new_right = (new_middle[0] + 1, new_middle[1])
+            print(f"Mid: {new_middle} Left: {new_left} Right: {new_right}")
+            if new_right[0] >= self.max_x:# or new_right[1] < 0:
+                print("Move impossible!")
+                return -1
+            mid_coord = ceil_to_coordinates(new_middle[0], new_middle[1])
+            right_coord = ceil_to_coordinates(new_right[0], new_right[1])
+            left_coord = ceil_to_coordinates(new_left[0], new_left[1])
+            right_hand = [0, 1, 2]
+            mid_hand = -1
+            left_hand = -1
+            Tol = 2
+            for i in range(3):
+                if (abs(mid_coord[0] - hand_coords[i][0]) < Tol) and (abs(mid_coord[1] - hand_coords[i][1]) < Tol):
+                    right_hand.remove(i)
+                    mid_hand = i
+                if (abs(left_coord[0] - hand_coords[i][0]) < Tol) and (abs(left_coord[1] - hand_coords[i][1]) < Tol):
+                    right_hand.remove(i)
+                    left_hand = i
+            if len(right_hand) != 1:
+                print("Something went wrong, abort!")
+                return -1
+            new_coords[right_hand[0]] = (right_coord[0], right_coord[1])
+
+            # calc center
+            shifts = [-1, -1, -1]
+            shifts[mid_hand] = 1.07 * size["innerRadLimit"]
+            shifts[right_hand[0]] = shifts[left_hand] = math.sqrt(
+                (1.07 * size["innerRadLimit"]) ** 2 + (size["D2"] / 2) ** 2)
+            new_center_x, new_center_y = center_by_params(new_coords, shifts[0], shifts[1], shifts[2])
+            print(f"New coords: {new_coords} New center: ({new_center_x}, {new_center_y})")
+            res = self.move_vector(robot_num, hand_coords[3][0], hand_coords[3][1],
+                                   new_center_x, new_center_y, new_coords, right_hand[0])
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return -1
+
+
     def start_robot_by_path(self, robot_num):
         for i in range(1, len(self.robots[robot_num].path)):
             x_t, y_t = self.robots[robot_num].centers[i]
@@ -2722,6 +3207,40 @@ class Ceil:
                     else:
                         move_hand = j
             # sleep(10.0)
+            self.robots[robot_num].get_robot_params()
+            # sleep(10.0)
+            res = self.move_vector(robot_num, x_s, y_s, x_t, y_t, pos, move_hand)
+            # print(f"res: {res}")
+            if res == -1:
+                print("Critical error, return")
+                return
+        return 1
+
+    def turn_by_path(self, robot_num, path, centers):
+        for i in range(1, len(path)):
+            print(f"i: {i}, len: {len(path)}, path: {path}, centers: {centers}")
+            x_t, y_t = centers[i]
+            x_s, y_s = self.robots[robot_num].get_center()
+            print(f"Iteration No.{i}: Os = ({x_s}, {y_s}); Ot = ({x_t}, {y_t})")
+            pos = path[i]
+            print(f"Position: {pos}")
+            move_hand = -1
+            Tol = 5
+            for j in range(3):
+                print(f"j: {j}")
+                print(f"Hand: {self.robots[robot_num].hands[j].x}, {self.robots[robot_num].hands[j].y}")
+                # print(f"pos[j][0] - self.robots[robot_num].hands[j].x = {pos[j][0] - self.robots[robot_num].hands[j].x}\n"
+                #       f"pos[j][1] - self.robots[robot_num].hands[j].y = {pos[j][1] - self.robots[robot_num].hands[j].y}")
+                if (abs(pos[j][0] - self.robots[robot_num].hands[j].x) > Tol) or (
+                        abs(pos[j][1] - self.robots[robot_num].hands[j].y) > Tol):
+                    if move_hand != -1:
+                        print("Need to move two hands at the same time, impossible!")
+                        return -1
+                    else:
+                        move_hand = j
+
+            # sleep(10.0)
+            print(f"Move hand: {move_hand}")
             self.robots[robot_num].get_robot_params()
             # sleep(10.0)
             res = self.move_vector(robot_num, x_s, y_s, x_t, y_t, pos, move_hand)
