@@ -214,6 +214,170 @@ def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
     return x, y
 
+def current_pos(points):
+    current_pose = -1  # 0 - left hand higher, 1 - right hand higher, 2 - vertical, 3 - unaligned, needs improving
+    Tol = 2
+    if (abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
+            abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
+            abs(points[1][1] - (points[0][1] + size['D2'] / 4)) < Tol) and (
+            abs(points[1][1] - (points[2][1] - size['D2'] / 4)) < Tol):
+        print("0")
+        current_pose = 0 # 0 - left hand higher
+        return 0
+
+    elif (abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
+            abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
+            abs(points[1][1] - (points[0][1] - size['D2'] / 4) < Tol)) and (
+            abs(points[1][1] - (points[2][1] + size['D2'] / 4)) < Tol):
+        print("1")
+        current_pose = 1 # 1 - right hand higher
+        return 1
+
+    elif (abs(points[1][0] - points[0][0]) < Tol) and (
+            abs(points[1][0] - points[2][0]) < Tol) and (
+            abs(points[1][1] - (points[0][1] + size['D2'] / 2)) < Tol) and (
+            abs(points[1][1] - (points[2][1] - size['D2'] / 2)) < Tol):
+        print("2")
+        current_pose = 2 # 2 - vertical
+        return 2
+    else:
+        print("3")
+        current_pose = 3 # 3 - unaligned, needs improving
+        return 3
+    return current_pose
+
+def calculate_center(coords, shifts):
+    x1 = coords[0][0]
+    y1 = coords[0][1]
+    x2 = coords[1][0]
+    y2 = coords[1][1]
+    x3 = coords[2][0]
+    y3 = coords[2][1]
+    r1 = shifts[0]
+    r2 = shifts[1]
+    r3 = shifts[2]
+    points = [(x1, y1),
+              (x2, y2),
+              (x3, y3)]
+    sort_points = [(x1, y1),
+              (x2, y2),
+              (x3, y3)]
+    sort_points.sort(key=lambda point: (point[0], point[1]))
+    print(f"Points: {points}\nSorted: {sort_points}")
+    current_pose = current_pos(sort_points)
+    print(f"IN CENTER current pos: {current_pose}")
+
+    print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
+    print(f"R: {r1} | {r2} | {r3}")
+    r_short = -1
+    r_long = -1
+
+    if r1 < r2 and r1 < r3:
+        r_short = r1
+        r_long = r2
+    elif r2 < r1 and r2 < r3:
+        r_short = r2
+        r_long = r3
+    else:
+        r_short = r3
+        r_long = r1
+
+    # print(f"r_short: {r_short}; r_long: {r_long}")
+
+    l = (r_long**2 - r_short**2) / (size["D2"]) - (size["D2"] / 4)
+    h = math.sqrt(r_short**2-l**2)
+    y = 0
+    x = 0
+    Tol = 2
+
+    if current_pose == 0:
+        if ((abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[1][1] - (points[0][1] + size['D2'] / 4)) < Tol) and (
+                abs(points[1][1] - (points[2][1] - size['D2'] / 4)) < Tol)) or (
+
+                (abs(points[2][0] - (points[1][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[2][0] - (points[0][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[2][1] - (points[1][1] + size['D2'] / 4)) < Tol) and (
+                abs(points[2][1] - (points[0][1] - size['D2'] / 4)) < Tol)) or (
+
+                (abs(points[0][0] - (points[2][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[0][0] - (points[1][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[0][1] - (points[2][1] + size['D2'] / 4)) < Tol) and (
+                abs(points[0][1] - (points[1][1] - size['D2'] / 4)) < Tol)):
+            x = sort_points[1][0] + h * dsin(30)
+            y = sort_points[1][1] - h * dcos(30)
+        else:
+            x = sort_points[1][0] - h * dsin(30)
+            y = sort_points[1][1] + h * dcos(30)
+        print(f"CENTER {current_pose} x: {x}, y: {y}")
+
+    elif current_pose == 1:
+        if ((abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[1][1] - (points[0][1] - size['D2'] / 4) < Tol)) and (
+                abs(points[1][1] - (points[2][1] + size['D2'] / 4)) < Tol)) or (
+
+                (abs(points[2][0] - (points[1][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[2][0] - (points[0][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[2][1] - (points[1][1] - size['D2'] / 4) < Tol)) and (
+                abs(points[2][1] - (points[0][1] + size['D2'] / 4)) < Tol)) or (
+
+                (abs(points[0][0] - (points[2][0] + size['d2'] / 2)) < Tol) and (
+                abs(points[0][0] - (points[1][0] - size['d2'] / 2)) < Tol) and (
+                abs(points[0][1] - (points[2][1] - size['D2'] / 4) < Tol)) and (
+                abs(points[0][1] - (points[1][1] + size['D2'] / 4)) < Tol)):
+            x = sort_points[1][0] - h * dsin(30)
+            y = sort_points[1][1] - h * dcos(30)
+        else:
+            x = sort_points[1][0] + h * dsin(30)
+            y = sort_points[1][1] + h * dcos(30)
+        print(f"CENTER {current_pose} x: {x}, y: {y}")
+    elif current_pose == 2:
+        if ((abs(points[1][0] - points[0][0]) < Tol) and (
+                abs(points[1][0] - points[2][0]) < Tol) and (
+                abs(points[1][1] - (points[0][1] + size['D2'] / 2)) < Tol) and (
+                abs(points[1][1] - (points[2][1] - size['D2'] / 2)) < Tol)) or (
+
+                (abs(points[2][0] - points[1][0]) < Tol) and (
+                abs(points[2][0] - points[0][0]) < Tol) and (
+                abs(points[2][1] - (points[1][1] + size['D2'] / 2)) < Tol) and (
+                abs(points[2][1] - (points[0][1] - size['D2'] / 2)) < Tol)) or (
+
+                (abs(points[0][0] - points[2][0]) < Tol) and (
+                abs(points[0][0] - points[1][0]) < Tol) and (
+                abs(points[0][1] - (points[2][1] + size['D2'] / 2)) < Tol) and (
+                abs(points[0][1] - (points[1][1] - size['D2'] / 2)) < Tol)):
+            x = sort_points[1][0] + h
+            y = sort_points[1][1]
+        else:
+            x = sort_points[1][0] - h
+            y = sort_points[1][1]
+        print(f"CENTER {current_pose} x: {x}, y: {y}")
+        # if (y3 < y2) and (y2 < y1):
+        #     y = y2 + l
+        #     x = x1 - h
+        # if (y2 < y1) and (y1 < y3):
+        #     y = y1 + l
+        #     x = x1 - h
+        # if (y1 < y3) and (y3 < y2):
+        #     y = y3 + l
+        #     x = x1 - h
+        #
+        # if (y1 < y2) and (y2 < y3):
+        #     y = y2 + l
+        #     x = x1 + h
+        # if (y3 < y1) and (y1 < y2):
+        #     y = y1 + l
+        #     x = x1 + h
+        # if (y2 < y3) and (y3 < y1):
+        #     y = y3 + l
+        #     x = x1 + h
+        # print(f"CENTER x: {x}, y: {y}")
+    # зачепи не на одній лінії
+    else:
+        x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
+    return x, y
 
 def calculate_center_neighbouring_func(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # print("---")
@@ -289,16 +453,16 @@ def calculate_center_neighbouring_func(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
     return ox, oy
 
-def calculate_center(coords, shifts):
+def calculate_center____(coords, shifts):
     # print("---")
-    # print(f"START coords: {coords} shifts: {shifts}")
+    print(f"START coords: {coords} shifts: {shifts}")
     mid_coord = middle_point(coords[0], coords[1], coords[2])
-    # print(f"mid_coord: {mid_coord}")
+    print(f"mid_coord: {mid_coord}")
     # return -1, -1
     non_middle = [0, 1, 2]
     non_middle.remove(mid_coord)
     left_coord = non_middle[0]
-    # print(f"left_coord: {left_coord}")
+    print(f"left_coord: {left_coord}")
 
     x1 = coords[mid_coord][0]
     y1 = coords[mid_coord][1]
@@ -308,21 +472,21 @@ def calculate_center(coords, shifts):
     r2 = shifts[left_coord]
     l = dist(x1, y1, x2, y2)
     s = (r1 + r2 + l) / 2
-    # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
+    print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
     h = round((2 * math.sqrt(s * (s - r1) * (s - r2) * (s - l)) / l), 10)  # altitude
 
     # l = dist(x1, y1, x2, y2)
     # s = (r1 + r2 + l) / 2
     # print(f"r1: {r1} r2: {r2} l: {l} s: {s}")
     # h = round((2 * math.sqrt(s * ( s - r1 ) * ( s - r2 ) * (s - l)) / l), 10) # altitude
-    # print(f"H: {h}")
+    print(f"H: {h}")
 
     # find the right triangle where r1 - hypotenuse and h - one of the legs
     x = x1
     y = y1
     r = r1
     d = math.sqrt(r**2 - h**2) # the second leg; on the holders line
-    # print(f"d: {d}")
+    print(f"d: {d}")
 
     # find the angle between the horizontal of the ceiling and the robot line
     x_r_vector, y_r_vector = get_vector_coords(x, y, x2, y2) # vector of robot line
@@ -334,7 +498,7 @@ def calculate_center(coords, shifts):
         -angle_between_vectors(x_horizontal, y_horizontal, x_r_vector, y_r_vector))  # TODO invert + ?
     if shift_angle > 180:
         shift_angle = normalize(-(shift_angle - 180))
-    # print(f"shift angle: {shift_angle}")
+    print(f"shift angle: {shift_angle}")
 
     # if robot is facing down or left, modify the angle
 
@@ -348,23 +512,23 @@ def calculate_center(coords, shifts):
     # print(f"ROTATED VECTOR x: {x_rotated_vector} y: {y_rotated_vector}")
     #hand_angle = angle_between_vectors(x_rotated_vector, y_rotated_vector, x_horizontal, y_horizontal)
     hand_angle = math.degrees(math.acos((r1**2 + l**2 - r2**2) / (2 * r1 * l)))
-    # print(f"HAND ANGLE: {hand_angle}")
+    print(f"HAND ANGLE: {hand_angle}")
 
     if hand_angle > 90:
-        # print("minus")
+        print("minus")
         ox_ = x - d
     else:
-        # print("plus")
+        print("plus")
         ox_ = x + d
     oy_ = y - h
-    # print(f"ROTATED O x: {ox_} y: {oy_}")
+    print(f"ROTATED O x: {ox_} y: {oy_}")
 
     ox, oy = -1, -1
     if y2 > y:
         ox, oy = rotate_point(ox_, oy_, x, y, shift_angle)
     else:
         ox, oy = rotate_point(ox_, oy_, x, y, normalize(-shift_angle))
-    # print(f"UNROTATED O x: {ox} y: {oy}")
+    print(f"UNROTATED O x: {ox} y: {oy}")
 
     return ox, oy
 
@@ -435,11 +599,11 @@ def center_by_params(hand_coords, shift_1, shift_2, shift_3):
     center_x, center_y = -1, -1
     try:
         if is_aligned(hand_coords):
-            # print("another aligned")
+            print("another aligned")
             center_x, center_y = calculate_center(hand_coords,
                                                   [shift_1, shift_2, shift_3])
         else:
-            # print("another non-aligned")
+            print("another non-aligned")
             center_x, center_y = calculate_center_three_points(hand_coords[0][0], hand_coords[0][1],
                                                                hand_coords[1][0], hand_coords[1][1],
                                                                hand_coords[2][0], hand_coords[2][1],
@@ -562,6 +726,17 @@ def angle_between_vectors(xa, ya, xb, yb):
     angle_deg = normalize(angle_deg)
     # print(f"Normalized angle: {angle_deg}")
     return angle_deg
+
+
+def area(x1, y1, x2, y2, x3, y3):
+    return abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0)
+
+def isInside(x1, y1, x2, y2, x3, y3, x, y):
+    a = area(x1, y1, x2, y2, x3, y3)
+    a1 = area(x, y, x2, y2, x3, y3)
+    a2 = area(x1, y1, x, y, x3, y3)
+    a3 = area(x1, y1, x2, y2, x, y)
+    return a == (a1 + a2 + a3)
 
 def mirroring_check(ang1, ang2, ang3):
     if (ang1 < ang2 < ang3) or (

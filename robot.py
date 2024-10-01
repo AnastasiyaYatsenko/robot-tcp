@@ -221,6 +221,10 @@ class Robot:
         x1, y1 = ceil_to_coordinates(self.hands[0].x, self.hands[0].y)
         x2, y2 = ceil_to_coordinates(self.hands[1].x, self.hands[1].y)
         x3, y3 = ceil_to_coordinates(self.hands[2].x, self.hands[2].y)
+        if (x1 == x3 and x1 != x2) or (x2 == x3 and x2 != x1) or (x1 == x2 and x1 != x3):
+            return False
+        if (y1 == y3 and y1 != y2) or (y2 == y3 and y2 != y1) or (y1 == y2 and y1 != y3):
+            return False
         if abs((x3 - x1) / (x2 - x1) - (y3 - y1) / (y2 - y1)) <= Tol:
             # print("---")
             return True
