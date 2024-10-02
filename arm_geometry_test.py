@@ -64,7 +64,12 @@ def get_arm_state_by_pos(pos, size, id=''):
     return res
 '''
 
-def ceil_to_coordinates(a):
+def ceil_to_coordinates(x, y):
+    x = size["netBorder"] + x * size["netStep"]
+    y = size["netBorder"] + y * size["netStep"]
+    return x, y
+
+def ceil_to_coordinates_(a):
     a = size["netBorder"] + a * size["netStep"]
     return a
 
@@ -81,8 +86,12 @@ def ceil_to_coordinates_all(x1, y1, x2, y2, x3, y3):
 
     return x1, y1, x2, y2, x3, y3
 
+def coordinates_to_ceil(x, y):
+    x = (x - size["netBorder"]) / size["netStep"]
+    y = (y - size["netBorder"]) / size["netStep"]
+    return int(x), int(y)
 
-def coordinates_to_ceil(a):
+def coordinates_to_ceil_(a):
     a = (a - size["netBorder"]) / size["netStep"]
     return int(a)
 
@@ -122,19 +131,51 @@ def point_in_sector(px, py, cx, cy, v1x, v1y, v2x, v2y):
     else:
         return theta_p >= theta1 or theta_p <= theta2
 
-# обчислення координат центру за наявних координат лап
-# x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
-# OLD
+def current_pos(points):
+    current_pose = -1  # 0 - horizontal, 1 - vertical, 2 - unaligned, needs improving
+    Tol = 2
+    # print(f"Points: {points}")
+    # print(f"difs: {abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol} {abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol} {abs(points[1][1] - (points[0][1] + size['D2'] / 4)) < Tol} {abs(points[1][1] - (points[2][1] - size['D2'] / 4)) < Tol}")
+    # print(f'Condition: {(abs(points[1][0] - (points[0][0] + size["d2"]) / 2) < Tol) and (abs(points[1][0] - (points[2][0] - size["d2"] / 2)) < Tol) and (abs(points[1][1] - (points[0][1] + size["D2"] / 4)) < Tol) and (abs(points[1][1] - (points[2][1] - size["D2"] / 4)) < Tol)}')
 
-def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
-    # x1 = size["netBorder"] + x1 * size["netStep"]
-    # y1 = size["netBorder"] + y1 * size["netStep"]
-    #
-    # x2 = size["netBorder"] + x2 * size["netStep"]
-    # y2 = size["netBorder"] + y2 * size["netStep"]
-    #
-    # x3 = size["netBorder"] + x3 * size["netStep"]
-    # y3 = size["netBorder"] + y3 * size["netStep"]
+    if (abs(points[1][0] - (points[0][0] + size["netStep"])) < Tol) and (
+            abs(points[1][0] - (points[2][0] - size["netStep"])) < Tol) and (
+            abs(points[1][1] - points[0][1]) < Tol) and (
+            abs(points[1][1] - points[2][1]) < Tol):
+        print("0")
+        current_pose = 0  # 0 - horizontal
+
+    elif (abs(points[1][0] - points[0][0]) < Tol) and (
+            abs(points[1][0] - points[2][0]) < Tol) and (
+            abs(points[1][1] - (points[0][1] + size["netStep"])) < Tol) and (
+            abs(points[1][1] - (points[2][1] - size["netStep"])) < Tol):
+        print("1")
+        current_pose = 1  # 1 - vertical
+    else:
+        print("2")
+        current_pose = 2  # 2 - unaligned, needs improving
+    return current_pose
+
+def calculate_center(coords, shifts):
+    x1 = coords[0][0]
+    y1 = coords[0][1]
+    x2 = coords[1][0]
+    y2 = coords[1][1]
+    x3 = coords[2][0]
+    y3 = coords[2][1]
+    r1 = shifts[0]
+    r2 = shifts[1]
+    r3 = shifts[2]
+    points = [(x1, y1),
+              (x2, y2),
+              (x3, y3)]
+    sort_points = [(x1, y1),
+                   (x2, y2),
+                   (x3, y3)]
+    sort_points.sort(key=lambda point: (point[0], point[1]))
+    # print(f"Points: {points}\nSorted: {sort_points}")
+    current_pose = current_pos(sort_points)
+    # print(f"IN CENTER current pos: {current_pose}")
 
     # print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
     # print(f"R: {r1} | {r2} | {r3}")
@@ -153,8 +194,93 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
     # print(f"r_short: {r_short}; r_long: {r_long}")
 
-    l = (r_long**2 - r_short**2) / (2 * 200) - (200 / 2)
+    l = (r_long ** 2 - r_short ** 2) / (2 * size['netStep']) - (size['netStep'] / 2)
+    h = math.sqrt(r_short ** 2 - l ** 2)
+    y = 0
+    x = 0
+    Tol = 2
+
+    if current_pose == 0:  # horizontal
+        if ((abs(points[1][0] - (points[0][0] + size['netStep'])) < Tol) and (
+                abs(points[1][0] - (points[2][0] - size['netStep'])) < Tol) and (
+                    abs(points[1][1] - points[0][1]) < Tol) and (
+                    abs(points[1][1] - points[2][1]) < Tol)) or (
+
+                (abs(points[2][0] - (points[1][0] + size['netStep'])) < Tol) and (
+                abs(points[2][0] - (points[0][0] - size['netStep'])) < Tol) and (
+                        abs(points[2][1] - points[1][1]) < Tol) and (
+                        abs(points[2][1] - points[0][1]) < Tol)) or (
+
+                (abs(points[0][0] - (points[2][0] + size['netStep'])) < Tol) and (
+                abs(points[0][0] - (points[1][0] - size['netStep'])) < Tol) and (
+                        abs(points[0][1] - points[2][1]) < Tol) and (
+                        abs(points[0][1] - points[1][1]) < Tol)):
+            x = sort_points[1][0]
+            y = sort_points[1][1] - h
+        else:
+            x = sort_points[1][0]
+            y = sort_points[1][1] + h
+        # print(f"CENTER {current_pose} x: {x}, y: {y}")
+
+    elif current_pose == 1:
+        if ((abs(points[1][0] - points[0][0]) < Tol) and (
+                abs(points[1][0] - points[2][0]) < Tol) and (
+                    abs(points[1][1] - (points[0][1] + size['netStep'])) < Tol) and (
+                    abs(points[1][1] - (points[2][1] - size['netStep'])) < Tol)) or (
+
+                (abs(points[2][0] - points[1][0]) < Tol) and (
+                abs(points[2][0] - points[0][0]) < Tol) and (
+                        abs(points[2][1] - (points[1][1] + size['netStep'])) < Tol) and (
+                        abs(points[2][1] - (points[0][1] - size['netStep'])) < Tol)) or (
+
+                (abs(points[0][0] - points[2][0]) < Tol) and (
+                abs(points[0][0] - points[1][0]) < Tol) and (
+                        abs(points[0][1] - (points[2][1] + size['netStep'])) < Tol) and (
+                        abs(points[0][1] - (points[1][1] - size['netStep'])) < Tol)):
+            x = sort_points[1][0] + h
+            y = sort_points[1][1]
+        else:
+            x = sort_points[1][0] - h
+            y = sort_points[1][1]
+    # зачепи не на одній лінії
+    else:
+        x, y = calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3)
+    return x, y
+
+# обчислення координат центру за наявних координат лап
+# x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
+# OLD
+
+def calculate_center__(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+    # x1 = size["netBorder"] + x1 * size["netStep"]
+    # y1 = size["netBorder"] + y1 * size["netStep"]
+    #
+    # x2 = size["netBorder"] + x2 * size["netStep"]
+    # y2 = size["netBorder"] + y2 * size["netStep"]
+    #
+    # x3 = size["netBorder"] + x3 * size["netStep"]
+    # y3 = size["netBorder"] + y3 * size["netStep"]
+
+    print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
+    print(f"R: {r1} | {r2} | {r3}")
+    r_short = -1
+    r_long = -1
+
+    if r1 < r2 and r1 < r3:
+        r_short = r1
+        r_long = r2
+    elif r2 < r1 and r2 < r3:
+        r_short = r2
+        r_long = r3
+    else:
+        r_short = r3
+        r_long = r1
+
+    print(f"r_short: {r_short}; r_long: {r_long}")
+
+    l = (r_long**2 - r_short**2) / (2 * size["netStep"]) - (size["netStep"] / 2)
     h = math.sqrt(r_short**2-l**2)
+    print(f"l: {l} h: {h}")
     y = 0
     x = 0
     # зачепи на одній лінії, горизонтальне розміщення
@@ -178,7 +304,7 @@ def calculate_center(x1, y1, x2, y2, x3, y3, r1, r2, r3):
         if (x1 < x3) and (x3 < x2):
             y = y1 + h
             x = x2 + l
-        # print(f"CENTER x: {x}, y: {y}")
+        print(f"CENTER x: {x}, y: {y}")
     # зачепи на одні лінії, вертикальне розміщення
     elif (x1 == x2) and (x2 == x3):
         if (y3 < y2) and (y2 < y1):
@@ -338,10 +464,10 @@ def center_by_params(hand_coords, shift_1, shift_2, shift_3):
     center_x, center_y = -1, -1
     try:
         if is_aligned(hand_coords):
-            center_x, center_y = calculate_center(hand_coords[0][0], hand_coords[0][1],
-                                                  hand_coords[1][0], hand_coords[1][1],
-                                                  hand_coords[2][0], hand_coords[2][1],
-                                                  shift_1, shift_2, shift_3)
+            center_x, center_y = calculate_center([(hand_coords[0][0], hand_coords[0][1]),
+                                                   (hand_coords[1][0], hand_coords[1][1]),
+                                                   (hand_coords[2][0], hand_coords[2][1])],
+                                                  [shift_1, shift_2, shift_3])
         else:
             center_x, center_y = calculate_center_three_points(hand_coords[0][0], hand_coords[0][1],
                                                                hand_coords[1][0], hand_coords[1][1],
@@ -465,6 +591,16 @@ def angle_between_vectors(xa, ya, xb, yb):
     angle_deg = normalize(angle_deg)
     # print(f"Normalized angle: {angle_deg}")
     return angle_deg
+
+def area(x1, y1, x2, y2, x3, y3):
+    return abs((x1 * (y2 - y3) + x2 * (y3 - y1) + x3 * (y1 - y2)) / 2.0)
+
+def isInside(x1, y1, x2, y2, x3, y3, x, y):
+    a = area(x1, y1, x2, y2, x3, y3)
+    a1 = area(x, y, x2, y2, x3, y3)
+    a2 = area(x1, y1, x, y, x3, y3)
+    a3 = area(x1, y1, x2, y2, x, y)
+    return a == (a1 + a2 + a3)
 
 def mirroring_check(ang1, ang2, ang3):
     if (ang1 < ang2 < ang3) or (
@@ -787,6 +923,22 @@ def calc_params_backward(L, N, n, h, aa0, hand_a, hand_b, hand_c):
 
     return shifts, angs, holds
 
+def to_range(num, inMin, inMax, outMin, outMax):
+  return outMin + (float(num - inMin) / float(inMax - inMin) * (outMax
+                  - outMin))
+
+def get_ceil_coords(x, y, rect_side, outer_border, outer_border_add):
+    ceil_x = size["netBorder"] + x * size["netStep"]
+    ceil_y = size["netBorder"] + y * size["netStep"]
+    fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
+    fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
+    return fin_x, fin_y
+
+def get_visual_coords(x, y, rect_side, outer_border, outer_border_add):
+    fin_x = to_range(x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
+    fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
+    return fin_x, fin_y
+
 
 
 # def get_ang(x1, y1, xc, yc):
@@ -851,7 +1003,12 @@ size = {
     "outerRadLimit": 220,  # max shift pos
     "minAngle": 68,
     "netStep": 200,
-    "netBorder": 100
+    "ceilLenX": 2000,
+    "ceilLenY": 2000,
+    "netBorder": 100,
+    # "D2": 400,
+    # "d2": 200*math.sqrt(3),
+    "holeRad": 40
 }
 
 # arm_state = get_arm_state_by_pos(7, size, 'b')

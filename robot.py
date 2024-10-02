@@ -126,14 +126,11 @@ class Robot:
     #         print("Point occupied!")
 
     def get_all_points(self):
-        center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
-                                              self.hands[1].x, self.hands[1].y,
-                                              self.hands[2].x, self.hands[2].y,
-                                              self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
-        return [self.hands[0].x, self.hands[0].y,
-                self.hands[1].x, self.hands[1].y,
-                self.hands[2].x, self.hands[2].y,
-                center_x, center_y]
+        center_x, center_y = self.get_center()
+        return [(self.hands[0].x, self.hands[0].y),
+                (self.hands[1].x, self.hands[1].y),
+                (self.hands[2].x, self.hands[2].y),
+                (center_x, center_y)]
 
     def set_real_coordinates(self, c1, c2, c3, co):
         self.real_coordinates[0] = c1
@@ -158,10 +155,10 @@ class Robot:
         center_x, center_y = 0, 0
         if self.is_aligned():
             # print("aligned")
-            center_x, center_y = calculate_center(self.hands[0].x, self.hands[0].y,
-                                                  self.hands[1].x, self.hands[1].y,
-                                                  self.hands[2].x, self.hands[2].y,
-                                                  self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
+            center_x, center_y = calculate_center([(self.hands[0].x, self.hands[0].y),
+                                                   (self.hands[1].x, self.hands[1].y),
+                                                   (self.hands[2].x, self.hands[2].y)],
+                                                  [self.hands[0].lin, self.hands[1].lin, self.hands[2].lin])
         else:
             # print("not aligned")
             center_x, center_y = calculate_center_three_points(self.hands[0].x, self.hands[0].y,

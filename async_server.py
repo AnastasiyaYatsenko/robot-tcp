@@ -161,8 +161,188 @@ def serve_forever():
         thread_rx.daemon = True
         thread_rx.start()
 
-
 def draw_ceil(screen):
+    rect_side = 590
+    # rect_side = 1000
+    outer_border = 60  # 20 + 60
+    outer_border_add = 20 + outer_border
+    side = 2 * size["netBorder"] + (ceil.max_x - 1) * size["netStep"]
+    # side = (ceil.max_x - 1)*size["d2"] / 2 + 2*size["netBorder"]
+    # rect_border = int(size["netBorder"]*rect_side / side)
+    # rect_step = int(rect_side / ceil.max_x)
+    # rect_step = int(size["d2"]/2 * rect_side / side)
+
+    # D1 = (size["d2"] / 3) * 2
+    # side = size["d2"] / 2 + size["netBorder"]
+    # ceil_y = D1 + (1 - (x % 2)) * (size["D2"] / 4) + size["netBorder"]
+
+    # side_x = 2*size["netBorder"]+(self.max_x-1)*size["netStep"]
+    # side_y = 2 * size["netBorder"] + (self.max_y - 1) * size["netStep"]
+    pg.draw.rect(screen, (255, 255, 255), (20, 20, rect_side+2*outer_border, rect_side+2*outer_border))
+    pg.draw.rect(screen, (0, 0, 0), (outer_border_add, outer_border_add, rect_side, rect_side), 1)
+
+    # Create a font object
+    font = pg.font.Font(None, 30)
+    top_text = font.render("top", True, (0, 0, 0))
+    top_text_rect = top_text.get_rect(center=(20 + (rect_side+2*outer_border) / 2, 10 + outer_border_add / 2))
+    bottom_text = font.render("bottom", True, (0, 0, 0))
+    bottom_text_rect = bottom_text.get_rect(center=(20 + (rect_side + 2 * outer_border) / 2,
+                                                    rect_side + 1.5 * outer_border_add - 10))
+
+    left_text = font.render("left", True, (0, 0, 0))
+    left_r_text = pg.transform.rotate(left_text, 90)
+    left_text_rect = left_text.get_rect(center=(10 + outer_border_add / 2, 20 + (rect_side + 2 * outer_border) / 2))
+    right_text = font.render("right", True, (0, 0, 0))
+    right_r_text = pg.transform.rotate(right_text, -90)
+    right_text_rect = right_text.get_rect(center=(rect_side + 1.5 * outer_border_add - 10,
+                                                  20 + (rect_side + 2 * outer_border) / 2))
+
+    screen.blit(top_text, top_text_rect)
+    screen.blit(bottom_text, bottom_text_rect)
+    screen.blit(left_r_text, left_text_rect)
+    screen.blit(right_r_text, right_text_rect)
+
+    for y in range(ceil.max_y):
+        for x in range(ceil.max_x):
+            fin_x, fin_y = -1, -1
+            r = to_range(size["holeRad"], 0, size["ceilLenX"], 0, rect_side)
+            fin_x, fin_y = get_ceil_coords(x, y, rect_side, outer_border, outer_border_add)
+
+            pg.draw.circle(screen, (0, 0, 0), (fin_x, fin_y), r, 1)
+        # print("\n")
+
+        for i in range(len(ceil.robots)):
+            if not ceil.robots[i].isAlive:
+                print("Robot is inactive")
+                continue
+            # print("in r loop")
+            if ceil.robots[i].ot[0] != -1:
+                # x = ceil.robots[i].ot[0] * rect_side / side + outer_border_add + rect_border
+                # y = ceil.robots[i].ot[1] * rect_side / side + outer_border_add + rect_border
+
+
+                x, y = get_visual_coords(ceil.robots[i].ot[0],
+                                         ceil.robots[i].ot[1],
+                                         rect_side, outer_border, outer_border_add)
+
+                # xs = ceil.robots[i].os[0] * rect_side / side + outer_border_add
+                # ys = ceil.robots[i].os[1] * rect_side / side + outer_border_add
+
+                # pg.draw.line(screen, (255, 0, 0), (xs, ys), (x, y), 3)
+                pg.draw.circle(screen, (255, 0, 0), (x, y), 5, 0)
+                # pg.draw.circle(screen, (255, 0, 0), (xs, ys), 5, 0)
+
+            if len(ceil.robots[i].opt_points) != 0:
+                # print(f"trying to print opt points: {ceil.robots[i].opt_points}")
+                for j in range(len(ceil.robots[i].opt_points)):
+                    # hand_0_x, hand_0_y = get_ceil_coords(ceil.robots[i].opt_points[j][0],
+                    #                                      ceil.robots[i].opt_points[j][1],
+                    #                                      rect_side, outer_border)
+                    hand_0_x, hand_0_y = get_visual_coords(ceil.robots[i].opt_points[j][0],
+                                                           ceil.robots[i].opt_points[j][1],
+                                                           rect_side, outer_border, outer_border_add)
+                    # print(f"Opt point: {hand_0_x}, {hand_0_y}")
+                    # hand_0_x, hand_0_y = (ceil.robots[i].opt_points[j][0] * rect_side / side + outer_border_add,
+                    #                       ceil.robots[i].opt_points[j][1] * rect_side / side + outer_border_add)
+                    pg.draw.circle(screen, (0, 255, 0),
+                                   (hand_0_x, hand_0_y), 7, 2)
+
+                if not ceil.robots[i].isMovingPath:
+                    global counter
+
+                    if len(ceil.robots[i].path) != 0:
+                        for j in range(len(ceil.robots[i].path)):
+                            for l in range(len(ceil.robots[i].path[j])):
+                                # hand_0_x, hand_0_y = (
+                                # ceil.robots[i].path[j][l][0] * rect_side / side + outer_border_add,
+                                # ceil.robots[i].path[j][l][1] * rect_side / side + outer_border_add)
+
+                                hand_0_x, hand_0_y = get_visual_coords(ceil.robots[i].path[j][l][0],
+                                                                       ceil.robots[i].path[j][l][1],
+                                                                       rect_side, outer_border, outer_border_add)
+
+                                pg.draw.circle(screen, (255, 0, 0), (hand_0_x, hand_0_y), 10, 2)
+
+                    if len(ceil.robots[i].centers) != 0:
+                        for j in range(1, len(ceil.robots[i].centers)):
+                            # x_old = ceil.robots[i].centers[j-1][0]  * rect_side / side + outer_border_add + rect_border
+                            # y_old = ceil.robots[i].centers[j-1][1]  * rect_side / side + outer_border_add + rect_border
+                            x_old, y_old = get_visual_coords(ceil.robots[i].centers[j-1][0],
+                                                             ceil.robots[i].centers[j-1][1],
+                                                             rect_side, outer_border, outer_border_add)
+
+                            # x_new = ceil.robots[i].centers[j][0]  * rect_side / side + outer_border_add + rect_border
+                            # y_new = ceil.robots[i].centers[j][1]  * rect_side / side + outer_border_add + rect_border
+
+                            x_new, y_new = get_visual_coords(ceil.robots[i].centers[j][0],
+                                                             ceil.robots[i].centers[j][1],
+                                                             rect_side, outer_border, outer_border_add)
+                            pg.draw.line(screen, (0, 0, 255), (x_old, y_old), (x_new, y_new), 2)
+
+            points = ceil.robots[i].get_real_coordinates_robot()
+            hand_points = ceil.robots[i].get_real_coordinates_hand()
+
+            # hand_red_x, hand_red_y = (hand_points[0][0] * rect_side / side + outer_border_add + rect_border,
+            #                           hand_points[0][1] * rect_side / side + outer_border_add + rect_border)
+            hand_red_x, hand_red_y = get_visual_coords(hand_points[0][0],
+                                                       hand_points[0][1],
+                                                       rect_side, outer_border, outer_border_add)
+            # hand_red_x, hand_red_y = get_ceil_coords(hand_points[0][0], hand_points[0][1],
+            #                                          rect_border, rect_step, outer_border_add)
+            # hand_green_x, hand_green_y = (hand_points[1][0] * rect_side / side + outer_border_add + rect_border,
+            #                               hand_points[1][1] * rect_side / side + outer_border_add + rect_border)
+            hand_green_x, hand_green_y = get_visual_coords(hand_points[1][0],
+                                                           hand_points[1][1],
+                                                           rect_side, outer_border, outer_border_add)
+            # hand_blue_x, hand_blue_y = (hand_points[2][0] * rect_side / side + outer_border_add + rect_border,
+            #                             hand_points[2][1] * rect_side / side + outer_border_add + rect_border)
+            hand_blue_x, hand_blue_y = get_visual_coords(hand_points[2][0],
+                                                         hand_points[2][1],
+                                                         rect_side, outer_border, outer_border_add)
+
+            # red_x, red_y = (points[0][0] * rect_side / side + outer_border_add + rect_border,
+            #                 points[0][1] * rect_side / side + outer_border_add + rect_border)
+            red_x, red_y = get_visual_coords(points[0][0],
+                                             points[0][1],
+                                             rect_side, outer_border, outer_border_add)
+            # green_x, green_y = (points[1][0] * rect_side / side + outer_border_add + rect_border,
+            #                     points[1][1] * rect_side / side + outer_border_add + rect_border)
+            green_x, green_y = get_visual_coords(points[1][0],
+                                                 points[1][1],
+                                                 rect_side, outer_border, outer_border_add)
+            # blue_x, blue_y = (points[2][0] * rect_side / side + outer_border_add + rect_border,
+            #                   points[2][1] * rect_side / side + outer_border_add + rect_border)
+            blue_x, blue_y = get_visual_coords(points[2][0],
+                                               points[2][1],
+                                               rect_side, outer_border, outer_border_add)
+            # center_x, center_y = (points[3][0] * rect_side / side + outer_border_add + rect_border,
+            #                       points[3][1] * rect_side / side + outer_border_add + rect_border)
+            center_x, center_y = get_visual_coords(points[3][0],
+                                                   points[3][1],
+                                                   rect_side, outer_border, outer_border_add)
+
+            pg.draw.line(screen, (255, 0, 0), (hand_red_x, hand_red_y), (center_x, center_y), 3)
+            pg.draw.line(screen, (0, 255, 0), (hand_green_x, hand_green_y), (center_x, center_y), 3)
+            pg.draw.line(screen, (0, 0, 255), (hand_blue_x, hand_blue_y), (center_x, center_y), 3)
+
+            if ceil.robots[i].hands[0].hold == 1:
+                pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 5, 0)
+            else:
+                pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 10, 1)
+
+            if ceil.robots[i].hands[1].hold == 1:
+                pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 5, 0)
+            else:
+                pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 10, 1)
+
+            if ceil.robots[i].hands[2].hold == 1:
+                pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 5, 0)
+            else:
+                pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 10, 1)
+
+            pg.draw.circle(screen, (255, 255, 255), (center_x, center_y), 5, 1)
+
+def draw_ceil_(screen):
     rect_side = 590
     # rect_side = 1000
     outer_border = 60  # 20 + 60
@@ -296,9 +476,9 @@ def command_panel():
     screen = pg.display.set_mode([1210, 750])
 
     # Inputs
-    robot_input = InputBox(870, 70, 200, 32)
-    x_input = InputBox(870, 120, 200, 32)
-    y_input = InputBox(870, 170, 200, 32)
+    robot_input = InputBox(810, 70, 200, 32)
+    x_input = InputBox(810, 120, 200, 32)
+    y_input = InputBox(810, 170, 200, 32)
 
     r2_input = InputBox(900, 360)
     x1_input = InputBox(790, 440, 100)
@@ -330,6 +510,11 @@ def command_panel():
     button_surface_disconnect = pg.Surface((200, 50))
     button_surface_update = pg.Surface((200, 50))
 
+    button_surface_l = pg.Surface((35, 35))
+    button_surface_r = pg.Surface((35, 35))
+    button_surface_u = pg.Surface((35, 35))
+    button_surface_d = pg.Surface((35, 35))
+
     # Button rectangles
     button_start = pg.Rect(760, 220, 200, 50)
     button_disconnect = pg.Rect(990, 220, 200, 50)
@@ -338,8 +523,13 @@ def command_panel():
     button_update = pg.Rect(990, 630, 200, 50)
     # (760, 290), (1190, 290)
 
+    button_l = pg.Rect(1050, 110, 35, 35)
+    button_r = pg.Rect(1130, 110, 35, 35)
+    button_u = pg.Rect(1090, 70, 35, 35)
+    button_d = pg.Rect(1090, 150, 35, 35)
+
     # Create a font object
-    font = pg.font.Font(None, 30)
+    font = pg.font.Font(None, 29)
 
     text = font.render("Start move", True, (255, 255, 255))
     text_rect = text.get_rect(center=(button_surface.get_width() / 2, button_surface.get_height() / 2))
@@ -365,7 +555,7 @@ def command_panel():
     text_update_rect = text_update.get_rect(
         center=(button_surface_update.get_width() / 2, button_surface_update.get_height() / 2))
 
-    r_text1 = font.render("Robot N.", True, (255, 255, 255))
+    r_text1 = font.render("Robot:", True, (255, 255, 255))
     r_text1_rect = text.get_rect(center=(
         robot_input.inputBox.x - r_text1.get_width() + 40, robot_input.inputBox.y + robot_input.inputBox.height / 2))
 
@@ -460,6 +650,10 @@ def command_panel():
                             ceil.robots[robot_num].get_robot_params()
                             xo_s, yo_s = ceil.robots[robot_num].get_center()
                             print(f"Os: ({xo_s}, {yo_s}); Ot: ({x}, {y})")
+                            t_path = threading.Thread(target=ceil.path_manual,
+                                                      args=[robot_num, x])
+                            t_path.start()
+                            '''
                             global ot
                             ot[0] = x
                             ot[1] = y
@@ -474,6 +668,7 @@ def command_panel():
                             t_start.start()
                             # t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
                             # t1.start()
+                            '''
                 if button_disconnect.collidepoint(event.pos):
                     # print("SET COORD BUTTON")
                     if robot_input.text == '':
@@ -549,12 +744,96 @@ def command_panel():
                     # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
                     t_path = threading.Thread(target=ceil.build_path_lines, args=[0, xo_s, yo_s, xo_t, yo_t])
                     t_path.start()
+                if button_l.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
 
-                    # t_path.join()
-                    # t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
-                    # t_start.start()
-                    # global path
-                    # path = path_[:]
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 0])
+                            t_step.start()
+                if button_r.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 1])
+                            t_step.start()
+                if button_u.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 2])
+                            t_step.start()
+                if button_d.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 3])
+                            t_step.start()
+
+                   # t_path.join()
+                   # t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
+                   # t_start.start()
+                   # global path
+                   # path = path_[:]
 
 
             robot_input.handle_event(event)
@@ -619,6 +898,32 @@ def command_panel():
 
         button_surface_update.blit(text_update, text_update_rect)
         screen.blit(button_surface_update, (button_update.x, button_update.y))
+
+        # manual control buttons
+        if button_l.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_l, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_l, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_r.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_r, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_r, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_u.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_u, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_u, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_d.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_d, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_d, (5, 99, 46), (1, 1, 200, 48))
+
+        screen.blit(button_surface_l, (button_l.x, button_l.y))
+        screen.blit(button_surface_r, (button_r.x, button_r.y))
+        screen.blit(button_surface_u, (button_u.x, button_u.y))
+        screen.blit(button_surface_d, (button_d.x, button_d.y))
 
         pg.draw.line(screen, (255, 255, 255), (760, 290), (1090 + x3_input.inputBox.width, 290))
         pg.draw.line(screen, (255, 255, 255), (760, 620), (1090 + x3_input.inputBox.width, 620))
