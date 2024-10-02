@@ -14,7 +14,7 @@ import sys
 # from pygame import font
 
 # from arm_geometry_test import *
-from pygame_elements import InputBox
+from pygame_elements import InputBox, RadioButton
 # from robot import *
 from ceil import *
 
@@ -25,6 +25,7 @@ BIND_ADDRESS = ('192.168.0.91', 8686)
 BACKLOG = 5
 
 ceil = Ceil()
+ceil_type = 0 # 0 - hex, 1 - square
 # path = []
 counter = 0
 ot = [-1, -1]
@@ -166,14 +167,17 @@ def serve_forever():
         thread_rx.daemon = True
         thread_rx.start()
 
-
 def draw_ceil(screen):
+    global ceil_type
     rect_side = 590
     # rect_side = 1000
     outer_border = 60  # 20 + 60
     outer_border_add = 20 + outer_border
-    # side = 2 * size["netBorder"] + (ceil.max_x - 1) * size["netStep"]
-    side = (ceil.max_x - 1)*size["d2"] / 2 + 2*size["netBorder"]
+    if ceil_type == 0:
+        side = (ceil.max_x - 1) * size["d2"] / 2 + 2 * size["netBorder"]
+    elif ceil_type == 1:
+        side = 2 * size["netBorder"] + (ceil.max_x - 1) * size["netStep"]
+    # side = (ceil.max_x - 1)*size["d2"] / 2 + 2*size["netBorder"]
     rect_border = int(size["netBorder"]*rect_side / side)
     # rect_step = int(rect_side / ceil.max_x)
     rect_step = int(size["d2"]/2 * rect_side / side)
@@ -210,17 +214,14 @@ def draw_ceil(screen):
 
     for y in range(ceil.max_y):
         for x in range(ceil.max_x):
-            # D1 = (size["d2"] / 3) * 2
-            # ceil_x = x*size["d2"]/2 + size["netBorder"]
-            # ceil_y = y*D1 + (1 - (x % 2))*(size["D2"]/4) + size["netBorder"]
-            # # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
-            # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
-            # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
-            fin_x, fin_y = get_ceil_coords(x, y, rect_side, outer_border, outer_border_add)
+            fin_x, fin_y = -1, -1
             r = to_range(size["holeRad"], 0, size["ceilLenX"], 0, rect_side)
+            if ceil_type == 0:
+                fin_x, fin_y = get_ceil_coords_hex(x, y, rect_side, outer_border, outer_border_add)
+            elif ceil_type == 1:
+                fin_x, fin_y = get_ceil_coords_square(x, y, rect_side, outer_border, outer_border_add)
+
             pg.draw.circle(screen, (0, 0, 0), (fin_x, fin_y), r, 1)
-            # pg.draw.circle(screen, (0, 0, 0), (rect_border+x*rect_step+outer_border_add,
-            #                                    rect_border+y*rect_step+outer_border_add), r, 1)
         # print("\n")
 
         for i in range(len(ceil.robots)):
@@ -231,6 +232,7 @@ def draw_ceil(screen):
             if ceil.robots[i].ot[0] != -1:
                 # x = ceil.robots[i].ot[0] * rect_side / side + outer_border_add + rect_border
                 # y = ceil.robots[i].ot[1] * rect_side / side + outer_border_add + rect_border
+
 
                 x, y = get_visual_coords(ceil.robots[i].ot[0],
                                          ceil.robots[i].ot[1],
@@ -250,8 +252,8 @@ def draw_ceil(screen):
                     #                                      ceil.robots[i].opt_points[j][1],
                     #                                      rect_side, outer_border)
                     hand_0_x, hand_0_y = get_visual_coords(ceil.robots[i].opt_points[j][0],
-                                                         ceil.robots[i].opt_points[j][1],
-                                                         rect_side, outer_border, outer_border_add)
+                                                           ceil.robots[i].opt_points[j][1],
+                                                           rect_side, outer_border, outer_border_add)
                     # print(f"Opt point: {hand_0_x}, {hand_0_y}")
                     # hand_0_x, hand_0_y = (ceil.robots[i].opt_points[j][0] * rect_side / side + outer_border_add,
                     #                       ceil.robots[i].opt_points[j][1] * rect_side / side + outer_border_add)
@@ -358,9 +360,22 @@ def draw_ceil(screen):
         #     y = ceil.robots[i].ot[1] * rect_side / side + outer_border_add
         #     pg.draw.circle(screen, (255, 0, 0), (x, y), 5, 0)
 
+def on_click_hex():
+    global ceil_type
+    print("hex")
+    ceil_type = 0
+    ceil.max_x = 11
+    ceil.max_y = 9
 
+def on_click_square():
+    global ceil_type
+    print("square")
+    ceil_type = 1
+    ceil.max_x = 10
+    ceil.max_y = 10
 
 def command_panel():
+    global ceil_type
     pg.init()
     screen = pg.display.set_mode([1210, 750])
 
@@ -413,12 +428,12 @@ def command_panel():
     button_path = pg.Rect(760, 630, 200, 50)
     button_update = pg.Rect(990, 630, 200, 50)
 
-    button_lu = pg.Rect(1050, 90, 35, 35)
-    button_ld = pg.Rect(1050, 130, 35, 35)
-    button_u = pg.Rect(1090, 70, 35, 35)
-    button_d = pg.Rect(1090, 150, 35, 35)
-    button_ru = pg.Rect(1130, 90, 35, 35)
-    button_rd = pg.Rect(1130, 130, 35, 35)
+    button_lu = pg.Rect(1050, 110, 35, 35)
+    button_ld = pg.Rect(1050, 150, 35, 35)
+    button_u = pg.Rect(1090, 90, 35, 35)
+    button_d = pg.Rect(1090, 170, 35, 35)
+    button_ru = pg.Rect(1130, 110, 35, 35)
+    button_rd = pg.Rect(1130, 150, 35, 35)
     # (760, 290), (1190, 290)
 
     # Create a font object
@@ -503,6 +518,15 @@ def command_panel():
     clock = pg.time.Clock()
     screen.fill((48, 48, 48))
 
+    radioButtons = [
+        RadioButton(1050, 25, 115, 25, font, "hexagonal", on_click_hex),
+        RadioButton(1050, 55, 115, 25, font, "square", on_click_square)
+    ]
+    for rb in radioButtons:
+        rb.setRadioButtons(radioButtons)
+    radioButtons[0].clicked = True
+    group = pg.sprite.Group(radioButtons)
+
     # running = True
     global running, sock
     while running:  # main loop
@@ -559,10 +583,17 @@ def command_panel():
                             ceil.robots[robot_num].os = (xo_s, yo_s)
                             ceil.robots[robot_num].ot = (x, y)
                             # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
-                            t_path = threading.Thread(target=ceil.build_path_hex, args=[robot_num, xo_s, yo_s, x, y])
-                            t_path.start()
+                            if ceil_type == 0:
+                                t_path = threading.Thread(target=ceil.build_path_hex,
+                                                          args=[robot_num, xo_s, yo_s, x, y])
+                                t_path.start()
+                                t_path.join()
+                            elif ceil_type == 1:
+                                t_path = threading.Thread(target=ceil.build_path_lines_2,
+                                                          args=[robot_num, xo_s, yo_s, x, y])
+                                t_path.start()
+                                t_path.join()
 
-                            t_path.join()
                             t_start = threading.Thread(target=ceil.start_robot_by_path, args=[robot_num])
                             t_start.start()
                             # t1 = threading.Thread(target=ceil.move_robot, args=[robot_num, x, y])
@@ -645,8 +676,16 @@ def command_panel():
                     ceil.robots[0].ot = (xo_t, yo_t)
 
                     # path_, centers = ceil.build_path(0, xo_s, yo_s, xo_t, yo_t)
-                    t_path = threading.Thread(target=ceil.build_path_hex, args=[0, xo_s, yo_s, xo_t, yo_t])
-                    t_path.start()
+                    if ceil_type == 0:
+                        t_path = threading.Thread(target=ceil.build_path_hex,
+                                                  args=[robot_num, xo_s, yo_s, x, y])
+                        t_path.start()
+                        t_path.join()
+                    elif ceil_type == 1:
+                        t_path = threading.Thread(target=ceil.build_path_lines_2,
+                                                  args=[robot_num, xo_s, yo_s, x, y])
+                        t_path.start()
+                        t_path.join()
 
                     # t_path.join()
                     # t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
@@ -654,6 +693,9 @@ def command_panel():
                     # global path
                     # path = path_[:]
                 if button_lu.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
                     if robot_input.text == '':
                         print("Invalid input")
                     else:
@@ -675,6 +717,9 @@ def command_panel():
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 0])
                             t_step.start()
                 if button_ld.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
                     if robot_input.text == '':
                         print("Invalid input")
                     else:
@@ -696,6 +741,9 @@ def command_panel():
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 1])
                             t_step.start()
                 if button_u.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
                     if robot_input.text == '':
                         print("Invalid input")
                     else:
@@ -717,6 +765,9 @@ def command_panel():
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 2])
                             t_step.start()
                 if button_d.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
                     if robot_input.text == '':
                         print("Invalid input")
                     else:
@@ -738,6 +789,9 @@ def command_panel():
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 3])
                             t_step.start()
                 if button_ru.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
                     if robot_input.text == '':
                         print("Invalid input")
                     else:
@@ -759,6 +813,9 @@ def command_panel():
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 4])
                             t_step.start()
                 if button_rd.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
                     if robot_input.text == '':
                         print("Invalid input")
                     else:
@@ -779,8 +836,6 @@ def command_panel():
                             ceil.robots[robot_num].get_robot_params()
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 5])
                             t_step.start()
-
-
 
             robot_input.handle_event(event)
             x_input.handle_event(event)
@@ -935,6 +990,9 @@ def command_panel():
         x3_input.draw(screen)
         y3_input.draw(screen)
         clock.tick(60)
+
+        # group.update(events)
+        # group.draw(screen)
 
         pg.display.update()
 

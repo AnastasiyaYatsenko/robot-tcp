@@ -134,7 +134,7 @@ def point_in_sector(px, py, cx, cy, v1x, v1y, v2x, v2y):
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
 # OLD
 
-def calculate_center_(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center_square(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
     #
@@ -263,12 +263,12 @@ def calculate_center(coords, shifts):
               (x2, y2),
               (x3, y3)]
     sort_points.sort(key=lambda point: (point[0], point[1]))
-    print(f"Points: {points}\nSorted: {sort_points}")
+    # print(f"Points: {points}\nSorted: {sort_points}")
     current_pose = current_pos(sort_points)
-    print(f"IN CENTER current pos: {current_pose}")
+    # print(f"IN CENTER current pos: {current_pose}")
 
-    print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
-    print(f"R: {r1} | {r2} | {r3}")
+    # print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
+    # print(f"R: {r1} | {r2} | {r3}")
     r_short = -1
     r_long = -1
 
@@ -310,7 +310,7 @@ def calculate_center(coords, shifts):
         else:
             x = sort_points[1][0] - h * dsin(30)
             y = sort_points[1][1] + h * dcos(30)
-        print(f"CENTER {current_pose} x: {x}, y: {y}")
+        # print(f"CENTER {current_pose} x: {x}, y: {y}")
 
     elif current_pose == 1:
         if ((abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
@@ -332,7 +332,7 @@ def calculate_center(coords, shifts):
         else:
             x = sort_points[1][0] + h * dsin(30)
             y = sort_points[1][1] + h * dcos(30)
-        print(f"CENTER {current_pose} x: {x}, y: {y}")
+        # print(f"CENTER {current_pose} x: {x}, y: {y}")
     elif current_pose == 2:
         if ((abs(points[1][0] - points[0][0]) < Tol) and (
                 abs(points[1][0] - points[2][0]) < Tol) and (
@@ -353,7 +353,7 @@ def calculate_center(coords, shifts):
         else:
             x = sort_points[1][0] - h
             y = sort_points[1][1]
-        print(f"CENTER {current_pose} x: {x}, y: {y}")
+        # print(f"CENTER {current_pose} x: {x}, y: {y}")
         # if (y3 < y2) and (y2 < y1):
         #     y = y2 + l
         #     x = x1 - h
@@ -1074,7 +1074,6 @@ def to_range(num, inMin, inMax, outMin, outMax):
                   - outMin))
 
 def get_ceil_coords(x, y, rect_side, outer_border, outer_border_add):
-    D1 = (size["d2"] / 3) * 2
     # ceil_x = x * size["d2"] / 2 + size["netBorder"]
     ceil_x = x * size["d2"] / 2 + size["netBorder"]
     ceil_y = y * size["D2"] / 2 + (size["D2"] / 4) * (1 - (x % 2)) + size["netBorder"]
@@ -1083,6 +1082,26 @@ def get_ceil_coords(x, y, rect_side, outer_border, outer_border_add):
     # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
     # fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side + 2 * outer_border) + outer_border_add
     # fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side + 2 * outer_border) + outer_border_add
+    fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
+    fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
+    return fin_x, fin_y
+
+def get_ceil_coords_hex(x, y, rect_side, outer_border, outer_border_add):
+    # ceil_x = x * size["d2"] / 2 + size["netBorder"]
+    ceil_x = x * size["d2"] / 2 + size["netBorder"]
+    ceil_y = y * size["D2"] / 2 + (size["D2"] / 4) * (1 - (x % 2)) + size["netBorder"]
+    # print(f"({ceil_x:.3f}, {ceil_y:.3f})", end=" ")
+    # fin_x = to_range(ceil_x, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+    # fin_y = to_range(ceil_y, 0, 2000, 0, rect_border + 9 * rect_step + outer_border_add)
+    # fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side + 2 * outer_border) + outer_border_add
+    # fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side + 2 * outer_border) + outer_border_add
+    fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
+    fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
+    return fin_x, fin_y
+
+def get_ceil_coords_square(x, y, rect_side, outer_border, outer_border_add):
+    ceil_x = size["netBorder"] + x * size["netStep"]
+    ceil_y = size["netBorder"] + y * size["netStep"]
     fin_x = to_range(ceil_x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
     fin_y = to_range(ceil_y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
     return fin_x, fin_y
@@ -1098,6 +1117,7 @@ def get_visual_coords(x, y, rect_side, outer_border, outer_border_add):
     fin_x = to_range(x, 0, size["ceilLenX"], 0, rect_side) + outer_border_add
     fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
     return fin_x, fin_y
+
 
 # def get_ang(x1, y1, xc, yc):
 #     ax = x1 - xc

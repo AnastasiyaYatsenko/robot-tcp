@@ -180,6 +180,11 @@ class Robot:
                                                    (self.hands[1].x, self.hands[1].y),
                                                    (self.hands[2].x, self.hands[2].y)],
                                                   [self.hands[0].lin, self.hands[1].lin, self.hands[2].lin])
+            # elif ceil_type == 1:
+            #     center_x, center_y = calculate_center_square(self.hands[0].x, self.hands[0].y,
+            #                                                  self.hands[1].x, self.hands[1].y,
+            #                                                  self.hands[2].x, self.hands[2].y,
+            #                                                  self.hands[0].lin, self.hands[1].lin, self.hands[2].lin)
         else:
             print("not aligned")
             center_x, center_y = calculate_center_three_points(self.hands[0].x, self.hands[0].y,

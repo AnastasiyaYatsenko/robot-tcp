@@ -19,7 +19,6 @@ class Ceil:
     def __init__(self):
         self.max_x = 11
         self.max_y = 9
-        # масив лунок
         # “even-q” vertical layout in offset coordinates
         self.ceil_arr = [[0 for i in range(self.max_x)] for j in range(self.max_y)]
         #self.N = 2
@@ -59,6 +58,7 @@ class Ceil:
         self.robots = []
         
         self.coef = 1.07
+        self.type = 0  # 0 - hex, 1 - square
 
         # self.rect_side = 620
         # self.side = 2 * size["netBorder"] + (self.max_x - 1) * size["netStep"]
@@ -1435,10 +1435,10 @@ class Ceil:
             temp_shifts[non_middle[0]] = math.sqrt(temp_shifts[middle] ** 2 + l1 ** 2)
             temp_shifts[non_middle[1]] = math.sqrt(temp_shifts[middle] ** 2 + l2 ** 2)
             print(f"Temp shifts: {temp_shifts}")
-            new_center_x, new_center_y = calculate_center(temp_hand_coords[0][0], temp_hand_coords[0][1],
-                                                          temp_hand_coords[1][0], temp_hand_coords[1][1],
-                                                          temp_hand_coords[2][0], temp_hand_coords[2][1],
-                                                          temp_shifts[0], temp_shifts[1], temp_shifts[2])
+            new_center_x, new_center_y = calculate_center([(temp_hand_coords[0][0], temp_hand_coords[0][1]),
+                                                           (temp_hand_coords[1][0], temp_hand_coords[1][1]),
+                                                           (temp_hand_coords[2][0], temp_hand_coords[2][1])],
+                                                          temp_shifts)
             print(f"New center: {new_center_x}, {new_center_y}")
         else:
             new_center_x = (temp_hand_coords[0][0] + temp_hand_coords[1][0] + temp_hand_coords[2][0]) / 3
@@ -1887,6 +1887,7 @@ class Ceil:
         print(centers)
         self.robots[robot_num].isMovingPath = False
 
+    '''
     def build_path_lines_2(self, robot_num, xo_s, yo_s, xo_t, yo_t):
         # is_ot_possible = self.check_if_ot_possible(xo_t, yo_t)
 
@@ -2068,6 +2069,7 @@ class Ceil:
         print(centers)
         self.robots[robot_num].isMovingPath = False
 
+    '''
     # first we determine optimal path by holes, then robot moves to a specified holes
     def build_path_2(self, robot_num, xo_s, yo_s, xo_t, yo_t):
         self.robots[robot_num].isMovingPath = True
