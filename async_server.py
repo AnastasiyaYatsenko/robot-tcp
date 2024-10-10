@@ -715,6 +715,9 @@ def command_panel():
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
                             break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
+                            break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
                             print("There's no robot with such No.")
@@ -738,6 +741,9 @@ def command_panel():
 
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
+                            break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
                             break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
@@ -763,6 +769,9 @@ def command_panel():
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
                             break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
+                            break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
                             print("There's no robot with such No.")
@@ -786,6 +795,9 @@ def command_panel():
 
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
+                            break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
                             break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
@@ -811,6 +823,9 @@ def command_panel():
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
                             break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
+                            break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
                             print("There's no robot with such No.")
@@ -834,6 +849,9 @@ def command_panel():
 
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
+                            break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
                             break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
@@ -859,6 +877,9 @@ def command_panel():
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
                             break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
+                            break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):
                             print("There's no robot with such No.")
@@ -882,6 +903,9 @@ def command_panel():
 
                         if not ceil.robots[robot_num].isAlive:
                             print("Robot is inactive")
+                            break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
                             break
 
                         if (robot_num < 0) or (robot_num >= len(ceil.robots)):

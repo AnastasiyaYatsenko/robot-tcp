@@ -2768,6 +2768,7 @@ class Ceil:
         pass
 
     def turn_clock(self, robot_num, clockwise = True):
+        self.robots[robot_num].isMoving = True
         theta = 60
         if not clockwise:
             theta = -60
@@ -2915,6 +2916,7 @@ class Ceil:
         print(f"Centers: {centers}")
 
         self.turn_by_path(robot_num, path, centers)
+        self.robots[robot_num].isMoving = False
         return 1
 
 
@@ -3064,6 +3066,7 @@ class Ceil:
         :param direction: 0 - left up, 1 - left down, 2 - up, 3 - down, 4 - right up, 5 - right down
         :return:
         '''
+        self.robots[robot_num].isMoving = True
         hand_coords = self.robots[robot_num].get_all_points()
         print(f"Hand coords: {hand_coords}")
         x1, y1 = (hand_coords[0][0], hand_coords[0][1])
@@ -3382,6 +3385,7 @@ class Ceil:
             if res == -1:
                 print("Critical error, return")
                 return -1
+        self.robots[robot_num].isMoving = False
 
 
     def start_robot_by_path(self, robot_num):
