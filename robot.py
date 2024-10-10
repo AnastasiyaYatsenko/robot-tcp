@@ -172,7 +172,7 @@ class Robot:
         return self.real_coordinates_hand
 
     def get_center(self):
-        # print("--- get center ---")
+        print("--- get center ---")
         center_x, center_y = 0, 0
         if self.is_aligned():
             print("aligned")
@@ -210,7 +210,10 @@ class Robot:
         # print("CHECK IF IN LINE")
         # print(f"X: {self.hands[0].x} {self.hands[1].x} {self.hands[2].x}")
         # print(f"Y: {self.hands[0].y} {self.hands[1].y} {self.hands[2].y}")
-        if self.is_horizontal_aligned() or self.is_vertical_aligned():
+        hand_coords = [(float("%.4f" % self.hands[0].x), float("%.4f" % self.hands[0].y)),
+                       (float("%.4f" % self.hands[1].x), float("%.4f" % self.hands[1].y)),
+                       (float("%.4f" % self.hands[2].x), float("%.4f" % self.hands[2].y))]
+        if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
             # print("---")
             return True
         # Tol = 1e-10
@@ -226,9 +229,9 @@ class Robot:
         # x1, y1 = ceil_to_coordinates(self.hands[0].x, self.hands[0].y)
         # x2, y2 = ceil_to_coordinates(self.hands[1].x, self.hands[1].y)
         # x3, y3 = ceil_to_coordinates(self.hands[2].x, self.hands[2].y)
-        x1, y1 = self.hands[0].x, self.hands[0].y
-        x2, y2 = self.hands[1].x, self.hands[1].y
-        x3, y3 = self.hands[2].x, self.hands[2].y
+        x1, y1 = hand_coords[0][0], hand_coords[0][1]
+        x2, y2 = hand_coords[1][0], hand_coords[1][1]
+        x3, y3 = hand_coords[2][0], hand_coords[2][1]
         if (x1 == x3 and x1 != x2) or (x2 == x3 and x2 != x1) or (x1 == x2 and x1 != x3):
             return False
         if (y1 == y3 and y1 != y2) or (y2 == y3 and y2 != y1) or (y1 == y2 and y1 != y3):

@@ -250,12 +250,19 @@ def current_pos(points):
     return current_pose
 
 def calculate_center(coords, shifts):
-    x1 = coords[0][0]
-    y1 = coords[0][1]
-    x2 = coords[1][0]
-    y2 = coords[1][1]
-    x3 = coords[2][0]
-    y3 = coords[2][1]
+    x1 = float("%.4f" % coords[0][0])
+    y1 = float("%.4f" % coords[0][1])
+    x2 = float("%.4f" % coords[1][0])
+    y2 = float("%.4f" % coords[1][1])
+    x3 = float("%.4f" % coords[2][0])
+    y3 = float("%.4f" % coords[2][1])
+
+    # x1 = coords[0][0]
+    # y1 = coords[0][1]
+    # x2 = coords[1][0]
+    # y2 = coords[1][1]
+    # x3 = coords[2][0]
+    # y3 = coords[2][1]
     r1 = shifts[0]
     r2 = shifts[1]
     r3 = shifts[2]
@@ -266,12 +273,12 @@ def calculate_center(coords, shifts):
               (x2, y2),
               (x3, y3)]
     sort_points.sort(key=lambda point: (point[0], point[1]))
-    # print(f"Points: {points}\nSorted: {sort_points}")
+    print(f"Points: {points}\nSorted: {sort_points}")
     current_pose = current_pos(sort_points)
-    # print(f"IN CENTER current pos: {current_pose}")
+    print(f"IN CENTER current pos: {current_pose}")
 
-    # print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
-    # print(f"R: {r1} | {r2} | {r3}")
+    print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
+    print(f"R: {r1} | {r2} | {r3}")
     r_short = -1
     r_long = -1
 
@@ -631,6 +638,10 @@ def rotate_point(px, py, qx, qy, theta):
 
 def middle_point(p1, p2, p3):
     # Extract x and y coordinates
+    p1 = (float("%.4f" % p1[0]), float("%.4f" % p1[1]))
+    p2 = (float("%.4f" % p2[0]), float("%.4f" % p2[1]))
+    p3 = (float("%.4f" % p3[0]), float("%.4f" % p3[1]))
+
     x1, y1 = p1
     x2, y2 = p2
     x3, y3 = p3
@@ -921,9 +932,9 @@ def optimal_points(a, b, c, max_x, max_y):
 
 def is_aligned(hand_coords):
     print(f"In is_aligned: {hand_coords}")
-    # hand_coords = [("%.4f" % hand_coords[0][0], "%.4f" % hand_coords[0][1]),
-    #                ("%.4f" % hand_coords[1][0], "%.4f" % hand_coords[1][1]),
-    #                ("%.4f" % hand_coords[2][0], "%.4f" % hand_coords[2][1])]
+    hand_coords = [(float("%.4f" % hand_coords[0][0]), float("%.4f" % hand_coords[0][1])),
+                   (float("%.4f" % hand_coords[1][0]), float("%.4f" % hand_coords[1][1])),
+                   (float("%.4f" % hand_coords[2][0]), float("%.4f" % hand_coords[2][1]))]
     if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
         print("- horizontal or vertical -")
         return True
