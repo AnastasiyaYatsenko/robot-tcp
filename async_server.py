@@ -421,6 +421,9 @@ def command_panel():
     button_surface_ru = pg.Surface((35, 35))
     button_surface_rd = pg.Surface((35, 35))
 
+    button_surface_clockwise = pg.Surface((35, 35))
+    button_surface_counterclockwise = pg.Surface((35, 35))
+
     # Button rectangles
     button_start = pg.Rect(760, 220, 200, 50)
     button_disconnect = pg.Rect(990, 220, 200, 50)
@@ -434,6 +437,9 @@ def command_panel():
     button_d = pg.Rect(1090, 170, 35, 35)
     button_ru = pg.Rect(1130, 110, 35, 35)
     button_rd = pg.Rect(1130, 150, 35, 35)
+
+    button_counterclockwise = pg.Rect(1050, 20, 35, 35)
+    button_clockwise = pg.Rect(1130, 20, 35, 35)
     # (760, 290), (1190, 290)
 
     # Create a font object
@@ -518,14 +524,14 @@ def command_panel():
     clock = pg.time.Clock()
     screen.fill((48, 48, 48))
 
-    radioButtons = [
-        RadioButton(1050, 25, 115, 25, font, "hexagonal", on_click_hex),
-        RadioButton(1050, 55, 115, 25, font, "square", on_click_square)
-    ]
-    for rb in radioButtons:
-        rb.setRadioButtons(radioButtons)
-    radioButtons[0].clicked = True
-    group = pg.sprite.Group(radioButtons)
+    # radioButtons = [
+    #     RadioButton(1050, 25, 115, 25, font, "hexagonal", on_click_hex),
+    #     RadioButton(1050, 55, 115, 25, font, "square", on_click_square)
+    # ]
+    # for rb in radioButtons:
+    #     rb.setRadioButtons(radioButtons)
+    # radioButtons[0].clicked = True
+    # group = pg.sprite.Group(radioButtons)
 
     # running = True
     global running, sock
@@ -836,6 +842,54 @@ def command_panel():
                             ceil.robots[robot_num].get_robot_params()
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 5])
                             t_step.start()
+                if button_counterclockwise.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_turn = threading.Thread(target=ceil.turn_clock, args=[robot_num, False])
+                            t_turn.start()
+                if button_clockwise.collidepoint(event.pos):
+                    if ceil_type != 0:
+                        print("Wrong ceil type!")
+                        break
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_turn = threading.Thread(target=ceil.turn_clock, args=[robot_num, True])
+                            t_turn.start()
 
             robot_input.handle_event(event)
             x_input.handle_event(event)
@@ -932,6 +986,16 @@ def command_panel():
         else:
             pg.draw.rect(button_surface_rd, (5, 99, 46), (1, 1, 200, 48))
 
+        if button_counterclockwise.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_counterclockwise, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_counterclockwise, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_clockwise.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_clockwise, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_clockwise, (5, 99, 46), (1, 1, 200, 48))
+
         # Show the button text
         # button_surface.blit(text, text_rect)
         # Draw the button on the screen
@@ -941,6 +1005,9 @@ def command_panel():
         screen.blit(button_surface_d, (button_d.x, button_d.y))
         screen.blit(button_surface_ru, (button_ru.x, button_ru.y))
         screen.blit(button_surface_rd, (button_rd.x, button_rd.y))
+
+        screen.blit(button_surface_counterclockwise, (button_counterclockwise.x, button_counterclockwise.y))
+        screen.blit(button_surface_clockwise, (button_clockwise.x, button_clockwise.y))
 
 
         pg.draw.line(screen, (255, 255, 255), (760, 290), (1090 + x3_input.inputBox.width, 290))

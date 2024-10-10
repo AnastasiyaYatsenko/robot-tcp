@@ -216,6 +216,7 @@ def calculate_center_square(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 def current_pos(points):
     current_pose = -1  # 0 - left hand higher, 1 - right hand higher, 2 - vertical, 3 - unaligned, needs improving
+    print(f"Points: {points}")
     Tol = 2
     if (abs(points[1][0] - (points[0][0] + size['d2'] / 2)) < Tol) and (
             abs(points[1][0] - (points[2][0] - size['d2'] / 2)) < Tol) and (
@@ -234,9 +235,11 @@ def current_pos(points):
         return 1
 
     elif (abs(points[1][0] - points[0][0]) < Tol) and (
-            abs(points[1][0] - points[2][0]) < Tol) and (
+            abs(points[1][0] - points[2][0]) < Tol) and ((
             abs(points[1][1] - (points[0][1] + size['D2'] / 2)) < Tol) and (
-            abs(points[1][1] - (points[2][1] - size['D2'] / 2)) < Tol):
+            abs(points[1][1] - (points[2][1] - size['D2'] / 2)) < Tol)) or ((
+            abs(points[1][1] - (points[0][1] - size['D2'] / 2)) < Tol) and (
+            abs(points[1][1] - (points[2][1] + size['D2'] / 2)) < Tol)):
         print("2")
         current_pose = 2 # 2 - vertical
         return 2
@@ -597,6 +600,7 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
 
 def center_by_params(hand_coords, shift_1, shift_2, shift_3):
     center_x, center_y = -1, -1
+    print("center by params")
     try:
         if is_aligned(hand_coords):
             print("another aligned")
@@ -738,6 +742,62 @@ def isInside(x1, y1, x2, y2, x3, y3, x, y):
     a3 = area(x1, y1, x2, y2, x, y)
     return a == (a1 + a2 + a3)
 
+def on_segment(p, q, r):
+    """Check if point q lies on line segment 'pr'"""
+    if (q[0] <= max(p[0], r[0]) and q[0] >= min(p[0], r[0]) and
+            q[1] <= max(p[1], r[1]) and q[1] >= min(p[1], r[1])):
+        return True
+    return False
+
+def orientation(p, q, r):
+    """Find the orientation of the ordered triplet (p, q, r).
+    0 -> p, q and r are collinear
+    1 -> Clockwise
+    2 -> Counterclockwise"""
+    val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
+    if val == 0:
+        return 0
+    elif val > 0:
+        return 1
+    else:
+        return 2
+
+def do_intersect(p1, q1, p2, q2):
+    """Main function to check whether the line segments 'p1q1' and 'p2q2' intersect"""
+    # Find the four orientations needed for the general and special cases
+    o1 = orientation(p1, q1, p2)
+    o2 = orientation(p1, q1, q2)
+    o3 = orientation(p2, q2, p1)
+    o4 = orientation(p2, q2, q1)
+
+    # General case
+    if o1 != o2 and o3 != o4:
+        return True
+
+    # Special cases
+    # p1, q1 and p2 are collinear and p2 lies on segment p1q1
+    if o1 == 0 and on_segment(p1, p2, q1):
+        return True
+
+    # p1, q1 and q2 are collinear and q2 lies on segment p1q1
+    if o2 == 0 and on_segment(p1, q2, q1):
+        return True
+
+    # p2, q2 and p1 are collinear and p1 lies on segment p2q2
+    if o3 == 0 and on_segment(p2, p1, q2):
+        return True
+
+    # p2, q2 and q1 are collinear and q1 lies on segment p2q2
+    if o4 == 0 and on_segment(p2, q1, q2):
+        return True
+
+    # If none of the cases
+    return False
+
+def check_no_intersect(p1, q1, p2, q2):
+    """Return True if the line segments 'p1q1' and 'p2q2' do not intersect"""
+    return not do_intersect(p1, q1, p2, q2)
+
 def mirroring_check(ang1, ang2, ang3):
     if (ang1 < ang2 < ang3) or (
             ang2 < ang3 < ang1) or (
@@ -860,9 +920,12 @@ def optimal_points(a, b, c, max_x, max_y):
     return opt_points
 
 def is_aligned(hand_coords):
-    # print(f"In is_aligned: {hand_coords}")
+    print(f"In is_aligned: {hand_coords}")
+    # hand_coords = [("%.4f" % hand_coords[0][0], "%.4f" % hand_coords[0][1]),
+    #                ("%.4f" % hand_coords[1][0], "%.4f" % hand_coords[1][1]),
+    #                ("%.4f" % hand_coords[2][0], "%.4f" % hand_coords[2][1])]
     if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
-        # print("- horizontal or vertical -")
+        print("- horizontal or vertical -")
         return True
     # Tol = 1e-10
     Tol = 2
@@ -876,10 +939,26 @@ def is_aligned(hand_coords):
     #         hand_coords[0][1] == hand_coords[1][1] and hand_coords[0][1] != hand_coords[2][1]):
     #     # print("- not aligned -")
     #     return False
-    if abs((hand_coords[2][0] - hand_coords[0][0]) / (hand_coords[1][0] - hand_coords[0][0]) -
-           (hand_coords[2][1] - hand_coords[0][1]) / (hand_coords[1][1] - hand_coords[0][1])) <= Tol:
-        # print("- aligned -")
+    # x1, y1 = float("%.4f" % hand_coords[0][0]), float("%.4f" % hand_coords[0][1])
+    # x2, y2 = float("%.4f" % hand_coords[1][0]), float("%.4f" % hand_coords[1][1])
+    # x3, y3 = float("%.4f" % hand_coords[2][0]), float("%.4f" % hand_coords[2][1])
+    x1, y1 = hand_coords[0][0], hand_coords[0][1]
+    x2, y2 = hand_coords[1][0], hand_coords[1][1]
+    x3, y3 = hand_coords[2][0], hand_coords[2][1]
+    print(f"Aligned condition: {abs((x3 - x1) / (x2 - x1) - (y3 - y1) / (y2 - y1))}")
+    if (x1 == x3 and x1 != x2) or (x2 == x3 and x2 != x1) or (x1 == x2 and x1 != x3):
+        print("false 1")
+        return False
+    if (y1 == y3 and y1 != y2) or (y2 == y3 and y2 != y1) or (y1 == y2 and y1 != y3):
+        print("false 2")
+        return False
+    if abs((x3 - x1) / (x2 - x1) - (y3 - y1) / (y2 - y1)) <= Tol:
+        print("true")
         return True
+    # if abs((hand_coords[2][0] - hand_coords[0][0]) / (hand_coords[1][0] - hand_coords[0][0]) -
+    #        (hand_coords[2][1] - hand_coords[0][1]) / (hand_coords[1][1] - hand_coords[0][1])) <= Tol:
+    #     # print("- aligned -")
+    #     return True
     # print("- not aligned -")
     return False
 
