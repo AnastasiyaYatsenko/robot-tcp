@@ -3072,13 +3072,16 @@ class Ceil:
         x1, y1 = (hand_coords[0][0], hand_coords[0][1])
         x2, y2 = (hand_coords[1][0], hand_coords[1][1])
         x3, y3 = (hand_coords[2][0], hand_coords[2][1])
-        points = [(x1, y1),
-                  (x2, y2),
-                  (x3, y3)]
+        # points = [(x1, y1),
+        #           (x2, y2),
+        #           (x3, y3)]
+        points = [(float("%.4f" % x1), float("%.4f" % y1)),
+                  (float("%.4f" % x2), float("%.4f" % y2)),
+                  (float("%.4f" % x3), float("%.4f" % y3))]
         points.sort(key=lambda point: (point[0], point[1]))
         allowed_poses = self.get_allowed_poses(robot_num)
         print(f"Allowed: {allowed_poses}")
-        current_pose = self.current_pos(robot_num, points)
+        current_pose = current_pos(points)
         print(f"Current pose: {current_pose}")
 
 

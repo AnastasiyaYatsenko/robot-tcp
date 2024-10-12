@@ -21,7 +21,8 @@ from ceil import *
 logger = logging.getLogger('main')
 
 
-BIND_ADDRESS = ('192.168.0.91', 8686)
+# BIND_ADDRESS = ('192.168.0.91', 8686)
+BIND_ADDRESS = ('localhost', 8686)
 BACKLOG = 5
 
 ceil = Ceil()
@@ -130,6 +131,16 @@ def serve_forever():
     # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # re-use port
     global sock
+    global BIND_ADDRESS
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    ip_address = s.getsockname()[0]
+    s.close()
+    # print(f"Hostname: {hostname}")
+    print(f"IP Address: {ip_address}")
+
+    BIND_ADDRESS = (ip_address, 8686)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(BIND_ADDRESS)
     sock.listen(BACKLOG)
