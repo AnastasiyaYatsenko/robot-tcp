@@ -1208,6 +1208,17 @@ def get_visual_coords(x, y, rect_side, outer_border, outer_border_add):
     fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
     return fin_x, fin_y
 
+def validate_ip(s):
+    a = s.split('.')
+    if len(a) != 4:
+        return False
+    for x in a:
+        if not x.isdigit():
+            return False
+        i = int(x)
+        if i < 0 or i > 255:
+            return False
+    return True
 
 # def get_ang(x1, y1, xc, yc):
 #     ax = x1 - xc

@@ -135,12 +135,36 @@ def serve_forever():
 
     s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     s.connect(("8.8.8.8", 80))
-    ip_address = s.getsockname()[0]
+    current_ip = s.getsockname()[0]
     s.close()
     # print(f"Hostname: {hostname}")
-    print(f"IP Address: {ip_address}")
+    print(f"Current machine IP Address: {current_ip}")
 
-    BIND_ADDRESS = (ip_address, 8686)
+    inp = input('0 - Leave localhost IP\n1 - Set current machine IP as server IP\n2 - Enter IP manually\nOption: ')
+    try:
+        inp = int(inp)
+    except:
+        inp = 0
+
+    print(f"Option {inp} is chosen")
+    if inp == 0:
+        print("local")
+    elif inp == 1:
+        print("current")
+        BIND_ADDRESS = (current_ip, 8686)
+    elif inp == 2:
+        manual_ip = input('IP address: ')
+        # print(manual_ip)
+        if validate_ip(manual_ip):
+            BIND_ADDRESS = (manual_ip, 8686)
+        else:
+            print("IP address is not valid, the default will be chosen")
+            # print("not ok :(")
+            # print("default local")
+    else:
+        print("default local")
+
+    # BIND_ADDRESS = (ip_address, 8686)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(BIND_ADDRESS)
     sock.listen(BACKLOG)
