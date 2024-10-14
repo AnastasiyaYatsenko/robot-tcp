@@ -2085,6 +2085,144 @@ class Ceil:
         # if the robot is not aligned to any of three allowed positions
         pass
 
+    def turn_clock(self, robot_num, clockwise=True):
+        self.robots[robot_num].isMoving = True
+        theta = 90
+        if not clockwise:
+            theta = -90
+        hand_coords = self.robots[robot_num].get_all_points()
+        print(f"Hand coords: {hand_coords}")
+        middle = middle_point((hand_coords[0][0], hand_coords[0][1]),
+                              (hand_coords[1][0], hand_coords[1][1]),
+                              (hand_coords[2][0], hand_coords[2][1]))
+        non_middle = [0, 1, 2]
+        non_middle.remove(middle)
+        xo = hand_coords[3][0]
+        yo = hand_coords[3][1]
+        x_center_hand = hand_coords[middle][0]
+        y_center_hand = hand_coords[middle][1]
+
+        hand_a = non_middle[0]
+        hand_c = non_middle[1]
+
+        new_x_a, new_y_a = rotate_point(hand_coords[hand_a][0], hand_coords[hand_a][1],
+                                        x_center_hand, y_center_hand, theta)
+        new_x_c, new_y_c = rotate_point(hand_coords[hand_c][0], hand_coords[hand_c][1],
+                                        x_center_hand, y_center_hand, theta)
+
+        # x1, y1 = rotate_point(point1[0], point1[1], center_point[0], center_point[1], 60)
+
+        # these are possible positions for the first turn move
+        possible_first_move = [[(-1, -1), (-1, -1), (-1, -1)],
+                               [(-1, -1), (-1, -1), (-1, -1)]]
+        move_hands = [hand_a, hand_c]
+
+        possible_first_move[0][hand_a] = (new_x_a, new_y_a)
+        possible_first_move[0][hand_c] = hand_coords[hand_c]
+        possible_first_move[0][middle] = hand_coords[middle]
+
+        possible_first_move[1][hand_a] = hand_coords[hand_a]
+        possible_first_move[1][hand_c] = (new_x_c, new_y_c)
+        possible_first_move[1][middle] = hand_coords[middle]
+
+        print(
+            f"Possible first:\n{possible_first_move[0]}\n{possible_first_move[1]}")
+        print(f"Move hands: {move_hands}")
+
+        is_start_inside_triangle = isInside(hand_coords[0][0], hand_coords[0][1],
+                                            hand_coords[1][0], hand_coords[1][1],
+                                            hand_coords[2][0], hand_coords[2][1],
+                                            hand_coords[3][0], hand_coords[3][1])
+
+        # is_move_possible = [-1, -1, -1, -1]
+        chosen_pos = -1
+        new_x, new_y = -1, -1
+        for i in range(len(possible_first_move)):
+            print("---")
+            print(f"Pos: {possible_first_move[i]}")
+            new_center_x = (possible_first_move[i][0][0] + possible_first_move[i][1][0] + possible_first_move[i][2][
+                0]) / 3
+            new_center_y = (possible_first_move[i][0][1] + possible_first_move[i][1][1] + possible_first_move[i][2][
+                1]) / 3
+
+            check1 = do_intersect(hand_coords[3],
+                                  (new_center_x, new_center_y),
+                                  hand_coords[hand_a],
+                                  hand_coords[middle])
+            check2 = do_intersect(hand_coords[3],
+                                  (new_center_x, new_center_y),
+                                  hand_coords[hand_c],
+                                  hand_coords[middle])
+            print(f"New Center: ({new_center_x}, {new_center_y})")
+            print(f"Center: ({hand_coords[3][0]}, {hand_coords[3][1]})")
+            print(f"Check: {check1}  {check2}")
+            if check1 or check2:
+                continue
+
+            can_move = self.is_move_possible_two_holds(robot_num, xo, yo,
+                                                       new_center_x, new_center_y,
+                                                       possible_first_move[i], move_hands[i])
+            is_possible = is_in_three_hands_area(possible_first_move[i][0][0], possible_first_move[i][0][1],
+                                                 possible_first_move[i][1][0], possible_first_move[i][1][1],
+                                                 possible_first_move[i][2][0], possible_first_move[i][2][1],
+                                                 new_center_x, new_center_y)
+            new_0, new_1, new_2, ang_0, ang_1, ang_2, rh = self.get_new_params_by_vector(robot_num,
+                                                                                         xo, yo,
+                                                                                         new_center_x, new_center_y,
+                                                                                         possible_first_move[i])
+            is_correct_hand_order = mirroring_check(ang_0, ang_1, ang_2)
+            # is_move_possible[i] = can_move
+            print(f"1 Can move? {can_move} Is possible? {is_possible}")
+            if can_move and is_correct_hand_order and is_possible:
+                chosen_pos = i
+                new_x, new_y = new_center_x, new_center_y
+                break
+
+        print(f"Chosen pos: {possible_first_move[chosen_pos]}")
+        last_pos = possible_first_move[chosen_pos][:]
+        print(f"Last pos 1: {last_pos}")
+        non_middle.remove(move_hands[chosen_pos])
+        print(f"Non-middle: {non_middle[0]}")
+        print(f"Chosen: {chosen_pos}")
+        # return -1
+        if chosen_pos == 0:
+            last_pos[hand_c] = (new_x_c, new_y_c)
+        else:
+            last_pos[hand_a] = (new_x_a, new_y_a)
+        print(f"Last pos 2: {last_pos}")
+
+        shifts = [-1, -1, -1]
+        shifts[middle] = self.coef * size["innerRadLimit"]
+        shifts[non_middle[0]] = shifts[move_hands[chosen_pos]] = math.sqrt(
+            (self.coef * size["innerRadLimit"]) ** 2 + size["netStep"] ** 2)
+        print(f"Shifts: {shifts}")
+        last_center_x, last_center_y = center_by_params(last_pos, shifts[0], shifts[1], shifts[2])
+        print(f"Temp center: ({new_x}, {new_y})")
+        print(f"Last center (first): ({last_center_x}, {last_center_y})")
+        can_move = self.is_move_possible_two_holds(robot_num, new_x, new_y,
+                                                   last_center_x, last_center_y,
+                                                   last_pos, non_middle[0])
+        is_possible = is_in_three_hands_area(last_pos[0][0], last_pos[0][1],
+                                             last_pos[1][0], last_pos[1][1],
+                                             last_pos[2][0], last_pos[2][1],
+                                             last_center_x, last_center_y)
+        print(f"Can move? {can_move} Is possible? {is_possible}")
+        if not (can_move and is_possible):
+            return -1
+            # last_center_x, last_center_y = self.find_pos_by_shifts(robot_num, new_x, new_y,
+            #                                                        last_pos, shifts, non_middle[0])
+
+        if last_center_x == -1 or last_center_y == -1:
+            return -1
+        path = [hand_coords[:3], possible_first_move[chosen_pos], last_pos]
+        centers = [(xo, yo), (new_x, new_y), (last_center_x, last_center_y)]
+        print(f"Path: {path}")
+        print(f"Centers: {centers}")
+
+        self.turn_by_path(robot_num, path, centers)
+        self.robots[robot_num].isMoving = False
+        return 1
+
     def turn(self, robot_num, allowed_poses, pos_num):
         hand_coords = self.robots[robot_num].get_all_points()
         middle = middle_point((hand_coords[0][0], hand_coords[0][1]),
@@ -2232,9 +2370,12 @@ class Ceil:
         x1, y1 = (hand_coords[0][0], hand_coords[0][1])
         x2, y2 = (hand_coords[1][0], hand_coords[1][1])
         x3, y3 = (hand_coords[2][0], hand_coords[2][1])
-        points = [(x1, y1),
-                  (x2, y2),
-                  (x3, y3)]
+        points = [(float("%.4f" % x1), float("%.4f" % y1)),
+                  (float("%.4f" % x2), float("%.4f" % y2)),
+                  (float("%.4f" % x3), float("%.4f" % y3))]
+        # points = [(x1, y1),
+        #           (x2, y2),
+        #           (x3, y3)]
         points.sort(key=lambda point: (point[0], point[1]))
         allowed_poses = self.get_allowed_poses(robot_num)
         print(f"Allowed: {allowed_poses}")

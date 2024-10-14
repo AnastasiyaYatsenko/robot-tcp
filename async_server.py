@@ -21,7 +21,8 @@ from ceil import *
 logger = logging.getLogger('main')
 
 
-BIND_ADDRESS = ('192.168.0.91', 8686)
+# BIND_ADDRESS = ('192.168.0.91', 8686)
+BIND_ADDRESS = ('127.0.0.1', 8686)
 BACKLOG = 5
 
 ceil = Ceil()
@@ -119,11 +120,30 @@ def handle_write(sock, client_ip, client_port):
 #     ceil.start_move(0, 500.0, 700.0)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-def serve_forever():
+def serve_forever(ip):
     # створюємо сокет для прослуховування
     # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # re-use port
     global sock
+
+    s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+    s.connect(("8.8.8.8", 80))
+    current_ip = s.getsockname()[0]
+    s.close()
+    # print(f"Hostname: {hostname}")
+    print(f"Parser: {ip}")
+    print(f"Current machine IP Address: {current_ip}")
+
+    if ip is None:
+        print("current")
+        BIND_ADDRESS = (current_ip, 8686)
+    else:
+        if validate_ip(ip):
+            BIND_ADDRESS = (ip, 8686)
+        else:
+            print("IP address is not valid, the current machine IP will be chosen")
+            BIND_ADDRESS = (current_ip, 8686)
+
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     sock.bind(BIND_ADDRESS)
     sock.listen(BACKLOG)
@@ -515,6 +535,9 @@ def command_panel():
     button_surface_u = pg.Surface((35, 35))
     button_surface_d = pg.Surface((35, 35))
 
+    button_surface_clockwise = pg.Surface((35, 35))
+    button_surface_counterclockwise = pg.Surface((35, 35))
+
     # Button rectangles
     button_start = pg.Rect(760, 220, 200, 50)
     button_disconnect = pg.Rect(990, 220, 200, 50)
@@ -527,6 +550,9 @@ def command_panel():
     button_r = pg.Rect(1130, 110, 35, 35)
     button_u = pg.Rect(1090, 70, 35, 35)
     button_d = pg.Rect(1090, 150, 35, 35)
+
+    button_counterclockwise = pg.Rect(1050, 20, 35, 35)
+    button_clockwise = pg.Rect(1130, 20, 35, 35)
 
     # Create a font object
     font = pg.font.Font(None, 29)
@@ -828,6 +854,54 @@ def command_panel():
                             ceil.robots[robot_num].get_robot_params()
                             t_step = threading.Thread(target=ceil.path_manual, args=[robot_num, 3])
                             t_step.start()
+                if button_counterclockwise.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_turn = threading.Thread(target=ceil.turn_clock, args=[robot_num, False])
+                            t_turn.start()
+                if button_clockwise.collidepoint(event.pos):
+                    if robot_input.text == '':
+                        print("Invalid input")
+                    else:
+                        try:
+                            robot_num = int(robot_input.text)
+                        except:
+                            print("Invalid input")
+                            break
+                        # robot_input.text = ''
+
+                        if not ceil.robots[robot_num].isAlive:
+                            print("Robot is inactive")
+                            break
+                        if ceil.robots[robot_num].isMoving:
+                            print("Robot is moving already!")
+                            break
+
+                        if (robot_num < 0) or (robot_num >= len(ceil.robots)):
+                            print("There's no robot with such No.")
+                        else:
+                            ceil.robots[robot_num].get_robot_params()
+                            t_turn = threading.Thread(target=ceil.turn_clock, args=[robot_num, True])
+                            t_turn.start()
 
                    # t_path.join()
                    # t_start = threading.Thread(target=ceil.start_robot_by_path, args=[0])
@@ -920,10 +994,23 @@ def command_panel():
         else:
             pg.draw.rect(button_surface_d, (5, 99, 46), (1, 1, 200, 48))
 
+        if button_counterclockwise.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_counterclockwise, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_counterclockwise, (5, 99, 46), (1, 1, 200, 48))
+
+        if button_clockwise.collidepoint(pg.mouse.get_pos()):
+            pg.draw.rect(button_surface_clockwise, (5, 60, 57), (1, 1, 200, 48))
+        else:
+            pg.draw.rect(button_surface_clockwise, (5, 99, 46), (1, 1, 200, 48))
+
         screen.blit(button_surface_l, (button_l.x, button_l.y))
         screen.blit(button_surface_r, (button_r.x, button_r.y))
         screen.blit(button_surface_u, (button_u.x, button_u.y))
         screen.blit(button_surface_d, (button_d.x, button_d.y))
+
+        screen.blit(button_surface_counterclockwise, (button_counterclockwise.x, button_counterclockwise.y))
+        screen.blit(button_surface_clockwise, (button_clockwise.x, button_clockwise.y))
 
         pg.draw.line(screen, (255, 255, 255), (760, 290), (1090 + x3_input.inputBox.width, 290))
         pg.draw.line(screen, (255, 255, 255), (760, 620), (1090 + x3_input.inputBox.width, 620))

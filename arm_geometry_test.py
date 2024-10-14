@@ -146,9 +146,11 @@ def current_pos(points):
         current_pose = 0  # 0 - horizontal
 
     elif (abs(points[1][0] - points[0][0]) < Tol) and (
-            abs(points[1][0] - points[2][0]) < Tol) and (
+            abs(points[1][0] - points[2][0]) < Tol) and ((
             abs(points[1][1] - (points[0][1] + size["netStep"])) < Tol) and (
-            abs(points[1][1] - (points[2][1] - size["netStep"])) < Tol):
+            abs(points[1][1] - (points[2][1] - size["netStep"])) < Tol)) or ((
+            abs(points[1][1] - (points[0][1] - size["netStep"])) < Tol) and (
+            abs(points[1][1] - (points[2][1] + size["netStep"])) < Tol)):
         print("1")
         current_pose = 1  # 1 - vertical
     else:
@@ -157,12 +159,20 @@ def current_pos(points):
     return current_pose
 
 def calculate_center(coords, shifts):
-    x1 = coords[0][0]
-    y1 = coords[0][1]
-    x2 = coords[1][0]
-    y2 = coords[1][1]
-    x3 = coords[2][0]
-    y3 = coords[2][1]
+    x1 = float("%.4f" % coords[0][0])
+    y1 = float("%.4f" % coords[0][1])
+    x2 = float("%.4f" % coords[1][0])
+    y2 = float("%.4f" % coords[1][1])
+    x3 = float("%.4f" % coords[2][0])
+    y3 = float("%.4f" % coords[2][1])
+
+    # x1 = coords[0][0]
+    # y1 = coords[0][1]
+    # x2 = coords[1][0]
+    # y2 = coords[1][1]
+    # x3 = coords[2][0]
+    # y3 = coords[2][1]
+
     r1 = shifts[0]
     r2 = shifts[1]
     r3 = shifts[2]
@@ -491,6 +501,10 @@ def rotate_point(px, py, qx, qy, theta):
     return rx, ry
 
 def middle_point(p1, p2, p3):
+    p1 = (float("%.4f" % p1[0]), float("%.4f" % p1[1]))
+    p2 = (float("%.4f" % p2[0]), float("%.4f" % p2[1]))
+    p3 = (float("%.4f" % p3[0]), float("%.4f" % p3[1]))
+
     # Extract x and y coordinates
     x1, y1 = p1
     x2, y2 = p2
@@ -601,6 +615,62 @@ def isInside(x1, y1, x2, y2, x3, y3, x, y):
     a2 = area(x1, y1, x, y, x3, y3)
     a3 = area(x1, y1, x2, y2, x, y)
     return a == (a1 + a2 + a3)
+
+def on_segment(p, q, r):
+    """Check if point q lies on line segment 'pr'"""
+    if (q[0] <= max(p[0], r[0]) and q[0] >= min(p[0], r[0]) and
+            q[1] <= max(p[1], r[1]) and q[1] >= min(p[1], r[1])):
+        return True
+    return False
+
+def orientation(p, q, r):
+    """Find the orientation of the ordered triplet (p, q, r).
+    0 -> p, q and r are collinear
+    1 -> Clockwise
+    2 -> Counterclockwise"""
+    val = (q[1] - p[1]) * (r[0] - q[0]) - (q[0] - p[0]) * (r[1] - q[1])
+    if val == 0:
+        return 0
+    elif val > 0:
+        return 1
+    else:
+        return 2
+
+def do_intersect(p1, q1, p2, q2):
+    """Main function to check whether the line segments 'p1q1' and 'p2q2' intersect"""
+    # Find the four orientations needed for the general and special cases
+    o1 = orientation(p1, q1, p2)
+    o2 = orientation(p1, q1, q2)
+    o3 = orientation(p2, q2, p1)
+    o4 = orientation(p2, q2, q1)
+
+    # General case
+    if o1 != o2 and o3 != o4:
+        return True
+
+    # Special cases
+    # p1, q1 and p2 are collinear and p2 lies on segment p1q1
+    if o1 == 0 and on_segment(p1, p2, q1):
+        return True
+
+    # p1, q1 and q2 are collinear and q2 lies on segment p1q1
+    if o2 == 0 and on_segment(p1, q2, q1):
+        return True
+
+    # p2, q2 and p1 are collinear and p1 lies on segment p2q2
+    if o3 == 0 and on_segment(p2, p1, q2):
+        return True
+
+    # p2, q2 and q1 are collinear and q1 lies on segment p2q2
+    if o4 == 0 and on_segment(p2, q1, q2):
+        return True
+
+    # If none of the cases
+    return False
+
+def check_no_intersect(p1, q1, p2, q2):
+    """Return True if the line segments 'p1q1' and 'p2q2' do not intersect"""
+    return not do_intersect(p1, q1, p2, q2)
 
 def mirroring_check(ang1, ang2, ang3):
     if (ang1 < ang2 < ang3) or (
@@ -716,6 +786,10 @@ def optimal_points(a, b, c):
     return opt_points
 
 def is_aligned(hand_coords):
+    hand_coords = [(float("%.4f" % hand_coords[0][0]), float("%.4f" % hand_coords[0][1])),
+                   (float("%.4f" % hand_coords[1][0]), float("%.4f" % hand_coords[1][1])),
+                   (float("%.4f" % hand_coords[2][0]), float("%.4f" % hand_coords[2][1]))]
+
     # print(f"In is_aligned: {hand_coords}")
     if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
         # print("- horizontal or vertical -")
@@ -939,6 +1013,17 @@ def get_visual_coords(x, y, rect_side, outer_border, outer_border_add):
     fin_y = to_range(y, 0, size["ceilLenY"], 0, rect_side) + outer_border_add
     return fin_x, fin_y
 
+def validate_ip(s):
+    a = s.split('.')
+    if len(a) != 4:
+        return False
+    for x in a:
+        if not x.isdigit():
+            return False
+        i = int(x)
+        if i < 0 or i > 255:
+            return False
+    return True
 
 
 # def get_ang(x1, y1, xc, yc):
