@@ -1,4 +1,5 @@
 from async_server import *
+import argparse
 
 # налаштовуємо лог
 logger.setLevel(logging.DEBUG)
@@ -11,5 +12,11 @@ formatter = logging.Formatter(
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 logger.info('Run')
+
+parser = argparse.ArgumentParser()
+parser.add_argument("--ip", help="ip for server",
+                    type=str)
+args = parser.parse_args()
+
 # запускаємо сервер
-serve_forever()
+serve_forever(args.ip)

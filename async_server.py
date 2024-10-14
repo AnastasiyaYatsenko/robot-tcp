@@ -126,7 +126,7 @@ def handle_write(sock, client_ip, client_port):
 #     ceil.start_move(0, 500.0, 700.0)
 
 sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-def serve_forever():
+def serve_forever(ip):
     # створюємо сокет для прослуховування
     # sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     # re-use port
@@ -138,31 +138,32 @@ def serve_forever():
     current_ip = s.getsockname()[0]
     s.close()
     # print(f"Hostname: {hostname}")
+    print(f"Parser: {ip}")
     print(f"Current machine IP Address: {current_ip}")
 
-    inp = input('0 - Set current machine IP as server IP\n1 - Enter IP manually\nOption: ')
-    try:
-        inp = int(inp)
-    except:
-        inp = 0
+    # inp = input('0 - Set current machine IP as server IP\n1 - Enter IP manually\nOption: ')
+    # try:
+    #     inp = int(inp)
+    # except:
+    #     inp = 0
 
-    print(f"Option {inp} is chosen")
-    if inp == 0:
+    # print(f"Option {inp} is chosen")
+    if ip is None:
         print("current")
         BIND_ADDRESS = (current_ip, 8686)
-    elif inp == 1:
-        manual_ip = input('IP address: ')
+    else:
+        # manual_ip = input('IP address: ')
         # print(manual_ip)
-        if validate_ip(manual_ip):
-            BIND_ADDRESS = (manual_ip, 8686)
+        if validate_ip(ip):
+            BIND_ADDRESS = (ip, 8686)
         else:
             print("IP address is not valid, the current machine IP will be chosen")
             BIND_ADDRESS = (current_ip, 8686)
             # print("not ok :(")
             # print("default local")
-    else:
-        print("default current")
-        BIND_ADDRESS = (current_ip, 8686)
+    # else:
+    #     print("default current")
+    #     BIND_ADDRESS = (current_ip, 8686)
 
     # BIND_ADDRESS = (ip_address, 8686)
     sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
