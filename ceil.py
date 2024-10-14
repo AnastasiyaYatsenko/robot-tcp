@@ -2389,9 +2389,13 @@ class Ceil:
 
         res = 0
         if (direction == 0 or direction == 1) and current_pose != 0:
-            res = self.turn(robot_num, allowed_poses, 0)
+            print("Wrong position of robot!")
+            return -1
+            # res = self.turn(robot_num, allowed_poses, 0)
         elif (direction == 2 or direction == 3) and current_pose != 1:
-            res = self.turn(robot_num, allowed_poses, 1)
+            print("Wrong position of robot!")
+            return -1
+            # res = self.turn(robot_num, allowed_poses, 1)
         if res == -1:
             return -1
 
