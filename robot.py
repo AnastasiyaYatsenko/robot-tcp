@@ -184,7 +184,10 @@ class Robot:
         # print("CHECK IF IN LINE")
         # print(f"X: {self.hands[0].x} {self.hands[1].x} {self.hands[2].x}")
         # print(f"Y: {self.hands[0].y} {self.hands[1].y} {self.hands[2].y}")
-        if self.is_horizontal_aligned() or self.is_vertical_aligned():
+        hand_coords = [(float("%.4f" % self.hands[0].x), float("%.4f" % self.hands[0].y)),
+                       (float("%.4f" % self.hands[1].x), float("%.4f" % self.hands[1].y)),
+                       (float("%.4f" % self.hands[2].x), float("%.4f" % self.hands[2].y))]
+        if is_horizontal_aligned(hand_coords) or is_vertical_aligned(hand_coords):
             # print("---")
             return True
         Tol = 1e-10

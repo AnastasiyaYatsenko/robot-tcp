@@ -2,7 +2,7 @@ import math
 
 RAD2DEG = 180 / math.pi
 
-
+'''
 def get_arm_angle_by_y(x, y):
     return math.asin(y / math.sqrt(x ** 2 + y ** 2)) * RAD2DEG
 
@@ -10,7 +10,7 @@ def get_arm_angle_by_y(x, y):
 def get_arm_shift_by_y(x, y):
     return math.sqrt(x ** 2 + y ** 2)
 
-'''
+
 def get_arm_state_by_pos(pos, size, id=''):
     # here will be result of arm state:
     # a - angle
@@ -187,8 +187,8 @@ def calculate_center(coords, shifts):
     current_pose = current_pos(sort_points)
     # print(f"IN CENTER current pos: {current_pose}")
 
-    # print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
-    # print(f"R: {r1} | {r2} | {r3}")
+    print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
+    print(f"R: {r1} | {r2} | {r3}")
     r_short = -1
     r_long = -1
 
@@ -447,8 +447,8 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     # eps = 1e-6
     # eps = 0.003
     eps = 20 # TODO find the suitable eps
-    # print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
-    # print(f"r1: {r1} r2: {r2}")
+    print(f"START x1: {x1} y1: {y1} x2: {x2} y2: {y2} x3: {x3} y3: {y3}")
+    print(f"r1: {r1} r2: {r2}")
     if (2 * ((y3 - y2) * (x1 - x2) - (y2 - y1) * (x2 - x3)) == 0) or (
             (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))) == 0):
         return -1, -1
@@ -459,24 +459,22 @@ def calculate_center_three_points(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     y = (((x2 - x1) * (r2 * r2 - r3 * r3 - x2 * x2 + x3 * x3 - y2 * y2 + y3 * y3) - (x3 - x2) *
           (r1 * r1 - r2 * r2 - x1 * x1 + x2 * x2 - y1 * y1 + y2 * y2)) /
          (2 * ((x3 - x2) * (y1 - y2) - (x2 - x1) * (y2 - y3))))
-    # print("x=" + str(x) + " y=" + str(y))
-    # print(f"abs = {abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1)}")
+    print("x=" + str(x) + " y=" + str(y))
+    print(f"abs = {abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1)}")
     if abs((x1 - x) * (x1 - x) + (y1 - y) * (y1 - y) - r1 * r1) < eps:
-        # print("x=" + str(x) + " y=" + str(y))
+        print("x=" + str(x) + " y=" + str(y))
         return x, y
-    # else:
-        # print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
-        # print(f"x: {x} y: {y}")
-        # print("Impossible")
+    else:
+        print(f"x1: {x1} y1: {y1} | x2: {x2} y2: {y2} | x3: {x3} y3: {y3} | r1: {r1} r2: {r2} r3: {r3}")
+        print(f"x: {x} y: {y}")
+        print("Impossible")
     return -1, -1
 
 def center_by_params(hand_coords, shift_1, shift_2, shift_3):
     center_x, center_y = -1, -1
     try:
         if is_aligned(hand_coords):
-            center_x, center_y = calculate_center([(hand_coords[0][0], hand_coords[0][1]),
-                                                   (hand_coords[1][0], hand_coords[1][1]),
-                                                   (hand_coords[2][0], hand_coords[2][1])],
+            center_x, center_y = calculate_center(hand_coords,
                                                   [shift_1, shift_2, shift_3])
         else:
             center_x, center_y = calculate_center_three_points(hand_coords[0][0], hand_coords[0][1],

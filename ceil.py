@@ -686,7 +686,7 @@ class Ceil:
         old_shift = -1
         is_clockwise = -1
 
-        # print(f"move hand: {move_hand}")
+        print(f"move hand: {move_hand}")
 
         is_possible = False
         if move_hand == -1:
@@ -2082,7 +2082,21 @@ class Ceil:
         return current_pose
 
     def align_to_allowed(self, robot_num):
-        # if the robot is not aligned to any of three allowed positions
+        # hand_coords = self.robots[robot_num].get_all_points()
+        # print(f"Hand coords: {hand_coords}")
+        # x1, y1 = (hand_coords[0][0], hand_coords[0][1])
+        # x2, y2 = (hand_coords[1][0], hand_coords[1][1])
+        # x3, y3 = (hand_coords[2][0], hand_coords[2][1])
+        # points = [(float("%.4f" % x1), float("%.4f" % y1)),
+        #           (float("%.4f" % x2), float("%.4f" % y2)),
+        #           (float("%.4f" % x3), float("%.4f" % y3))]
+        # # points = [(x1, y1),
+        # #           (x2, y2),
+        # #           (x3, y3)]
+        # points.sort(key=lambda point: (point[0], point[1]))
+        # allowed_poses = self.get_allowed_poses(robot_num)
+        # for pose in allowed_poses:
+        #     pass
         pass
 
     def turn_clock(self, robot_num, clockwise=True):
@@ -2219,7 +2233,9 @@ class Ceil:
         print(f"Path: {path}")
         print(f"Centers: {centers}")
 
+        print("--- TURN BY PATH ---")
         self.turn_by_path(robot_num, path, centers)
+        print("--- END TURN BY PATH ---")
         self.robots[robot_num].isMoving = False
         return 1
 
@@ -2347,8 +2363,8 @@ class Ceil:
         print(f"Can move? {can_move} Is possible? {is_possible}")
         if not (can_move and is_possible):
             return -1
-            last_center_x, last_center_y = self.find_pos_by_shifts(robot_num, new_x, new_y,
-                                                                   last_pos, shifts, non_middle[0])
+            # last_center_x, last_center_y = self.find_pos_by_shifts(robot_num, new_x, new_y,
+            #                                                        last_pos, shifts, non_middle[0])
 
         if last_center_x == -1 or last_center_y == -1:
             return -1
