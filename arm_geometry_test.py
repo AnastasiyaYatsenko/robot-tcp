@@ -158,7 +158,7 @@ def current_pos(points):
         current_pose = 2  # 2 - unaligned, needs improving
     return current_pose
 
-def calculate_center(coords, shifts):
+def calculate_center__(coords, shifts):
     x1 = float("%.4f" % coords[0][0])
     y1 = float("%.4f" % coords[0][1])
     x2 = float("%.4f" % coords[1][0])
@@ -183,9 +183,9 @@ def calculate_center(coords, shifts):
                    (x2, y2),
                    (x3, y3)]
     sort_points.sort(key=lambda point: (point[0], point[1]))
-    # print(f"Points: {points}\nSorted: {sort_points}")
+    print(f"Points: {points}\nSorted: {sort_points}")
     current_pose = current_pos(sort_points)
-    # print(f"IN CENTER current pos: {current_pose}")
+    print(f"IN CENTER current pos: {current_pose}")
 
     print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
     print(f"R: {r1} | {r2} | {r3}")
@@ -202,10 +202,16 @@ def calculate_center(coords, shifts):
         r_short = r3
         r_long = r1
 
-    # print(f"r_short: {r_short}; r_long: {r_long}")
+    print(f"r_short: {r_short}; r_long: {r_long}")
 
-    l = (r_long ** 2 - r_short ** 2) / (2 * size['netStep']) - (size['netStep'] / 2)
-    h = math.sqrt(r_short ** 2 - l ** 2)
+    l, h = 0, 0
+    try:
+        l = (r_long ** 2 - r_short ** 2) / (2 * size['netStep']) - (size['netStep'] / 2)
+        h = math.sqrt(r_short ** 2 - l ** 2)
+        print(f"l: {l}; h: {h}")
+    except:
+        print("Error occured while calculating the center, abort")
+        return -1, -1
     y = 0
     x = 0
     Tol = 2
@@ -230,7 +236,7 @@ def calculate_center(coords, shifts):
         else:
             x = sort_points[1][0]
             y = sort_points[1][1] + h
-        # print(f"CENTER {current_pose} x: {x}, y: {y}")
+        print(f"CENTER {current_pose} x: {x}, y: {y}")
 
     elif current_pose == 1:
         if ((abs(points[1][0] - points[0][0]) < Tol) and (
@@ -261,7 +267,7 @@ def calculate_center(coords, shifts):
 # x1 y1 - coords of FIRST ROBOT hand, x2 y2 - of SECOND ROBOT hand, x3 y3 - of THIRD ROBOT hand
 # OLD
 
-def calculate_center__(x1, y1, x2, y2, x3, y3, r1, r2, r3):
+def calculate_center(coords, shifts):
     # x1 = size["netBorder"] + x1 * size["netStep"]
     # y1 = size["netBorder"] + y1 * size["netStep"]
     #
@@ -270,6 +276,17 @@ def calculate_center__(x1, y1, x2, y2, x3, y3, r1, r2, r3):
     #
     # x3 = size["netBorder"] + x3 * size["netStep"]
     # y3 = size["netBorder"] + y3 * size["netStep"]
+
+    x1 = float("%.4f" % coords[0][0])
+    y1 = float("%.4f" % coords[0][1])
+    x2 = float("%.4f" % coords[1][0])
+    y2 = float("%.4f" % coords[1][1])
+    x3 = float("%.4f" % coords[2][0])
+    y3 = float("%.4f" % coords[2][1])
+
+    r1 = shifts[0]
+    r2 = shifts[1]
+    r3 = shifts[2]
 
     print(f"0: ({x1},{y1}) | 1: ({x2},{y2}) | 2: ({x3},{y3})")
     print(f"R: {r1} | {r2} | {r3}")
@@ -707,8 +724,9 @@ def is_in_three_hands_area(x1, y1, x2, y2, x3, y3, xo, yo):
     return True
 
 def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
-    # print("2hands: IN CONDITION CHECK")
+    print("2hands: IN CONDITION CHECK")
     dist_arr = [dist(x1, y1, xo, yo), dist(x2, y2, xo, yo)]
+    print(f"DISTS: aob: {dist_arr}")
     if (dist_arr[0] > size["outerRadLimit"] or dist_arr[0] < size["innerRadLimit"]) or (
             dist_arr[1] > size["outerRadLimit"] or dist_arr[1] < size["innerRadLimit"]):
         return False
@@ -720,7 +738,7 @@ def is_in_two_hands_area(x1, y1, x2, y2, xo, yo):
 
     aob = angle_between_vectors(xa, ya, xb, yb)
 
-    # print(f"ANGS FOR REACH ZONE: aob: {aob}")
+    print(f"ANGS FOR REACH ZONE: aob: {aob}")
 
     if aob < size["minAngle"] or (360-aob) < size["minAngle"]:
         return False
@@ -1082,7 +1100,7 @@ def validate_ip(s):
 # розміри стелі + лап робота
 size = {
     #"innerRadLimit": 48,  # min shift pos
-    "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
+    "innerRadLimit": 46,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
     "outerRadLimit": 220,  # max shift pos
     "minAngle": 68,
     "netStep": 200,

@@ -713,6 +713,13 @@ def command_panel():
                         print("update")
                         robot_num = int(robot_input.text)
                         ceil.robots[robot_num].get_robot_params()
+                        x1 = ceil.robots[robot_num].hands[0].x
+                        y1 = ceil.robots[robot_num].hands[0].y
+                        x2 = ceil.robots[robot_num].hands[1].x
+                        y2 = ceil.robots[robot_num].hands[1].y
+                        x3 = ceil.robots[robot_num].hands[2].x
+                        y3 = ceil.robots[robot_num].hands[2].y
+                        ceil.set_hand_coordinates(robot_num, x1, y1, x2, y2, x3, y3)
                         draw_ceil(screen)
                 if button_set_coord.collidepoint(event.pos):
                     # print("SET COORD BUTTON")
