@@ -774,6 +774,10 @@ class Ceil:
 
             # time.sleep(2)
 
+            if sum(holds) < 2:
+                print("Tried to unhold more than two hands, abort the move")
+                return -1
+
             p = pack('@ffiffiffi',
                      shifts[0], angs[0], holds[0],
                      shifts[1], angs[1], holds[1],
@@ -2583,7 +2587,7 @@ class Ceil:
             Tol = 5
             for j in range(3):
                 print(f"j: {j}")
-                print(f"Hand: {self.robots[robot_num].hands[j].x}, {self.robots[robot_num].hands[j].y}")
+                print(f"Hand: ({self.robots[robot_num].hands[j].x}, {self.robots[robot_num].hands[j].y}) to ({pos[j][0]}, {pos[j][1]})")
                 # print(f"pos[j][0] - self.robots[robot_num].hands[j].x = {pos[j][0] - self.robots[robot_num].hands[j].x}\n"
                 #       f"pos[j][1] - self.robots[robot_num].hands[j].y = {pos[j][1] - self.robots[robot_num].hands[j].y}")
                 if (abs(pos[j][0] - self.robots[robot_num].hands[j].x) > Tol) or (
