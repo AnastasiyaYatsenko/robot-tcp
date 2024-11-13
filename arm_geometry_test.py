@@ -1278,7 +1278,7 @@ def validate_ip(s):
 # розміри стелі + лап робота
 size = {
     #"innerRadLimit": 48,  # min shift pos
-    "innerRadLimit": 47,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
+    "innerRadLimit": 46,  # min shift pos # TODO NORMAL CALCULATION FOR REACH ZONE
     "outerRadLimit": 220,  # max shift pos
     "minAngle": 68,
     "netStep": 200,
