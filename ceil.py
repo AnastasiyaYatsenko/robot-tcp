@@ -710,14 +710,14 @@ class Ceil:
 
         prev_x_n, prev_y_n = xo_s, yo_s
 
-        for n in range(self.N + 1):
+        for n in range(self.N + 2):
             xo_n = xo_s
             yo_n = yo_s
             if 0 < n < self.N:
                 l = n / (self.N - n)
                 xo_n = (xo_s + l * xo_t) / (1 + l)
                 yo_n = (yo_s + l * yo_t) / (1 + l)
-            elif n == self.N:
+            elif n >= self.N:
                 xo_n = xo_t
                 yo_n = yo_t
             print("---------")
@@ -741,8 +741,9 @@ class Ceil:
             angs[1] = normalize(new_ang_1)
             angs[2] = normalize(new_ang_2)
 
-            #TODO
-            holds = [1, 1, 1]
+            holds = [2, 2, 2]
+            if move_hand != -1 and n == 0:
+                holds = [1, 1, 1]
             # print(f"n = {n}; N = {self.N}")
             # print(f"t_ang: {t_angs[move_hand]}, t_shift: {t_shifts[move_hand]}")
 
@@ -765,6 +766,11 @@ class Ceil:
                     # print(f"old_ang: {old_ang}")
                     # print(f"new ang: {old_ang + counterclockwise(t_angs[move_hand] - old_ang) * n / self.N}")
                     angs[move_hand] = normalize(old_ang + counterclockwise(t_angs[move_hand] - old_ang) * n / self.N)
+            elif move_hand != -1 and n == self.N:
+                holds = [1, 1, 1]
+                holds[move_hand] = 0
+            elif move_hand != -1 and n == self.N + 1:
+                holds = [1, 1, 1]
 
             mirror = mirroring_check(angs[0], angs[1], angs[2])
             # print(f"2 Shifts {shifts}, Angs: {angs}")
@@ -773,8 +779,9 @@ class Ceil:
                 return -1
 
             # time.sleep(2)
+            count0 = holds.count(0)
 
-            if sum(holds) < 2:
+            if count0 >= 2:
                 print("Tried to unhold more than two hands, abort the move")
                 return -1
 
