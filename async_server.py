@@ -374,22 +374,43 @@ def draw_ceil(screen):
             pg.draw.line(screen, (0, 255, 0), (hand_green_x, hand_green_y), (center_x, center_y), 3)
             pg.draw.line(screen, (0, 0, 255), (hand_blue_x, hand_blue_y), (center_x, center_y), 3)
 
-            if ceil.robots[i].hands[0].hold == 1:
-                pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 5, 0)
-            else:
-                pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), 10, 1)
+            w0, w1, w2 = 0, 0, 0
+            r0, r1, r2 = 5, 5, 5
+            if ceil.robots[i].hands[0].hold == 2:
+                r0 = 5
+                w0 = 1
+            elif ceil.robots[i].hands[0].hold == 0:
+                r0 = 10
+                w0 = 1
 
-            if ceil.robots[i].hands[1].hold == 1:
-                pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 5, 0)
-            else:
-                pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 10, 1)
+            if ceil.robots[i].hands[1].hold == 2:
+                r1 = 5
+                w1 = 1
+            elif ceil.robots[i].hands[1].hold == 0:
+                r1 = 10
+                w1 = 1
 
-            if ceil.robots[i].hands[2].hold == 1:
-                pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 5, 0)
-            else:
-                pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 10, 1)
+            if ceil.robots[i].hands[2].hold == 2:
+                r2 = 5
+                w2 = 1
+            elif ceil.robots[i].hands[2].hold == 0:
+                r2 = 10
+                w2 = 1
+
+            # if ceil.robots[i].hands[1].hold == 1:
+            #     pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 5, 0)
+            # else:
+            #     pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), 10, 1)
+            #
+            # if ceil.robots[i].hands[2].hold == 1:
+            #     pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 5, 0)
+            # else:
+            #     pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), 10, 1)
 
             pg.draw.circle(screen, (255, 255, 255), (center_x, center_y), 5, 1)
+            pg.draw.circle(screen, (255, 0, 0), (red_x, red_y), r0, w0)
+            pg.draw.circle(screen, (0, 255, 0), (green_x, green_y), r1, w1)
+            pg.draw.circle(screen, (0, 0, 255), (blue_x, blue_y), r2, w2)
 
         # if ceil.robots[i].ot[0] != -1:
         #     x = ceil.robots[i].ot[0] * rect_side / side + outer_border_add

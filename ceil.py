@@ -757,8 +757,9 @@ class Ceil:
             angs[1] = normalize(new_ang_1)
             angs[2] = normalize(new_ang_2)
 
-            # holds = [1, 1, 1]
             holds = [2, 2, 2]
+            if move_hand != -1 and n == 0:
+                holds = [1, 1, 1]
             # print(f"n = {n}; N = {self.N}")
             # print(f"t_ang: {t_angs[move_hand]}, t_shift: {t_shifts[move_hand]}")
 
