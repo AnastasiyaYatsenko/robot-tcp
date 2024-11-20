@@ -786,7 +786,9 @@ class Ceil:
 
             # time.sleep(2)
 
-            if sum(holds) < 2:
+            count0 = holds.count(0)
+
+            if count0 >= 2:
                 print("Tried to unhold more than two hands, abort the move")
                 return -1
 
